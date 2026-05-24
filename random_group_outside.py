@@ -7,27 +7,24 @@ def approach():
     hold_posture()  # let them respond, don't fill the silence
 
 
-def execute():
-    """Approaching a group of strangers standing outside – no shared context, no invitation."""
+# requires: group is visibly relaxed, not in deep conversation
 
-    # requires: group is visibly relaxed, not in deep conversation
+anchor()  # arrive first
 
-    anchor()  # arrive first
+fear_level = assess(fear)
 
-    fear_level = assess(fear)
+try:
+    if fear_level > 6:
+        raise FearTooHigh
 
-    try:
-        if fear_level > 6:
-            raise FearTooHigh
+    approach()
 
-        approach()
+except FearTooHigh:
+    anchor()  # step back
+    wait()    # let it settle
 
-    except FearTooHigh:
-        anchor()  # step back
-        wait()    # let it settle
-
-        fear_level = assess(fear)  # reassess
-        if fear_level <= 6:
-            approach()  # one more try
-        else:
-            exit_gracefully()
+    fear_level = assess(fear)  # reassess
+    if fear_level <= 6:
+        approach()  # one more try
+    else:
+        exit_gracefully()
