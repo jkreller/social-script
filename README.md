@@ -31,7 +31,15 @@ social_script/
 These rules define what Social Script code looks and feels like.  
 Follow them strictly – consistency is the whole point.
 
-### 1. One import
+### 1. Scripts are readable first, executable second
+
+A script must be understandable by a human reading it cold – before, during, or after a situation.  
+If someone can't follow the flow by reading it top to bottom, it's too complex.
+
+Running the script interactively is valid and supported.  
+But the code itself is the source of truth – not the terminal output.
+
+### 2. One import
 
 Every script starts with exactly one line:
 
@@ -41,7 +49,7 @@ from social_script import *
 
 Nothing else. No sub-imports. No configuration.
 
-### 2. Functions read as actions
+### 3. Functions read as actions
 
 Built-in functions are verbs. They describe what the body or mind does.  
 They never expose implementation details.
@@ -58,7 +66,7 @@ phrase_library.get("greeting.neutral")
 stdlib.anchor()
 ```
 
-### 3. Phrases are constants, not strings
+### 4. Phrases are constants, not strings
 
 Phrases are accessed as attributes, never as string keys.
 
@@ -72,7 +80,7 @@ say("greeting.neutral")
 say(phrases["greeting"]["neutral"])
 ```
 
-### 4. State is global and intuitive
+### 5. State is global and intuitive
 
 There is only one person executing a script.  
 Inner state is assessed intuitively, not measured precisely.
@@ -88,7 +96,7 @@ def run(state: State, ctx: Context, cfg: Config):
     if state.fear_level > cfg.threshold:
 ```
 
-### 5. Comments are internal monologue
+### 6. Comments are internal monologue
 
 Comments explain intent, not code. Write them as you would think them.
 
@@ -100,7 +108,7 @@ anchor()  # ground first, then move
 anchor()  # calls the anchor() function
 ```
 
-### 6. Silence is valid
+### 7. Silence is valid
 
 `wait()` and `hold_posture()` (or similar actions) are real instructions.  
 Pauses and stillness are not placeholders – they are actions.

@@ -1,33 +1,39 @@
 """Action verbs for executing social scripts – what the body, mind, and voice do."""
 
-from typing import Any
+from enum import Enum
 
 
 def anchor() -> None:
     """Ground the body before moving or speaking."""
-    pass  # TODO: implement
+    input("[ anchor ]  Feel your feet. Take a breath.  — press Enter when ready ")
 
 
-def say(phrase: str) -> None:
+def say(phrase) -> None:
     """Deliver a phrase out loud."""
-    pass  # TODO: implement
+    category = type(phrase).__name__.lower()
+    name = phrase.name
+    input(f"[ say ]     {category} / {name}  — press Enter when said ")
 
 
 def wait() -> None:
     """Hold still and let silence do the work."""
-    pass  # TODO: implement
+    input("[ wait ]    Let it settle.  — press Enter when ready ")
 
 
 def hold_posture() -> None:
     """Maintain current physical stance without movement."""
-    pass  # TODO: implement
+    input("[ hold ]    Don't move. Wait for their response.  — press Enter when they've reacted ")
 
 
 def exit_gracefully() -> None:
     """Close the interaction with composure."""
-    pass  # TODO: implement
+    print("[ exit ]    Leave with composure. You're done.")
 
 
-def assess(signal: Any) -> int:
+def assess(signal) -> int:
     """Read an inner signal and return an intensity level from 1 (barely present) to 10 (overwhelming)."""
-    pass  # TODO: implement – must return int in range 1..10
+    name = signal.name if isinstance(signal, Enum) else str(signal)
+    while True:
+        raw = input(f"[ assess ]  {name} level (1–10): ")
+        if raw.isdigit() and 1 <= int(raw) <= 10:
+            return int(raw)
