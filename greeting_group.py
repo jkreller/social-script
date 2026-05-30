@@ -11,7 +11,7 @@ def approach():
 
 anchor()  # arrive first
 
-fear_level = assess(fear)
+fear_level = assess_internal(fear)
 
 try:
     if fear_level > 6:
@@ -23,7 +23,7 @@ except FearTooHigh:
     anchor()  # step back
     wait()    # let it settle
 
-    fear_level = assess(fear)  # reassess
+    fear_level = assess_internal(fear)  # reassess
     if fear_level <= 6:
         approach()  # one more try
     else:

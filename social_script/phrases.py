@@ -29,8 +29,22 @@ class Response(Enum):
 class Boundary(Enum):
     soft = auto()
 
+class Phrase:
+    """A spoken phrase. content is the exact text; instruction tells the human what to say when content is empty."""
+
+    def __init__(self, content: str = "", instruction: str = ""):
+        self.content = content
+        self.instruction = instruction
+
+    def __str__(self) -> str:
+        if self.instruction and self.content:
+            return f"{self.instruction}: {self.content}"
+        return self.content or self.instruction or "Say any phrase that you have in mind."
+
 
 greeting = Greeting
+phrase = Phrase
+question = Phrase
 exit = Exit
 hold = Hold
 response = Response

@@ -6,7 +6,18 @@ from social_script.actions import (
     wait,
     hold_posture,
     exit_gracefully,
-    assess,
+    assess_internal,
+    assess_external,
+    sit_down,
+    observe_environment,
+    find_group_of_people,
+    interested_in,
+    reduce_distance_to,
+    show_interest_and_wait,
+    willing_to_continue,
+    flow,
+    observe,
+    choose,
 )
 
 from social_script.phrases import (
@@ -15,6 +26,13 @@ from social_script.phrases import (
     hold,
     response,
     boundary,
+    phrase,
+    question,
+)
+
+from social_script.external_actions import (
+    Activity,
+    activity,
 )
 
 from social_script.states import (
@@ -23,6 +41,16 @@ from social_script.states import (
     tension,
     excitement,
     hesitation,
+    readiness_for_interaction,
+    tiredness,
+)
+
+from social_script.environment import (
+    Person,
+    Group,
+    Distance,
+    distance_of,
+    me,
 )
 
 from social_script.exceptions import (
@@ -38,19 +66,43 @@ __all__ = [
     "wait",
     "hold_posture",
     "exit_gracefully",
-    "assess",
+    "assess_internal",
+    "assess_external",
+    "sit_down",
+    "observe_environment",
+    "find_group_of_people",
+    "interested_in",
+    "reduce_distance_to",
+    "show_interest_and_wait",
+    "willing_to_continue",
+    "flow",
+    "observe",
+    "choose",
     # phrase categories
     "greeting",
     "exit",
     "hold",
     "response",
     "boundary",
+    "phrase",
+    "question",
+    # external activity
+    "Activity",
+    "activity",
     # inner states
     "fear",
     "calm",
     "tension",
     "excitement",
     "hesitation",
+    "readiness_for_interaction",
+    "tiredness",
+    # environment
+    "Person",
+    "Group",
+    "Distance",
+    "distance_of",
+    "me",
     # exceptions
     "FearTooHigh",
     "TensionTooHigh",
