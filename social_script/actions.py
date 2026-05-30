@@ -1,6 +1,7 @@
 """Action verbs for executing social scripts – what the body, mind, and voice do."""
 
 from enum import Enum
+from social_script.phrases import Phrase
 
 
 def anchor() -> None:
@@ -10,7 +11,8 @@ def anchor() -> None:
 
 def say(p) -> None:
     """Deliver a phrase out loud."""
-    input(f"[ say ]     {p}  — press Enter when said ")
+    label = str(p) if isinstance(p, Phrase) and p.instruction else f"Say: '{p}'"
+    input(f"[ say ]     {label}  — press Enter when said ")
 
 
 def wait() -> None:

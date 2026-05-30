@@ -1,3 +1,4 @@
+import random
 from social_script import *
 
 
@@ -45,18 +46,27 @@ def think_of_question(topic):
 
 
 def catch_game(group):
-    # figure out which game they're playing
-    return "a game"
+    raw = input("[ observe ] Can you tell what game they're playing? (y/n) ").strip().lower()
+    return raw == "y"
 
 
 def assert_knowledge(subject):
-    # check whether you know this subject well enough to engage
-    return False
+    raw = input("[ think ]   Do you know this game well enough to join? (y/n) ").strip().lower()
+    return raw == "y"
 
 
 def random_question():
-    # fall back to a general icebreaker
-    return question("What brings you here?")
+    options = [
+        "What's the most random skill among you all?",
+        "What's something your group is weirdly proud of?",
+        "What would you all be doing right now if you weren't here?",
+        "What's the most controversial opinion in your group about something completely unimportant?",
+        "If your group had a theme song, what would it be?",
+        "What's the last thing that had all of you laughing?",
+        "Who in your group would surprise people the most?",
+        "If you all had to eat one thing forever, could you even agree on what?",
+    ]
+    return question(random.choice(options))
 
 
 # --- main flow ---
@@ -81,11 +91,13 @@ else:
         reduce_distance_to(group)
 
     keep_trying = True
-    while fear_level > 5 and keep_trying:
+    while keep_trying:
         reaction = show_interest_and_wait()
         if reaction:
             break
         fear_level = assess_internal(fear)
+        if fear_level <= 5:
+            break
         keep_trying = willing_to_continue()
 
     if reaction:
