@@ -42,6 +42,11 @@ class StepResponse(BaseModel):
     error: Optional[str] = None
 
 
+@app.get("/")
+def root():
+    return {}
+
+
 @app.get("/scripts")
 def list_scripts():
     return [p.stem for p in sorted(SCRIPTS_DIR.glob("*.py"))]
