@@ -1,0 +1,34 @@
+:root {
+  --bg: #f5f0e8;
+  --fg: #1a1a1a;
+  --muted: #8a8480;
+  --accent: #b5600a;
+  --border: #d8d0c4;
+  --zone-yes: #eae4da;
+  --zone-no: #ddd8cf;
+  --radius: 6px;
+  --font: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}

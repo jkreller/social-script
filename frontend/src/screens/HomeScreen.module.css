@@ -1,0 +1,64 @@
+.root {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.header {
+  padding: 48px 32px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.list {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.item:active {
+  background: var(--border);
+}
+
+.itemName {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statusText {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.errorText {
+  font-size: 14px;
+  color: var(--accent);
+}

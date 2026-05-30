@@ -44,13 +44,7 @@ run.py                  # convenience entry point for running scripts from the C
 ## Running a script
 
 ```bash
-python run.py
-```
-
-Or run a script file directly:
-
-```bash
-python scripts/connect_group.py
+python run.py connect_group.py
 ```
 
 ---
