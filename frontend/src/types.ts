@@ -24,3 +24,10 @@ export interface RunnerState {
   currentPrompt: Prompt | null
   done: boolean
 }
+
+export interface LogEntry {
+  timestamp: number
+  stepIndex: number
+  prompt: Prompt
+  answer: string
+}

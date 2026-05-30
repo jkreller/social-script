@@ -33,3 +33,20 @@
   color: var(--muted);
   margin-top: 8px;
 }
+
+.downloadBtn {
+  margin-top: 24px;
+  padding: 12px 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.downloadBtn:active {
+  background: var(--border);
+}

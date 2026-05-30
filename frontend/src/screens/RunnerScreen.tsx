@@ -10,7 +10,7 @@ import styles from './RunnerScreen.module.css'
 interface Props {
   script: string
   answers: string[]
-  onAnswer: (value: string) => void
+  onAnswer: (value: string, prompt: Prompt) => void
   onDone: () => void
   onExit: () => void
 }
@@ -58,7 +58,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
   }, [answers])
 
   const handleSubmit = (value: string) => {
-    onAnswer(value)
+    if (prompt) onAnswer(value, prompt)
   }
 
   const handleRetry = () => {

@@ -7,13 +7,15 @@ function formatName(s: string): string {
 }
 
 interface Props {
-  onPick: (script: string) => void
+  onPick: (script: string, userName: string) => void
 }
 
 export default function HomeScreen({ onPick }: Props) {
   const [scripts, setScripts] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userName, setUserName] = useState('')
+  const [pendingScript, setPendingScript] = useState<string | null>(null)
 
   useEffect(() => {
     getScripts()
@@ -21,6 +23,17 @@ export default function HomeScreen({ onPick }: Props) {
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
   }, [])
+
+  const closeModal = () => {
+    setPendingScript(null)
+    setUserName('')
+  }
+
+  const confirmStart = () => {
+    if (pendingScript && userName.trim()) {
+      onPick(pendingScript, userName.trim())
+    }
+  }
 
   return (
     <div className={styles.root}>
@@ -47,11 +60,36 @@ export default function HomeScreen({ onPick }: Props) {
               key={name}
               className={styles.item}
               role="button"
-              onPointerDown={() => onPick(name)}
+              onPointerDown={() => setPendingScript(name)}
             >
               <span className={styles.itemName}>{formatName(name)}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {pendingScript !== null && (
+        <div className={styles.overlay} onPointerDown={closeModal}>
+          <div className={styles.modal} onPointerDown={e => e.stopPropagation()}>
+            <span className={styles.modalLabel}>your name</span>
+            <input
+              className={styles.nameInput}
+              type="text"
+              placeholder="enter name"
+              value={userName}
+              autoFocus
+              maxLength={80}
+              onChange={e => setUserName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') confirmStart() }}
+            />
+            <button
+              className={styles.confirmBtn}
+              disabled={!userName.trim()}
+              onPointerDown={confirmStart}
+            >
+              Start
+            </button>
+          </div>
         </div>
       )}
     </div>
