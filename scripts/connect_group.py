@@ -17,7 +17,7 @@ def initialize_approach_with(group):
             ]))
         case Activity.gaming:
             game = catch_game(group)
-            if assert_knowledge(game):
+            if game and assert_knowledge(game):
                 return question("Can I join you?")
             else:
                 return question("What do you play?")
@@ -34,24 +34,24 @@ def approach(opener):
 
 def catch_conversation_topic(group):
     # can you make out what they're talking about?
-    raw = input("[ listen ]  Can you catch their topic? (y/n) ").strip().lower()
+    raw = io_read("Can you catch their topic?", headline="listen", input_type=InputType.yn).strip().lower()
     return raw == "y"
 
 
 def think_of_question(topic):
-    raw = input("[ think ]   Think of a question about the topic. Do you have any? (y/n) ").strip().lower()
+    raw = io_read("Think of a question about the topic. Do you have any?", headline="think", input_type=InputType.yn).strip().lower()
     if raw == "y":
         return question(instruction="Ask the question you have in mind")
     return None
 
 
 def catch_game(group):
-    raw = input("[ observe ] Can you tell what game they're playing? (y/n) ").strip().lower()
+    raw = io_read("Can you tell what game they're playing?", headline="observe", input_type=InputType.yn).strip().lower()
     return raw == "y"
 
 
 def assert_knowledge(subject):
-    raw = input("[ think ]   Do you know this game well enough to join? (y/n) ").strip().lower()
+    raw = io_read("Do you know this game well enough to join?", headline="think", input_type=InputType.yn).strip().lower()
     return raw == "y"
 
 

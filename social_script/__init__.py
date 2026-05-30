@@ -1,5 +1,17 @@
 """Social Script – a Python framework for writing human-executable social scripts."""
 
+from social_script._internal.driver import (
+    io_read,
+    io_write,
+    get_driver,
+    set_driver,
+    clear_driver,
+    CLIDriver,
+    ReplayDriver,
+    NeedInput,
+    InputType,
+)
+
 from social_script.actions import (
     anchor,
     say,
@@ -60,6 +72,16 @@ from social_script.exceptions import (
 )
 
 __all__ = [
+    # driver I/O (available in scripts via `from social_script import *`)
+    "io_read",
+    "io_write",
+    "get_driver",
+    "set_driver",
+    "clear_driver",
+    "CLIDriver",
+    "ReplayDriver",
+    "NeedInput",
+    "InputType",
     # actions
     "anchor",
     "say",

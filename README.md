@@ -16,13 +16,53 @@ step by step, with real control flow, but executed by a human body and mind.
 ## Project Structure
 
 ```
-social_script/
+social_script/          # core package — import with `from social_script import *`
 ├── __init__.py         # single import entry point
-├── stdlib.py           # built-in functions: anchor(), say(), wait(), ...
-├── phrases.py          # phrase library: greeting.neutral, exit.soft, ...
-└── scripts/            # your scripts go here
-    └── example.py
+├── actions.py          # action verbs: anchor(), say(), observe(), choose(), …
+├── phrases.py          # phrase library: greeting.neutral, exit.soft, …
+├── states.py           # inner states: fear, calm, tension, …
+├── environment.py      # environment types: Person, Group, Distance, …
+├── external_actions.py # activity() and Activity enum
+├── exceptions.py       # FearTooHigh, TensionTooHigh, HesitationTooHigh
+└── _internal/
+    └── driver.py       # I/O abstraction (CLIDriver / ReplayDriver)
+
+scripts/                # the actual scripts — run these, not the package
+└── connect_group.py
+
+api/                    # stateless FastAPI server for running scripts over HTTP
+├── main.py
+├── requirements.txt
+└── README.md           # API docs
+
+sketches/               # rough drafts and planning notes
+run.py                  # convenience entry point for running scripts from the CLI
 ```
+
+---
+
+## Running a script
+
+```bash
+python run.py
+```
+
+Or run a script file directly:
+
+```bash
+python scripts/connect_group.py
+```
+
+---
+
+## Running the API server
+
+```bash
+pip install -r api/requirements.txt
+python -m uvicorn api.main:app --reload
+```
+
+See [`api/README.md`](api/README.md) for endpoint docs.
 
 ---
 
@@ -87,7 +127,7 @@ Inner state is assessed intuitively, not measured precisely.
 
 ```python
 # correct
-fear_level = assess(fear)
+fear_level = assess_internal(fear)
 if fear_level > threshold:
     anchor()
 
@@ -110,7 +150,7 @@ anchor()  # calls the anchor() function
 
 ### 7. Silence is valid
 
-`wait()` and `hold_posture()` (or similar actions) are real instructions.  
+`wait()` and `hold_posture()` are real instructions.  
 Pauses and stillness are not placeholders – they are actions.
 
 ---
@@ -120,14 +160,13 @@ Pauses and stillness are not placeholders – they are actions.
 Phrases are organized as `category.name`:
 
 ```python
-phrases:
-    greeting.neutral
-    greeting.warm
-    exit.soft
-    exit.abort
-    hold.silence
-    response.acknowledgment
-    boundary.soft
+greeting.neutral
+greeting.warm
+exit.soft
+exit.abort
+hold.silence
+response.acknowledgment
+boundary.soft
 ```
 
 Access in scripts: `say(greeting.neutral)`
