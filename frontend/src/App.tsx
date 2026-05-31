@@ -12,29 +12,38 @@ export default function App() {
   const [script, setScript] = useState('')
   const [answers, setAnswers] = useState<string[]>([])
   const [userName, setUserName] = useState('')
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [finishTime, setFinishTime] = useState<number | null>(null)
   const [log, setLog] = useState<LogEntry[]>([])
 
   const handlePick = useCallback((name: string, user: string) => {
     setScript(name)
     setUserName(user)
     setAnswers([])
-    setLog([])
-    setStartTime(Date.now())
-    setFinishTime(null)
+    setLog([{ type: 'start', timestamp: Date.now() }])
     setScreen('running')
   }, [])
 
-  const handleAnswer = useCallback((value: string, prompt: Prompt, decision?: 'continue' | 'stop') => {
-    setAnswers(prev => {
-      setLog(l => [...l, { timestamp: Date.now(), stepIndex: prev.length, prompt, answer: value, decision }])
-      return [...prev, value]
-    })
+  const handleStepShow = useCallback((stepIndex: number, prompt: Prompt) => {
+    setLog(l => [...l, { type: 'step_show', timestamp: Date.now(), stepIndex, prompt }])
+  }, [])
+
+  const handleAnswer = useCallback((value: string, prompt: Prompt, stepIndex: number) => {
+    setLog(l => [...l, { type: 'step_answer', timestamp: Date.now(), stepIndex, prompt, answer: value }])
+    setAnswers(prev => [...prev, value])
+  }, [])
+
+  const handleExceptionSelect = useCallback((name: string, label: string) => {
+    setLog(l => [...l, { type: 'exception_select', timestamp: Date.now(), exceptionName: name, exceptionLabel: label }])
+  }, [])
+
+  const handleException = useCallback((name: string, label: string, note: string, decision: 'continue' | 'stop', exceptionStr: string) => {
+    setLog(l => [...l, { type: 'exception', timestamp: Date.now(), exceptionName: name, exceptionLabel: label, note, decision }])
+    if (decision === 'continue') {
+      setAnswers(prev => [...prev, exceptionStr])
+    }
   }, [])
 
   const handleDone = useCallback(() => {
-    setFinishTime(Date.now())
+    setLog(l => [...l, { type: 'finish', timestamp: Date.now() }])
     setScreen('done')
   }, [])
 
@@ -42,25 +51,14 @@ export default function App() {
     setAnswers(prev => prev.slice(0, -1))
   }, [])
 
-  const handleExceptionStop = useCallback((value: string, prompt: Prompt) => {
-    setAnswers(prev => {
-      setLog(l => [...l, { timestamp: Date.now(), stepIndex: prev.length, prompt, answer: value, decision: 'stop' }])
-      return prev
-    })
-  }, [])
-
   const handleExit = useCallback(() => {
     setUserName('')
-    setStartTime(null)
-    setFinishTime(null)
     setLog([])
     setScreen('home')
   }, [])
 
   const handleRestart = useCallback(() => {
     setUserName('')
-    setStartTime(null)
-    setFinishTime(null)
     setLog([])
     setScreen('home')
   }, [])
@@ -81,7 +79,9 @@ export default function App() {
             onDone={handleDone}
             onExit={handleExit}
             onRollback={handleRollback}
-            onExceptionStop={handleExceptionStop}
+            onStepShow={handleStepShow}
+            onExceptionSelect={handleExceptionSelect}
+            onException={handleException}
           />
         </div>
       )}
@@ -90,8 +90,6 @@ export default function App() {
           <DoneScreen
             userName={userName}
             script={script}
-            startTime={startTime!}
-            finishTime={finishTime!}
             log={log}
             onRestart={handleRestart}
           />

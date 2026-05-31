@@ -1,10 +1,8 @@
-import type { LogEntry } from '../types'
+import type { LogEntry, Prompt } from '../types'
 
 interface Params {
   userName: string
   script: string
-  startTime: number
-  finishTime: number
   log: LogEntry[]
 }
 
@@ -20,8 +18,7 @@ function truncate(s: string): string {
   return s.length > 50 ? s.slice(0, 47) + '…' : s
 }
 
-function resolveAnswer(entry: LogEntry): string {
-  const { prompt, answer } = entry
+function resolveAnswer(prompt: Prompt, answer: string): string {
   if (prompt.input_type === 'enter') return '(continue)'
   if (prompt.input_type === 'yn') return answer === 'y' ? 'Yes' : 'No'
   if (prompt.input_type === 'choice' && prompt.choices) {
@@ -32,7 +29,10 @@ function resolveAnswer(entry: LogEntry): string {
   return answer
 }
 
-export function downloadLog({ userName, script, startTime, finishTime, log }: Params): void {
+export function downloadLog({ userName, script, log }: Params): void {
+  const startTime = log.find(e => e.type === 'start')?.timestamp ?? Date.now()
+  const finishTime = log.findLast(e => e.type === 'finish')?.timestamp ?? Date.now()
+
   const lines: string[] = [
     'Social Script Session Log',
     '=========================',
@@ -45,40 +45,36 @@ export function downloadLog({ userName, script, startTime, finishTime, log }: Pa
     '',
   ]
 
-  let lineNum = 1
-  let prevTimestamp = startTime
-
   for (const entry of log) {
     const elapsed = formatElapsed(entry.timestamp - startTime)
 
-    if (entry.decision === 'continue') {
-      const s1 = String(lineNum).padStart(2, ' ')
-      const s2 = String(lineNum + 1).padStart(2, ' ')
+    if (entry.type === 'start') {
+      lines.push(`[${elapsed}]  START`)
+
+    } else if (entry.type === 'step_show') {
+      const s = String(entry.stepIndex + 1).padStart(2, ' ')
       const type = entry.prompt.input_type.padEnd(9, ' ')
       const text = truncate(entry.prompt.text)
-      const normal = entry.prompt.input_type === 'enter' ? '(continue)' : '(interrupted)'
-      const exc = truncate(entry.answer)
-      const elapsed1 = formatElapsed(prevTimestamp - startTime)
-      lines.push(`[${elapsed1}]  Step ${s1}  |  ${type}  |  "${text}"  →  ${normal}`)
-      lines.push(`[${elapsed}]  Step ${s2}  |  exception  |  "${exc}"  →  (continue)`)
-      lineNum += 2
+      lines.push(`[${elapsed}]  Step ${s} appeared  |  ${type}  |  "${text}"`)
 
-    } else if (entry.decision === 'stop') {
-      const s = String(lineNum).padStart(2, ' ')
-      const exc = truncate(entry.answer)
-      lines.push(`[${elapsed}]  Step ${s}  |  exception  |  "${exc}"  →  (stop)`)
-      lineNum += 1
-
-    } else {
-      const s = String(lineNum).padStart(2, ' ')
+    } else if (entry.type === 'step_answer') {
+      const s = String(entry.stepIndex + 1).padStart(2, ' ')
       const type = entry.prompt.input_type.padEnd(9, ' ')
       const text = truncate(entry.prompt.text)
-      const answer = resolveAnswer(entry)
-      lines.push(`[${elapsed}]  Step ${s}  |  ${type}  |  "${text}"  →  ${answer}`)
-      lineNum += 1
+      const answer = resolveAnswer(entry.prompt, entry.answer)
+      lines.push(`[${elapsed}]  Step ${s} answered  |  ${type}  |  "${text}"  →  ${answer}`)
+
+    } else if (entry.type === 'exception_select') {
+      const label = truncate(entry.exceptionLabel)
+      lines.push(`[${elapsed}]  Exception selected: ${entry.exceptionName}  |  exception  |  "${label}"`)
+
+    } else if (entry.type === 'exception') {
+      const noteStr = truncate(entry.note)
+      lines.push(`[${elapsed}]  Exception raised: ${entry.exceptionName}  |  exception  |  "${noteStr}"  →  (${entry.decision})`)
+
+    } else if (entry.type === 'finish') {
+      lines.push(`[${elapsed}]  DONE`)
     }
-
-    prevTimestamp = entry.timestamp
   }
 
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })

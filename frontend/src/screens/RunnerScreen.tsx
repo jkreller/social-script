@@ -11,14 +11,16 @@ import styles from './RunnerScreen.module.css'
 interface Props {
   script: string
   answers: string[]
-  onAnswer: (value: string, prompt: Prompt, decision?: 'continue' | 'stop') => void
+  onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
   onDone: () => void
   onExit: () => void
   onRollback: () => void
-  onExceptionStop: (value: string, prompt: Prompt) => void
+  onStepShow: (stepIndex: number, prompt: Prompt) => void
+  onExceptionSelect: (name: string, label: string) => void
+  onException: (name: string, label: string, note: string, decision: 'continue' | 'stop', exceptionStr: string) => void
 }
 
-export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit, onRollback, onExceptionStop }: Props) {
+export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -65,6 +67,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
         setPrompt(res.prompt)
         setPromptKey(k => k + 1)
         setLoading(false)
+        onStepShow(answers.length, res.prompt!)
       })
       .catch(err => {
         if (ctrl.signal.aborted) return
@@ -83,7 +86,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
   }, [uncaught, onRollback])
 
   const handleSubmit = (value: string) => {
-    if (prompt) onAnswer(value, prompt)
+    if (prompt) onAnswer(value, prompt, answers.length)
   }
 
   const handleRetry = () => {
@@ -102,6 +105,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
         setPrompt(res.prompt)
         setPromptKey(k => k + 1)
         setLoading(false)
+        onStepShow(answers.length, res.prompt!)
       })
       .catch(err => {
         if (ctrl.signal.aborted) return
@@ -118,7 +122,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
 
   const raise = () => {
     if (!selected || !prompt) return
-    onAnswer(exceptionString(), prompt, 'continue')
+    onException(selected.name, selected.label, note, 'continue', exceptionString())
     setShowException(false)
     setSelected(null)
     setNote('')
@@ -126,7 +130,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
 
   const stop = () => {
     if (!selected || !prompt) return
-    onExceptionStop(exceptionString(), prompt)
+    onException(selected.name, selected.label, note, 'stop', '')
     closeException()
     onDone()
   }
@@ -209,7 +213,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
                     key={exc.name}
                     className={styles.exceptionRow}
                     role="button"
-                    onPointerDown={() => setSelected(exc)}
+                    onPointerDown={() => { setSelected(exc); onExceptionSelect(exc.name, exc.label) }}
                   >
                     {exc.label}
                   </div>

@@ -37,10 +37,10 @@ export interface RunnerState {
   done: boolean
 }
 
-export interface LogEntry {
-  timestamp: number
-  stepIndex: number
-  prompt: Prompt
-  answer: string
-  decision?: 'continue' | 'stop'
-}
+export type LogEntry =
+  | { type: 'start';            timestamp: number }
+  | { type: 'step_show';        timestamp: number; stepIndex: number; prompt: Prompt }
+  | { type: 'step_answer';      timestamp: number; stepIndex: number; prompt: Prompt; answer: string }
+  | { type: 'exception_select'; timestamp: number; exceptionName: string; exceptionLabel: string }
+  | { type: 'exception';        timestamp: number; exceptionName: string; exceptionLabel: string; note: string; decision: 'continue' | 'stop' }
+  | { type: 'finish';           timestamp: number }
