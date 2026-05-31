@@ -27,7 +27,13 @@ def initialize_approach_with(group):
 
 def approach(opener):
     # say the opener, then hold space for their response
-    say(opener)
+    try:
+        say(opener)
+    except FearTooHigh:
+        breath_in_out(3)
+        approach(opener)
+        return
+
     hold_posture()
     flow()
 

@@ -23,7 +23,7 @@ social_script/          # core package — import with `from social_script impor
 ├── states.py           # inner states: fear, calm, tension, …
 ├── environment.py      # environment types: Person, Group, Distance, …
 ├── external_actions.py # activity() and Activity enum
-├── exceptions.py       # FearTooHigh, TensionTooHigh, HesitationTooHigh
+├── exceptions.py       # AnyException (base), FearTooHigh, UnexpectedReaction, …
 └── _internal/
     └── driver.py       # I/O abstraction (CLIDriver / ReplayDriver)
 
@@ -55,6 +55,10 @@ python run.py connect_group.py
 pip install -r api/requirements.txt
 python -m uvicorn api.main:app --reload
 ```
+
+The API server is stateless — it has no persistent state between requests. Each `/step` call re-runs the script from the beginning with all answers collected so far. The script is deterministic: given the same answers it always follows the same path, so re-running it just fast-forwards to the next unanswered prompt.
+
+`run.py` works on the same principle: it accumulates answers and drives the same stateless runner. The CLI additionally supports exception objects embedded in the `answers` list — when the user interrupts with Ctrl+C, the exception is stored at that position and injected back into the script's call stack on the next replay, so script-level exception handlers fire correctly.
 
 See [`api/README.md`](api/README.md) for endpoint docs.
 
@@ -175,6 +179,32 @@ Access in scripts: `say(greeting.neutral)`
 | Inner state assessment | Precise measurement or tracking |
 | Phrase-based communication | Dynamic text generation |
 | Social navigation flow | UI, networking, storage |
+
+---
+
+## Exceptions
+
+At any point during a script, the person executing it can raise an exception if something unexpected happens (Ctrl+C in CLI or button press on the web) — then they would:
+- Select a reason (meaning specific exceptions like `FearTooHigh` or `UnexpectedReaction`)
+- Add a message if they want
+- Choose whether to continue or stop.
+
+If a section does not handle exceptions, you don't need any try/except — unhandled exceptions are caught by the runner, which steps back to the interrupted action and lets the person continue from there.
+
+If you want specific recovery behavior for a particular exception, catch it explicitly:
+
+```python
+def approach(opener):
+    try:
+        say(opener)
+    except FearTooHigh:
+        breath_in_out(3)
+        approach(opener)
+        return
+
+    hold_posture()
+    flow()
+```
 
 ---
 

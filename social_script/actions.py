@@ -1,5 +1,6 @@
 """Action verbs for executing social scripts – what the body, mind, and voice do."""
 
+import random
 from enum import Enum
 from social_script._internal.driver import io_read, io_write, InputType
 from social_script.phrases import Phrase
@@ -8,6 +9,19 @@ from social_script.phrases import Phrase
 def anchor() -> None:
     """Ground the body before moving or speaking."""
     io_read("Feel your feet. Take a breath.", headline="anchor", input_type=InputType.enter)
+
+
+def breath_in_out(cycles: int = 1) -> None:
+    """Guide through a number of slow breath cycles."""
+    middle_cues = ["Another time:", "One more time:", "Again:"]
+    for i in range(cycles):
+        if i == 0:
+            cue = ""
+        elif i == cycles - 1:
+            cue = "One last time: "
+        else:
+            cue = random.choice(middle_cues) + " "
+        io_read(f"{cue}Breathe in... and out.", headline="breathe", input_type=InputType.enter)
 
 
 def say(p) -> None:

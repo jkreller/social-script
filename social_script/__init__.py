@@ -14,6 +14,7 @@ from social_script._internal.driver import (
 
 from social_script.actions import (
     anchor,
+    breath_in_out,
     say,
     wait,
     hold_posture,
@@ -66,9 +67,13 @@ from social_script.environment import (
 )
 
 from social_script.exceptions import (
+    AnyException,
     FearTooHigh,
-    TensionTooHigh,
-    HesitationTooHigh,
+    UnexpectedReaction,
+    RandomSituation,
+    SensoryOverload,
+    LostInterest,
+    ExternalReason,
 )
 
 __all__ = [
@@ -84,6 +89,7 @@ __all__ = [
     "InputType",
     # actions
     "anchor",
+    "breath_in_out",
     "say",
     "wait",
     "hold_posture",
@@ -126,7 +132,11 @@ __all__ = [
     "distance_of",
     "me",
     # exceptions
+    "AnyException",
     "FearTooHigh",
-    "TensionTooHigh",
-    "HesitationTooHigh",
+    "UnexpectedReaction",
+    "RandomSituation",
+    "SensoryOverload",
+    "LostInterest",
+    "ExternalReason",
 ]
