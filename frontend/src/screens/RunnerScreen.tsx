@@ -146,11 +146,11 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
   return (
     <div className={styles.root}>
       <div className={styles.topBar}>
-        <button className={styles.exitBtn} onPointerDown={() => setShowConfirm(true)} aria-label="Exit">
+        <button className={styles.exitBtn} onClick={() => setShowConfirm(true)} aria-label="Exit">
           ×
         </button>
         {interactive && (
-          <button className={styles.exceptionBtn} onPointerDown={() => setShowException(true)} aria-label="Raise exception">
+          <button className={styles.exceptionBtn} onClick={() => setShowException(true)} aria-label="Raise exception">
             ⚑
           </button>
         )}
@@ -159,7 +159,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
       {error ? (
         <div className={styles.errorState}>
           <span className={styles.errorText}>{error}</span>
-          <button className={btn.btnSecondary} onPointerDown={handleRetry}>Retry</button>
+          <button className={btn.btnSecondary} onClick={handleRetry}>Retry</button>
         </div>
       ) : uncaught ? (
         <div className={styles.uncaughtNotice}>
@@ -192,10 +192,10 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
         <div className={styles.confirmModal}>
           <span className={styles.confirmText}>Abandon this script?</span>
           <div className={styles.confirmActions}>
-            <button className={btn.btnSecondary} onPointerDown={() => setShowConfirm(false)}>
+            <button className={btn.btnSecondary} onClick={() => setShowConfirm(false)}>
               Keep going
             </button>
-            <button className={`${btn.btnSecondary} ${styles.danger}`} onPointerDown={onExit}>
+            <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={onExit}>
               Quit
             </button>
           </div>
@@ -213,13 +213,13 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
                     key={exc.name}
                     className={styles.exceptionRow}
                     role="button"
-                    onPointerDown={() => { setSelected(exc); onExceptionSelect(exc.name, exc.label) }}
+                    onClick={() => { setSelected(exc); onExceptionSelect(exc.name, exc.label) }}
                   >
                     {exc.label}
                   </div>
                 ))}
               </div>
-              <button className={styles.cancelBtn} onPointerDown={closeException}>
+              <button className={styles.cancelBtn} onClick={closeException}>
                 cancel
               </button>
             </>
@@ -237,14 +237,14 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
                 onKeyDown={e => { if (e.key === 'Enter') raise() }}
               />
               <div className={styles.confirmActions}>
-                <button className={`${btn.btnSecondary} ${styles.danger}`} onPointerDown={stop}>
+                <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={stop}>
                   stop
                 </button>
-                <button className={btn.btnSecondary} onPointerDown={raise}>
+                <button className={btn.btnSecondary} onClick={raise}>
                   continue
                 </button>
               </div>
-              <button className={styles.cancelBtn} onPointerDown={() => setSelected(null)}>
+              <button className={styles.cancelBtn} onClick={() => setSelected(null)}>
                 back
               </button>
             </>

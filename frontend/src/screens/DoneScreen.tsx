@@ -17,11 +17,11 @@ export default function DoneScreen({ userName, script, log, onRestart }: Props) 
       <span className={styles.message}>Script finished.</span>
       <button
         className={btn.btnPrimary}
-        onPointerDown={() => downloadLog({ userName, script, log })}
+        onClick={() => downloadLog({ userName, script, log })}
       >
         Download Log
       </button>
-      <button className={btn.btnSecondary} onPointerDown={onRestart}>
+      <button className={btn.btnSecondary} onClick={onRestart}>
         Return Home
       </button>
     </div>

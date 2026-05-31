@@ -20,7 +20,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
       <div
         className={`${styles.zone} ${styles.zoneYes} ${flashing === 'y' ? styles.flash : ''}`}
         role="button"
-        onPointerDown={() => handleTap('y')}
+        onClick={() => handleTap('y')}
       >
         <span className={styles.label}>Yes</span>
         {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
@@ -31,7 +31,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
       <div
         className={`${styles.zone} ${styles.zoneNo} ${flashing === 'n' ? styles.flash : ''}`}
         role="button"
-        onPointerDown={() => handleTap('n')}
+        onClick={() => handleTap('n')}
       >
         <span className={styles.label}>No</span>
       </div>

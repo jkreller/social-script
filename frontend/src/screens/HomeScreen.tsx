@@ -61,7 +61,7 @@ export default function HomeScreen({ onPick }: Props) {
               key={name}
               className={styles.item}
               role="button"
-              onPointerDown={() => setPendingScript(name)}
+              onClick={() => setPendingScript(name)}
             >
               <span className={styles.itemName}>{formatName(name)}</span>
             </div>
@@ -70,8 +70,8 @@ export default function HomeScreen({ onPick }: Props) {
       )}
 
       {pendingScript !== null && (
-        <div className={styles.overlay} onPointerDown={closeModal}>
-          <div className={styles.modal} onPointerDown={e => e.stopPropagation()}>
+        <div className={styles.overlay} onClick={closeModal}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <span className={styles.modalLabel}>your name</span>
             <input
               className={styles.nameInput}
@@ -86,7 +86,7 @@ export default function HomeScreen({ onPick }: Props) {
             <button
               className={`${btn.btnSecondary} ${styles.confirmBtn}`}
               disabled={!userName.trim()}
-              onPointerDown={confirmStart}
+              onClick={confirmStart}
             >
               Start
             </button>

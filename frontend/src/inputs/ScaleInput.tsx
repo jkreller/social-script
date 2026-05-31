@@ -93,7 +93,7 @@ export default function ScaleInput({ prompt, onSubmit }: Props) {
 
       <button
         className={`${styles.confirmBtn} ${!interacted ? styles.hidden : ''}`}
-        onPointerDown={() => onSubmit(String(value))}
+        onClick={() => onSubmit(String(value))}
       >
         Confirm
       </button>

@@ -37,7 +37,7 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
               key={globalIndex}
               className={`${styles.choice} ${isSelected ? styles.selected : ''}`}
               role="button"
-              onPointerDown={() => handleTap(globalIndex)}
+              onClick={() => handleTap(globalIndex)}
             >
               <span className={styles.choiceText}>{text}</span>
             </div>
@@ -50,7 +50,7 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
           <button
             className={styles.pageBtn}
             disabled={page === 0}
-            onPointerDown={() => setPage(p => p - 1)}
+            onClick={() => setPage(p => p - 1)}
           >
             ← prev
           </button>
@@ -58,7 +58,7 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
           <button
             className={styles.pageBtn}
             disabled={page === totalPages - 1}
-            onPointerDown={() => setPage(p => p + 1)}
+            onClick={() => setPage(p => p + 1)}
           >
             next →
           </button>
