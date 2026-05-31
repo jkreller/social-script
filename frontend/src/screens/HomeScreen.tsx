@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getScripts } from '../api'
+import btn from '../styles/buttons.module.css'
 import styles from './HomeScreen.module.css'
 
 function formatName(s: string): string {
@@ -83,7 +84,7 @@ export default function HomeScreen({ onPick }: Props) {
               onKeyDown={e => { if (e.key === 'Enter') confirmStart() }}
             />
             <button
-              className={styles.confirmBtn}
+              className={`${btn.btnSecondary} ${styles.confirmBtn}`}
               disabled={!userName.trim()}
               onPointerDown={confirmStart}
             >

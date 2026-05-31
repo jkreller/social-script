@@ -112,21 +112,9 @@
 .confirmBtn {
   align-self: flex-end;
   padding: 10px 28px;
-  background: transparent;
-  border: 1px solid var(--border);
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--fg);
-  cursor: pointer;
 }
 
 .confirmBtn:disabled {
   opacity: 0.35;
   cursor: default;
-}
-
-.confirmBtn:not(:disabled):active {
-  background: var(--border);
 }

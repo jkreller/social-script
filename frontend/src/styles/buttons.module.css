@@ -1,0 +1,33 @@
+.btnPrimary {
+  padding: 12px 32px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  background: var(--fg);
+  color: var(--bg);
+  border: none;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.btnPrimary:active {
+  opacity: 0.75;
+}
+
+.btnSecondary {
+  padding: 12px 32px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.btnSecondary:active {
+  background: var(--border);
+}

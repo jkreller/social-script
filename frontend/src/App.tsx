@@ -26,9 +26,9 @@ export default function App() {
     setScreen('running')
   }, [])
 
-  const handleAnswer = useCallback((value: string, prompt: Prompt) => {
+  const handleAnswer = useCallback((value: string, prompt: Prompt, decision?: 'continue' | 'stop') => {
     setAnswers(prev => {
-      setLog(l => [...l, { timestamp: Date.now(), stepIndex: prev.length, prompt, answer: value }])
+      setLog(l => [...l, { timestamp: Date.now(), stepIndex: prev.length, prompt, answer: value, decision }])
       return [...prev, value]
     })
   }, [])
@@ -36,6 +36,17 @@ export default function App() {
   const handleDone = useCallback(() => {
     setFinishTime(Date.now())
     setScreen('done')
+  }, [])
+
+  const handleRollback = useCallback(() => {
+    setAnswers(prev => prev.slice(0, -1))
+  }, [])
+
+  const handleExceptionStop = useCallback((value: string, prompt: Prompt) => {
+    setAnswers(prev => {
+      setLog(l => [...l, { timestamp: Date.now(), stepIndex: prev.length, prompt, answer: value, decision: 'stop' }])
+      return prev
+    })
   }, [])
 
   const handleExit = useCallback(() => {
@@ -69,6 +80,8 @@ export default function App() {
             onAnswer={handleAnswer}
             onDone={handleDone}
             onExit={handleExit}
+            onRollback={handleRollback}
+            onExceptionStop={handleExceptionStop}
           />
         </div>
       )}

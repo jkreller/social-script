@@ -46,3 +46,25 @@ npm run preview # locally preview the production build
 - **Android**: Open in Chrome → three-dot menu → Add to Home Screen (or the install prompt)
 
 Once installed, the app runs in `standalone` mode: fullscreen, no browser chrome.
+
+## Architecture notes
+
+- **`App.tsx`** — state machine `home → running → done`. Owns all session state: `answers[]`, `log[]`, `userName`, `startTime`, `finishTime`.
+- **`RunnerScreen`** — drives the `POST /step` loop. One `AbortController` per request prevents stale responses. `onAnswer(value, prompt)` bubbles to App.
+- **`api.ts`** — `getScripts()` and `postStep()`. Base URL from `VITE_API_URL`, defaults to `http://localhost:8000`.
+- **`types.ts`** — includes `LogEntry { timestamp, stepIndex, prompt, answer }` collected per answer and passed to `DoneScreen` for download.
+- **`src/utils/downloadLog.ts`** — called by `DoneScreen`; generates a downloadable log from `{ userName, script, startTime, finishTime, log }`.
+
+## UI rules
+
+The app is a calm field instrument. Keep it that way.
+
+- `height: 100dvh`, `overflow: hidden` on root — no scroll, ever
+- Light theme only: `--bg #f5f0e8`, `--fg #1a1a1a`, `--accent #b5600a` — accent used **only** for active states and headline labels
+- Font: JetBrains Mono (Google Fonts, loaded in `index.html`)
+- No UI libraries, no Tailwind — plain CSS modules only
+- Touch-first — no hover dependencies
+- No gradients, no decorations, transitions 150–250ms
+- `onPointerDown` not `onClick`
+- New UI must feel like it was always there — mirror existing patterns, never add on
+- Simple and minimal in both UI and code — less is more, reuse what's there

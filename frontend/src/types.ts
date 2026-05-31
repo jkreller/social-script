@@ -12,10 +12,22 @@ export interface StepRequest {
   answers: string[]
 }
 
+export interface ExceptionType {
+  name: string
+  label: string
+}
+
+export interface ExceptionInfo {
+  name: string
+  label: string
+  note: string
+}
+
 export interface StepResponse {
   prompt: Prompt | null
   done: boolean
   error: string | null
+  exception: ExceptionInfo | null
 }
 
 export interface RunnerState {
@@ -30,4 +42,5 @@ export interface LogEntry {
   stepIndex: number
   prompt: Prompt
   answer: string
+  decision?: 'continue' | 'stop'
 }
