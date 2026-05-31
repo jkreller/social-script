@@ -20,6 +20,21 @@ Returns a list of available script names (stems of `.py` files in `scripts/`).
 ["connect_group"]
 ```
 
+### `GET /exceptions`
+Returns all exception types a user can raise to interrupt a script.
+
+```json
+[
+  { "name": "FearTooHigh",        "label": "Fear was too high" },
+  { "name": "UnexpectedReaction", "label": "Unexpected reaction — felt unsafe or overwhelmed" },
+  { "name": "RandomSituation",    "label": "Random unexpected situation" },
+  { "name": "SensoryOverload",    "label": "Exhaustion or sensory overload" },
+  { "name": "LostInterest",       "label": "Lost interest / not feeling it today" },
+  { "name": "ExternalReason",     "label": "Had to leave — external reason" },
+  { "name": "AnyException",       "label": "Other" }
+]
+```
+
 ### `POST /step`
 Advances a script by one step. The client holds all session state — no server-side storage.
 
@@ -34,7 +49,9 @@ Advances a script by one step. The client holds all session state — no server-
 | Field | Type | Description |
 |---|---|---|
 | `script` | string | Script name (from `GET /scripts`) |
-| `answers` | string[] | All answers submitted so far, oldest first. Send `[]` to start. |
+| `answers` | string[] | All answers and exceptions so far, oldest first. Send `[]` to start. |
+
+Answers are plain strings. To inject a script exception at a position, use the format `"ExceptionName(optional note)"`, e.g. `"FearTooHigh(was too much)"` or `"FearTooHigh()"`. See [Raising exceptions](#raising-exceptions) below.
 
 **Response**
 ```json
@@ -46,19 +63,24 @@ Advances a script by one step. The client holds all session state — no server-
     "choices": null
   },
   "done": false,
-  "error": null
+  "error": null,
+  "exception": null
 }
 ```
 
 | Field | Type | Description |
 |---|---|---|
-| `prompt` | object \| null | The next prompt waiting for the user's input. `null` when done. |
+| `prompt` | object \| null | The next prompt waiting for the user's input. `null` when done or when an exception occurred. |
 | `prompt.headline` | string \| null | The action tag (e.g. `"assess"`, `"listen"`, `"signal"`) |
 | `prompt.text` | string | The question or instruction to show the user |
 | `prompt.input_type` | string | One of `"enter"`, `"yn"`, `"scale"`, `"choice"` |
 | `prompt.choices` | string[] \| null | Option labels for `"choice"` type; `null` otherwise |
 | `done` | bool | `true` when the script has finished |
-| `error` | string \| null | Set if the script raised an unhandled exception |
+| `error` | string \| null | Set if the script raised an unexpected internal error |
+| `exception` | object \| null | Set when a user exception propagated out of the script unhandled (see below) |
+| `exception.name` | string | Exception class name, e.g. `"FearTooHigh"` |
+| `exception.label` | string | Human-readable label, e.g. `"Fear was too high"` |
+| `exception.note` | string | The note the user attached, or `""` |
 
 **`input_type` values**
 
@@ -78,6 +100,25 @@ Advances a script by one step. The client holds all session state — no server-
 5. Repeat until `done: true`
 
 The `answers` array is the only state — store it client-side. The server is fully stateless, so it works on any free hosting tier (serverless, containers that spin down, multi-instance deployments).
+
+## Raising exceptions
+
+Scripts can handle real-world interruptions (fear, overload, external reasons, …) via typed exceptions. The flow mirrors how the CLI handles `Ctrl+C`:
+
+1. Show the user an "interrupt" option alongside any prompt
+2. When triggered, fetch `GET /exceptions` to populate a menu (or cache it on load)
+3. User picks an exception type and optionally adds a note
+4. Append `"ExceptionName(note)"` to the local `answers` list — e.g. `"FearTooHigh(was too much)"` or `"FearTooHigh()"` for no note
+5. `POST /step` with the updated answers
+
+**Two possible outcomes:**
+
+- **Script catches the exception** (e.g. `except FearTooHigh: ...`): the script handles it internally and continues. The response comes back as a normal `{prompt: ...}`. No special handling needed.
+
+- **Script does not catch the exception**: the response has `exception: {...}` and `done: false`. The client should:
+  1. Display `exception.label` (and `exception.note` if non-empty) to the user
+  2. Remove the exception entry from the local `answers` list
+  3. Re-submit `POST /step` with the cleaned answers to continue
 
 ## Adding scripts
 

@@ -1,3 +1,4 @@
+import re
 import sys
 import runpy
 from pathlib import Path
@@ -11,8 +12,20 @@ from pydantic import BaseModel
 from typing import Optional
 
 from social_script._internal.driver import set_driver, clear_driver, ReplayDriver, NeedInput
+from social_script.exceptions import AnyException, INTERRUPT_MENU
 
 SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
+
+_EXC_BY_NAME = {cls.__name__: cls for cls in INTERRUPT_MENU}
+_EXC_PATTERN = re.compile(r'^(\w+)\((.*)\)$')
+
+
+def _to_replay_answer(a: str):
+    m = _EXC_PATTERN.match(a)
+    if m and m.group(1) in _EXC_BY_NAME:
+        return _EXC_BY_NAME[m.group(1)](m.group(2))
+    return a
+
 
 app = FastAPI()
 
@@ -36,10 +49,17 @@ class PromptInfo(BaseModel):
     choices: Optional[list[str]]
 
 
+class ExceptionInfo(BaseModel):
+    name: str
+    label: str
+    note: str = ""
+
+
 class StepResponse(BaseModel):
-    prompt: Optional[PromptInfo]
-    done: bool
+    prompt: Optional[PromptInfo] = None
+    done: bool = False
     error: Optional[str] = None
+    exception: Optional[ExceptionInfo] = None
 
 
 @app.get("/")
@@ -52,6 +72,11 @@ def list_scripts():
     return [p.stem for p in sorted(SCRIPTS_DIR.glob("*.py"))]
 
 
+@app.get("/exceptions")
+def list_exceptions():
+    return [{"name": cls.__name__, "label": cls.label} for cls in INTERRUPT_MENU]
+
+
 @app.post("/step", response_model=StepResponse)
 def step(body: StepRequest):
     available = {p.stem: p for p in SCRIPTS_DIR.glob("*.py")}
@@ -59,27 +84,21 @@ def step(body: StepRequest):
         raise HTTPException(status_code=404, detail=f"Script '{body.script}' not found")
 
     script_path = available[body.script]
-
-    driver = ReplayDriver(body.answers)
+    replay_answers = [_to_replay_answer(a) for a in body.answers]
+    driver = ReplayDriver(replay_answers)
     set_driver(driver)
-
-    prompt = None
-    done = False
-    error = None
 
     try:
         runpy.run_path(str(script_path), run_name="__main__")
-        done = True
+        return StepResponse(done=True)
     except NeedInput:
-        prompt = PromptInfo(**driver.next_prompt) if driver.next_prompt else None
+        return StepResponse(prompt=PromptInfo(**driver.next_prompt), done=False)
+    except AnyException as e:
+        return StepResponse(
+            done=False,
+            exception=ExceptionInfo(name=type(e).__name__, label=type(e).label, note=e.note or ""),
+        )
     except Exception as e:
-        error = str(e)
-        done = True
+        return StepResponse(done=True, error=str(e))
     finally:
         clear_driver()
-
-    return StepResponse(
-        prompt=prompt,
-        done=done,
-        error=error,
-    )
