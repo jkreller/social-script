@@ -8,7 +8,7 @@ function formatName(s: string): string {
 }
 
 interface Props {
-  onPick: (script: string, userName: string) => void
+  onPick: (script: string, userName: string, cameraOn: boolean) => void
 }
 
 export default function HomeScreen({ onPick }: Props) {
@@ -16,6 +16,7 @@ export default function HomeScreen({ onPick }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userName, setUserName] = useState('')
+  const [camera, setCamera] = useState(true)
   const [pendingScript, setPendingScript] = useState<string | null>(null)
 
   useEffect(() => {
@@ -28,11 +29,12 @@ export default function HomeScreen({ onPick }: Props) {
   const closeModal = () => {
     setPendingScript(null)
     setUserName('')
+    setCamera(true)
   }
 
   const confirmStart = () => {
     if (pendingScript && userName.trim()) {
-      onPick(pendingScript, userName.trim())
+      onPick(pendingScript, userName.trim(), camera)
     }
   }
 
@@ -83,6 +85,10 @@ export default function HomeScreen({ onPick }: Props) {
               onChange={e => setUserName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') confirmStart() }}
             />
+            <label className={styles.cameraToggle}>
+              <input type="checkbox" checked={camera} onChange={e => setCamera(e.target.checked)} />
+              <span>record video</span>
+            </label>
             <button
               className={`${btn.btnSecondary} ${styles.confirmBtn}`}
               disabled={!userName.trim()}

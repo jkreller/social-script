@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getExceptions, postStep } from '../api'
 import type { ExceptionInfo, ExceptionType, Prompt } from '../types'
+import { useRecorder, type Recording } from '../hooks/useRecorder'
+import CameraLayer from '../components/CameraLayer'
 import EnterInput from '../inputs/EnterInput'
 import YesNoInput from '../inputs/YesNoInput'
 import ScaleInput from '../inputs/ScaleInput'
@@ -11,8 +13,9 @@ import styles from './RunnerScreen.module.css'
 interface Props {
   script: string
   answers: string[]
+  cameraOn: boolean
   onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
-  onDone: () => void
+  onDone: (recordings: Recording[]) => void
   onExit: () => void
   onRollback: () => void
   onStepShow: (stepIndex: number, prompt: Prompt) => void
@@ -20,7 +23,9 @@ interface Props {
   onException: (name: string, label: string, note: string, decision: 'continue' | 'stop', exceptionStr: string) => void
 }
 
-export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
+export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onExit, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
+  const { frontVideo, backVideo, stop: stopRecording } = useRecorder(cameraOn)
+  const finish = useCallback(async () => onDone(await stopRecording()), [onDone, stopRecording])
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +66,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
           return
         }
         if (res.done) {
-          onDone()
+          finish()
           return
         }
         setPrompt(res.prompt)
@@ -101,7 +106,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
         if (ctrl.signal.aborted) return
         if (res.error) { setError(res.error); setLoading(false); return }
         if (res.exception) { setUncaught(res.exception); setLoading(false); return }
-        if (res.done) { onDone(); return }
+        if (res.done) { finish(); return }
         setPrompt(res.prompt)
         setPromptKey(k => k + 1)
         setLoading(false)
@@ -132,7 +137,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
     if (!selected || !prompt) return
     onException(selected.name, selected.label, note, 'stop', '')
     closeException()
-    onDone()
+    finish()
   }
 
   const closeException = () => {
@@ -145,6 +150,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
 
   return (
     <div className={styles.root}>
+      {cameraOn && <CameraLayer frontRef={frontVideo} backRef={backVideo} />}
       <div className={styles.topBar}>
         <button className={styles.exitBtn} onClick={() => setShowConfirm(true)} aria-label="Exit">
           ×
@@ -195,7 +201,7 @@ export default function RunnerScreen({ script, answers, onAnswer, onDone, onExit
             <button className={btn.btnSecondary} onClick={() => setShowConfirm(false)}>
               Keep going
             </button>
-            <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={onExit}>
+            <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={async () => { await stopRecording(); onExit() }}>
               Quit
             </button>
           </div>

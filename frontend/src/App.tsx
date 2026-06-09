@@ -3,6 +3,7 @@ import styles from './App.module.css'
 import HomeScreen from './screens/HomeScreen'
 import RunnerScreen from './screens/RunnerScreen'
 import DoneScreen from './screens/DoneScreen'
+import type { Recording } from './hooks/useRecorder'
 import type { Prompt, LogEntry } from './types'
 
 type Screen = 'home' | 'running' | 'done'
@@ -13,12 +14,16 @@ export default function App() {
   const [answers, setAnswers] = useState<string[]>([])
   const [userName, setUserName] = useState('')
   const [log, setLog] = useState<LogEntry[]>([])
+  const [cameraOn, setCameraOn] = useState(true)
+  const [recordings, setRecordings] = useState<Recording[]>([])
 
-  const handlePick = useCallback((name: string, user: string) => {
+  const handlePick = useCallback((name: string, user: string, camera: boolean) => {
     setScript(name)
     setUserName(user)
     setAnswers([])
     setLog([{ type: 'start', timestamp: Date.now() }])
+    setCameraOn(camera)
+    setRecordings([])
     setScreen('running')
   }, [])
 
@@ -42,8 +47,9 @@ export default function App() {
     }
   }, [])
 
-  const handleDone = useCallback(() => {
+  const handleDone = useCallback((recs: Recording[]) => {
     setLog(l => [...l, { type: 'finish', timestamp: Date.now() }])
+    setRecordings(recs)
     setScreen('done')
   }, [])
 
@@ -51,13 +57,8 @@ export default function App() {
     setAnswers(prev => prev.slice(0, -1))
   }, [])
 
-  const handleExit = useCallback(() => {
-    setUserName('')
-    setLog([])
-    setScreen('home')
-  }, [])
-
-  const handleRestart = useCallback(() => {
+  const reset = useCallback(() => {
+    setRecordings(recs => { recs.forEach(r => URL.revokeObjectURL(r.url)); return [] })
     setUserName('')
     setLog([])
     setScreen('home')
@@ -75,9 +76,10 @@ export default function App() {
           <RunnerScreen
             script={script}
             answers={answers}
+            cameraOn={cameraOn}
             onAnswer={handleAnswer}
             onDone={handleDone}
-            onExit={handleExit}
+            onExit={reset}
             onRollback={handleRollback}
             onStepShow={handleStepShow}
             onExceptionSelect={handleExceptionSelect}
@@ -91,7 +93,8 @@ export default function App() {
             userName={userName}
             script={script}
             log={log}
-            onRestart={handleRestart}
+            recordings={recordings}
+            onRestart={reset}
           />
         </div>
       )}

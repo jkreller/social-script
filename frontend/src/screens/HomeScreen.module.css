@@ -109,6 +109,24 @@
   color: var(--muted);
 }
 
+.cameraToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.cameraToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .confirmBtn {
   align-self: flex-end;
   padding: 10px 28px;

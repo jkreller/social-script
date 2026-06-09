@@ -18,6 +18,10 @@ function truncate(s: string): string {
   return s.length > 50 ? s.slice(0, 47) + '…' : s
 }
 
+export function safeName(s: string): string {
+  return s.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+}
+
 function resolveAnswer(prompt: Prompt, answer: string): string {
   if (prompt.input_type === 'enter') return '(continue)'
   if (prompt.input_type === 'yn') return answer === 'y' ? 'Yes' : 'No'
@@ -80,11 +84,9 @@ export function downloadLog({ userName, script, log }: Params): void {
   const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  const safeUser = userName.replace(/[^a-z0-9]/gi, '_').toLowerCase()
-  const safeScript = script.replace(/[^a-z0-9]/gi, '_').toLowerCase()
   const dateStr = new Date(startTime).toISOString().slice(0, 10)
   a.href = url
-  a.download = `log_${safeScript}_${safeUser}_${dateStr}.txt`
+  a.download = `log_${safeName(script)}_${safeName(userName)}_${dateStr}.txt`
   a.click()
   URL.revokeObjectURL(url)
 }
