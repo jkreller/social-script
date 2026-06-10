@@ -79,13 +79,29 @@ export function useRecorder(enabled: boolean) {
       cameraTrack.current = track
       showTrack(track)
 
+      // Wait for the decoded frame size before sizing the canvas. getSettings() is
+      // unreliable on iOS Safari (reports the sensor's landscape orientation even when
+      // frames are portrait), which squeezes the recording; videoWidth/videoHeight is
+      // the true frame and drawImage then fills the canvas 1:1.
+      const v0 = videoRef.current
+      if (v0 && !(v0.videoWidth && v0.videoHeight)) {
+        await new Promise<void>(resolve =>
+          v0.addEventListener('loadedmetadata', () => resolve(), { once: true }))
+      }
+
       const canvas = document.createElement('canvas')
       canvasRef.current = canvas
       const ctx = canvas.getContext('2d')!
-      // Seed canvas to the camera's real frame BEFORE captureStream() so the recorder
-      // locks in the correct aspect ratio (not the default 300×150 placeholder).
-      const s0 = track.getSettings()
-      if (s0.width && s0.height) { canvas.width = s0.width; canvas.height = s0.height }
+      // Size the canvas to the true decoded frame BEFORE captureStream() so the recorder
+      // locks in the correct (portrait or landscape) aspect ratio, not the 300×150 default.
+      const v = videoRef.current
+      if (v?.videoWidth && v.videoHeight) {
+        canvas.width = v.videoWidth; canvas.height = v.videoHeight
+      } else {
+        // Fallback only if the element never reported a frame size.
+        const s0 = track.getSettings()
+        if (s0.width && s0.height) { canvas.width = s0.width; canvas.height = s0.height }
+      }
       const draw = () => {
         const v = videoRef.current
         if (v && v.readyState >= 2) {
