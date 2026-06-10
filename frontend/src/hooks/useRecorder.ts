@@ -7,11 +7,24 @@ export interface Recording {
   blob: Blob
 }
 
-// Prefer webm; fall back to mp4 for Safari. Empty string lets MediaRecorder pick.
+// Prefer MP4/H.264 (plays natively in QuickTime, iMessage, editors); fall back to webm
+// where MediaRecorder can't produce MP4 (Firefox). Empty string lets MediaRecorder pick.
 function pickMime(): string {
-  const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']
+  const types = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // H.264 baseline + AAC
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+  ]
   return types.find(t => MediaRecorder.isTypeSupported?.(t)) ?? ''
 }
+
+// Capped so a long run (~30 min) stays compact on phone storage while keeping
+// documentation-grade quality. Tune VIDEO_BPS down to ~1_500_000 for smaller files.
+const VIDEO_BPS = 2_000_000 // ~2 Mbps H.264 @ 720p
+const AUDIO_BPS = 128_000   // 128 kbps AAC
 
 /**
  * Records one camera at a time (front by default, mic audio included) for the whole run.
@@ -82,7 +95,11 @@ export function useRecorder(enabled: boolean) {
       const out = canvas.captureStream()
       if (audioTrack.current) out.addTrack(audioTrack.current)
       const mime = pickMime()
-      const rec = new MediaRecorder(out, mime ? { mimeType: mime } : undefined)
+      const rec = new MediaRecorder(out, {
+        ...(mime ? { mimeType: mime } : {}),
+        videoBitsPerSecond: VIDEO_BPS,
+        audioBitsPerSecond: AUDIO_BPS,
+      })
       rec.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
       rec.start()
       recorder.current = rec
