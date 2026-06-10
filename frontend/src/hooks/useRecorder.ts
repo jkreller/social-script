@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
+export type Facing = 'front' | 'back'
 
 export interface Recording {
-  facing: 'front' | 'back'
   url: string
   blob: Blob
 }
@@ -12,31 +13,38 @@ function pickMime(): string {
   return types.find(t => MediaRecorder.isTypeSupported?.(t)) ?? ''
 }
 
-interface Rec {
-  facing: 'front' | 'back'
-  recorder: MediaRecorder
-  chunks: Blob[]
-}
-
 /**
- * Records the front and/or back camera (with mic audio) for the lifetime of a run.
- * Graceful fallback: most phones only allow one camera live at a time — opening the
- * back camera ends the front track — so we record whichever tracks stay `live`.
- * NOTE: getUserMedia needs HTTPS off localhost, or it throws silently.
+ * Records one camera at a time (front by default, mic audio included) for the whole run.
+ * The active camera is drawn into an offscreen canvas and the canvas stream is recorded,
+ * so switchCamera() can swap the source without ever interrupting the recorder — the
+ * result is a single continuous file. NOTE: getUserMedia needs HTTPS off localhost.
  */
 export function useRecorder(enabled: boolean) {
-  const frontVideo = useRef<HTMLVideoElement>(null)
-  const backVideo = useRef<HTMLVideoElement>(null)
-  const tracksRef = useRef<MediaStreamTrack[]>([])
-  const recsRef = useRef<Rec[]>([])
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const cameraTrack = useRef<MediaStreamTrack | null>(null)
+  const audioTrack = useRef<MediaStreamTrack | null>(null)
+  const rafId = useRef<number>(0)
+  const recorder = useRef<MediaRecorder | null>(null)
+  const chunks = useRef<Blob[]>([])
   const startedRef = useRef(false)
+  const switchingRef = useRef(false)
+  const [facing, setFacing] = useState<Facing>('front')
 
-  const attach = (el: HTMLVideoElement | null, track: MediaStreamTrack) => {
-    if (!el) return
-    el.srcObject = new MediaStream([track])
-    el.muted = true
-    el.playsInline = true
-    el.play().catch(() => {})
+  const openCamera = async (f: Facing) => {
+    const s = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: f === 'front' ? 'user' : 'environment', width: { ideal: 1280 } },
+    })
+    return s.getVideoTracks()[0] ?? null
+  }
+
+  const showTrack = (track: MediaStreamTrack) => {
+    const v = videoRef.current
+    if (!v) return
+    v.srcObject = new MediaStream([track])
+    v.muted = true
+    v.playsInline = true
+    v.play().catch(() => {})
   }
 
   // Acquire once. Teardown happens only via stop() (not effect cleanup), so React
@@ -47,62 +55,72 @@ export function useRecorder(enabled: boolean) {
     startedRef.current = true
 
     ;(async () => {
-      const mime = pickMime()
-
-      let audio: MediaStreamTrack | null = null
       try {
         const a = await navigator.mediaDevices.getUserMedia({ audio: true })
-        audio = a.getAudioTracks()[0] ?? null
+        audioTrack.current = a.getAudioTracks()[0] ?? null
       } catch { /* no mic → video-only */ }
 
-      const open = async (facing: 'front' | 'back') => {
-        try {
-          const s = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facing === 'front' ? 'user' : 'environment' },
-          })
-          return s.getVideoTracks()[0] ?? null
-        } catch { return null }
+      let track: MediaStreamTrack | null = null
+      try { track = await openCamera('front') } catch { /* handled below */ }
+      if (!track) { audioTrack.current?.stop(); return }
+      cameraTrack.current = track
+      showTrack(track)
+
+      const canvas = document.createElement('canvas')
+      canvasRef.current = canvas
+      const ctx = canvas.getContext('2d')!
+      const draw = () => {
+        const v = videoRef.current
+        if (v && v.readyState >= 2) {
+          if (canvas.width !== v.videoWidth) { canvas.width = v.videoWidth; canvas.height = v.videoHeight }
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
+        }
+        rafId.current = requestAnimationFrame(draw)
       }
-      const front = await open('front')
-      const back = await open('back') // may preempt `front` on single-camera devices
+      draw()
 
-      tracksRef.current = [audio, front, back].filter(Boolean) as MediaStreamTrack[]
-
-      // Keep only cameras the OS actually left running.
-      const live: { facing: 'front' | 'back'; track: MediaStreamTrack }[] = []
-      if (front?.readyState === 'live') live.push({ facing: 'front', track: front })
-      if (back?.readyState === 'live') live.push({ facing: 'back', track: back })
-
-      if (live.length === 0) { audio?.stop(); return }
-
-      for (const { facing, track } of live) {
-        attach(facing === 'front' ? frontVideo.current : backVideo.current, track)
-        const recorder = new MediaRecorder(
-          new MediaStream(audio ? [track, audio] : [track]),
-          mime ? { mimeType: mime } : undefined,
-        )
-        const rec: Rec = { facing, recorder, chunks: [] }
-        recorder.ondataavailable = e => { if (e.data.size) rec.chunks.push(e.data) }
-        recorder.start()
-        recsRef.current.push(rec)
-      }
+      const out = canvas.captureStream()
+      if (audioTrack.current) out.addTrack(audioTrack.current)
+      const mime = pickMime()
+      const rec = new MediaRecorder(out, mime ? { mimeType: mime } : undefined)
+      rec.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
+      rec.start()
+      recorder.current = rec
     })()
   }, [enabled])
 
-  const stop = useCallback(async (): Promise<Recording[]> => {
-    const out = await Promise.all(recsRef.current.map(r => new Promise<Recording>(resolve => {
-      r.recorder.onstop = () => {
-        const blob = new Blob(r.chunks, { type: r.recorder.mimeType || 'video/webm' })
-        resolve({ facing: r.facing, url: URL.createObjectURL(blob), blob })
+  const switchCamera = useCallback(async () => {
+    if (switchingRef.current || !cameraTrack.current) return
+    switchingRef.current = true
+    const next: Facing = facing === 'front' ? 'back' : 'front'
+    try {
+      const track = await openCamera(next) // acquire before stopping the old one
+      if (track) {
+        cameraTrack.current?.stop()
+        cameraTrack.current = track
+        showTrack(track)
+        setFacing(next)
       }
-      if (r.recorder.state !== 'inactive') r.recorder.stop()
-      else r.recorder.onstop!(new Event('stop'))
-    })))
-    tracksRef.current.forEach(t => t.stop())
-    tracksRef.current = []
-    recsRef.current = []
+    } catch { /* acquisition failed → stay on current camera */ }
+    switchingRef.current = false
+  }, [facing])
+
+  const stop = useCallback(async (): Promise<Recording | null> => {
+    cancelAnimationFrame(rafId.current)
+    const rec = recorder.current
+    const out = rec ? await new Promise<Recording>(resolve => {
+      rec.onstop = () => {
+        const blob = new Blob(chunks.current, { type: rec.mimeType || 'video/webm' })
+        resolve({ url: URL.createObjectURL(blob), blob })
+      }
+      if (rec.state !== 'inactive') rec.stop()
+      else rec.onstop!(new Event('stop'))
+    }) : null
+    cameraTrack.current?.stop()
+    audioTrack.current?.stop()
+    recorder.current = null
     return out
   }, [])
 
-  return { frontVideo, backVideo, stop }
+  return { videoRef, facing, switchCamera, stop }
 }

@@ -8,18 +8,18 @@ interface Props {
   userName: string
   script: string
   log: LogEntry[]
-  recordings: Recording[]
+  recording: Recording | null
   onRestart: () => void
 }
 
-export default function DoneScreen({ userName, script, log, recordings, onRestart }: Props) {
+export default function DoneScreen({ userName, script, log, recording, onRestart }: Props) {
   const dateStr = new Date(log.find(e => e.type === 'start')?.timestamp ?? Date.now()).toISOString().slice(0, 10)
 
   const downloadVideo = (r: Recording) => {
     const ext = r.blob.type.includes('mp4') ? 'mp4' : 'webm'
     const a = document.createElement('a')
     a.href = r.url
-    a.download = `video_${safeName(script)}_${safeName(userName)}_${dateStr}_${r.facing}.${ext}`
+    a.download = `video_${safeName(script)}_${safeName(userName)}_${dateStr}.${ext}`
     a.click()
   }
 
@@ -33,11 +33,11 @@ export default function DoneScreen({ userName, script, log, recordings, onRestar
       >
         Download Log
       </button>
-      {recordings.map(r => (
-        <button key={r.facing} className={btn.btnSecondary} onClick={() => downloadVideo(r)}>
-          Download {r.facing} video
+      {recording && (
+        <button className={btn.btnSecondary} onClick={() => downloadVideo(recording)}>
+          Download Video
         </button>
-      ))}
+      )}
       <button className={btn.btnSecondary} onClick={onRestart}>
         Return Home
       </button>

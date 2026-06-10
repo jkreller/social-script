@@ -2,17 +2,14 @@ import type { RefObject } from 'react'
 import styles from './CameraLayer.module.css'
 
 interface Props {
-  frontRef: RefObject<HTMLVideoElement>
-  backRef: RefObject<HTMLVideoElement>
+  videoRef: RefObject<HTMLVideoElement>
 }
 
-// Faint live camera feeds behind the running UI — front on top, back on bottom.
-// A camera that isn't live just renders an empty (invisible) video.
-export default function CameraLayer({ frontRef, backRef }: Props) {
+// Faint full-screen preview of the active camera, behind the running UI.
+export default function CameraLayer({ videoRef }: Props) {
   return (
     <div className={styles.layer} aria-hidden>
-      <video ref={frontRef} className={styles.half} muted playsInline />
-      <video ref={backRef} className={styles.half} muted playsInline />
+      <video ref={videoRef} className={styles.video} muted playsInline />
     </div>
   )
 }

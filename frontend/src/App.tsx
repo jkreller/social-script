@@ -15,7 +15,7 @@ export default function App() {
   const [userName, setUserName] = useState('')
   const [log, setLog] = useState<LogEntry[]>([])
   const [cameraOn, setCameraOn] = useState(true)
-  const [recordings, setRecordings] = useState<Recording[]>([])
+  const [recording, setRecording] = useState<Recording | null>(null)
 
   const handlePick = useCallback((name: string, user: string, camera: boolean) => {
     setScript(name)
@@ -23,7 +23,7 @@ export default function App() {
     setAnswers([])
     setLog([{ type: 'start', timestamp: Date.now() }])
     setCameraOn(camera)
-    setRecordings([])
+    setRecording(null)
     setScreen('running')
   }, [])
 
@@ -47,9 +47,9 @@ export default function App() {
     }
   }, [])
 
-  const handleDone = useCallback((recs: Recording[]) => {
+  const handleDone = useCallback((rec: Recording | null) => {
     setLog(l => [...l, { type: 'finish', timestamp: Date.now() }])
-    setRecordings(recs)
+    setRecording(rec)
     setScreen('done')
   }, [])
 
@@ -58,7 +58,7 @@ export default function App() {
   }, [])
 
   const reset = useCallback(() => {
-    setRecordings(recs => { recs.forEach(r => URL.revokeObjectURL(r.url)); return [] })
+    setRecording(r => { if (r) URL.revokeObjectURL(r.url); return null })
     setUserName('')
     setLog([])
     setScreen('home')
@@ -93,7 +93,7 @@ export default function App() {
             userName={userName}
             script={script}
             log={log}
-            recordings={recordings}
+            recording={recording}
             onRestart={reset}
           />
         </div>

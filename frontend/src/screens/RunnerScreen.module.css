@@ -38,6 +38,10 @@
   background: var(--border);
 }
 
+.topRight {
+  display: flex;
+}
+
 .exceptionBtn {
   display: flex;
   align-items: center;

@@ -15,7 +15,7 @@ interface Props {
   answers: string[]
   cameraOn: boolean
   onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
-  onDone: (recordings: Recording[]) => void
+  onDone: (recording: Recording | null) => void
   onExit: () => void
   onRollback: () => void
   onStepShow: (stepIndex: number, prompt: Prompt) => void
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onExit, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
-  const { frontVideo, backVideo, stop: stopRecording } = useRecorder(cameraOn)
+  const { videoRef, switchCamera, stop: stopRecording } = useRecorder(cameraOn)
   const finish = useCallback(async () => onDone(await stopRecording()), [onDone, stopRecording])
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [loading, setLoading] = useState(true)
@@ -150,16 +150,23 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
 
   return (
     <div className={styles.root}>
-      {cameraOn && <CameraLayer frontRef={frontVideo} backRef={backVideo} />}
+      {cameraOn && <CameraLayer videoRef={videoRef} />}
       <div className={styles.topBar}>
         <button className={styles.exitBtn} onClick={() => setShowConfirm(true)} aria-label="Exit">
           ×
         </button>
-        {interactive && (
-          <button className={styles.exceptionBtn} onClick={() => setShowException(true)} aria-label="Raise exception">
-            ⚑
-          </button>
-        )}
+        <div className={styles.topRight}>
+          {cameraOn && (
+            <button className={styles.exceptionBtn} onPointerDown={switchCamera} aria-label="Switch camera">
+              ⇄
+            </button>
+          )}
+          {interactive && (
+            <button className={styles.exceptionBtn} onClick={() => setShowException(true)} aria-label="Raise exception">
+              ⚑
+            </button>
+          )}
+        </div>
       </div>
 
       {error ? (
