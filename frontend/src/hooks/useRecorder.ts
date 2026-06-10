@@ -82,6 +82,10 @@ export function useRecorder(enabled: boolean) {
       const canvas = document.createElement('canvas')
       canvasRef.current = canvas
       const ctx = canvas.getContext('2d')!
+      // Seed canvas to the camera's real frame BEFORE captureStream() so the recorder
+      // locks in the correct aspect ratio (not the default 300×150 placeholder).
+      const s0 = track.getSettings()
+      if (s0.width && s0.height) { canvas.width = s0.width; canvas.height = s0.height }
       const draw = () => {
         const v = videoRef.current
         if (v && v.readyState >= 2) {
