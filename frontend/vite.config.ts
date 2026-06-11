@@ -3,10 +3,21 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Pyodide ships its own runtime; don't let esbuild pre-bundle it.
+  optimizeDeps: { exclude: ['pyodide'] },
+  // The engine worker imports Pyodide (code-split) — needs ES module output.
+  worker: { format: 'es' },
+  // Allow the worker to read social_script/ + scripts/ (above the frontend root) via ?raw glob.
+  server: { fs: { allow: ['..'] } },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // Precache the Pyodide runtime (incl. the ~9.6 MB wasm) so runs work offline.
+        globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,wasm,zip,json,woff,woff2}'],
+        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
+      },
       manifest: {
         name: 'Social Script Runner',
         short_name: 'Script',

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import styles from './App.module.css'
 import HomeScreen from './screens/HomeScreen'
 import RunnerScreen from './screens/RunnerScreen'
@@ -8,14 +8,25 @@ import type { Prompt, LogEntry } from './types'
 
 type Screen = 'home' | 'running' | 'done'
 
+// Restore a run that survived the interpreter dying (iOS aggressively kills
+// backgrounded PWAs). Replay of `answers` lands back on the same prompt.
+const SAVED = (() => {
+  try { return JSON.parse(localStorage.getItem('run') || 'null') } catch { return null }
+})()
+
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home')
-  const [script, setScript] = useState('')
-  const [answers, setAnswers] = useState<string[]>([])
-  const [userName, setUserName] = useState('')
-  const [log, setLog] = useState<LogEntry[]>([])
-  const [cameraOn, setCameraOn] = useState(true)
+  const [screen, setScreen] = useState<Screen>(SAVED?.screen ?? 'home')
+  const [script, setScript] = useState(SAVED?.script ?? '')
+  const [answers, setAnswers] = useState<string[]>(SAVED?.answers ?? [])
+  const [userName, setUserName] = useState(SAVED?.userName ?? '')
+  const [log, setLog] = useState<LogEntry[]>(SAVED?.log ?? [])
+  const [cameraOn, setCameraOn] = useState<boolean>(SAVED?.cameraOn ?? true)
   const [recording, setRecording] = useState<Recording | null>(null)
+
+  useEffect(() => {
+    if (screen === 'home') localStorage.removeItem('run')
+    else localStorage.setItem('run', JSON.stringify({ screen, script, userName, cameraOn, answers, log }))
+  }, [screen, script, userName, cameraOn, answers, log])
 
   const handlePick = useCallback((name: string, user: string, camera: boolean) => {
     setScript(name)
