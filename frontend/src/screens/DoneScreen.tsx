@@ -7,12 +7,14 @@ import styles from './DoneScreen.module.css'
 interface Props {
   userName: string
   script: string
+  version: string
+  tags: string[]
   log: LogEntry[]
   recording: Recording | null
   onRestart: () => void
 }
 
-export default function DoneScreen({ userName, script, log, recording, onRestart }: Props) {
+export default function DoneScreen({ userName, script, version, tags, log, recording, onRestart }: Props) {
   const dateStr = new Date(log.find(e => e.type === 'start')?.timestamp ?? Date.now()).toISOString().slice(0, 10)
 
   const downloadVideo = (r: Recording) => {
@@ -29,7 +31,7 @@ export default function DoneScreen({ userName, script, log, recording, onRestart
       <span className={styles.message}>Script finished.</span>
       <button
         className={btn.btnPrimary}
-        onClick={() => downloadLog({ userName, script, log })}
+        onClick={() => downloadLog({ userName, script, version, tags, log })}
       >
         Download Log
       </button>

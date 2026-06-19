@@ -12,7 +12,17 @@ feel"). A look, a nod, a half-sentence still counts.
 ## Rules
 
 1. **One import, always:** `from social_script import *`. Nothing else, no sub-imports,
-   no config.
+   no config. An optional module docstring may sit above it to classify the script — a
+   `Social script` title line, a `version:` line, and a `tags:` line (comma-separated);
+   the version and tags show in the script list.
+
+   ```python
+   """
+   Social script
+   version: v1
+   tags: slow, approaching
+   """
+   ```
 2. **Functions are verbs** that read like instructions: `say()`, `anchor()`, `flow()`,
    `exit_gracefully()`. Never expose mechanism.
 3. **Phrases are constants:** `say(greeting.neutral)`, never `say("hello")`. Free-form

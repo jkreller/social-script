@@ -1,3 +1,9 @@
+"""
+Social script
+version: v1
+tags: slow, approaching
+"""
+
 import random
 from social_script import *
 

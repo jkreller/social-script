@@ -17,6 +17,8 @@ const SAVED = (() => {
 export default function App() {
   const [screen, setScreen] = useState<Screen>(SAVED?.screen ?? 'home')
   const [script, setScript] = useState(SAVED?.script ?? '')
+  const [version, setVersion] = useState<string>(SAVED?.version ?? '')
+  const [tags, setTags] = useState<string[]>(SAVED?.tags ?? [])
   const [answers, setAnswers] = useState<string[]>(SAVED?.answers ?? [])
   const [userName, setUserName] = useState(SAVED?.userName ?? '')
   const [log, setLog] = useState<LogEntry[]>(SAVED?.log ?? [])
@@ -25,11 +27,13 @@ export default function App() {
 
   useEffect(() => {
     if (screen === 'home') localStorage.removeItem('run')
-    else localStorage.setItem('run', JSON.stringify({ screen, script, userName, cameraOn, answers, log }))
-  }, [screen, script, userName, cameraOn, answers, log])
+    else localStorage.setItem('run', JSON.stringify({ screen, script, version, tags, userName, cameraOn, answers, log }))
+  }, [screen, script, version, tags, userName, cameraOn, answers, log])
 
-  const handlePick = useCallback((name: string, user: string, camera: boolean) => {
+  const handlePick = useCallback((name: string, ver: string, scriptTags: string[], user: string, camera: boolean) => {
     setScript(name)
+    setVersion(ver)
+    setTags(scriptTags)
     setUserName(user)
     setAnswers([])
     setLog([{ type: 'start', timestamp: Date.now() }])
@@ -103,6 +107,8 @@ export default function App() {
           <DoneScreen
             userName={userName}
             script={script}
+            version={version}
+            tags={tags}
             log={log}
             recording={recording}
             onRestart={reset}

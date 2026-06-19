@@ -1,7 +1,7 @@
 # Pyodide entry-point adapter — the browser-side counterpart of api/main.py.
 # Loaded once at worker startup (worker.ts reads this file via ?raw and calls
 # py.runPython). The three functions it defines are called by name from JS.
-import re, runpy, json, os, glob
+import re, runpy, json, os, glob, ast
 from social_script._internal.driver import set_driver, clear_driver, ReplayDriver, NeedInput
 from social_script.exceptions import AnyException, INTERRUPT_MENU
 
@@ -15,8 +15,26 @@ def _replay(a):
     m = _PAT.match(a)
     return _EXC[m.group(1)](m.group(2)) if m and m.group(1) in _EXC else a
 
+def _read_meta(src):
+    # version + tags live in the script's module docstring, as labeled lines. Read via
+    # ast so the script is parsed, never executed (executing would trigger the prompts).
+    doc = ast.get_docstring(ast.parse(src)) or ""
+    version, tags = "", []
+    for line in doc.splitlines():
+        key, _, val = line.strip().partition(":")
+        if key.lower() == "version":
+            version = val.strip()
+        elif key.lower() == "tags":
+            tags = [t.strip() for t in val.split(",") if t.strip()]
+    return version, tags
+
 def list_scripts():
-    return json.dumps(sorted(os.path.splitext(os.path.basename(p))[0] for p in glob.glob('scripts/*.py')))
+    items = []
+    for p in sorted(glob.glob('scripts/*.py')):
+        with open(p) as f:
+            version, tags = _read_meta(f.read())
+        items.append({"name": os.path.splitext(os.path.basename(p))[0], "version": version, "tags": tags})
+    return json.dumps(items)
 
 def list_exceptions():
     return json.dumps([{"name": c.__name__, "label": c.label} for c in INTERRUPT_MENU])

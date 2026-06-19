@@ -31,7 +31,13 @@ function call<T>(fn: string, ...args: string[]): Promise<T> {
   })
 }
 
-export function getScripts(): Promise<string[]> {
+export interface ScriptInfo {
+  name: string
+  version: string
+  tags: string[]
+}
+
+export function getScripts(): Promise<ScriptInfo[]> {
   return call('list_scripts')
 }
 

@@ -1,3 +1,4 @@
+import ast
 import re
 import sys
 import runpy
@@ -67,9 +68,27 @@ def root():
     return {}
 
 
+def _read_meta(src: str) -> tuple[str, list[str]]:
+    # version + tags live in the script's module docstring, as labeled lines. Read via
+    # ast so the script is parsed, never executed (executing would trigger the prompts).
+    doc = ast.get_docstring(ast.parse(src)) or ""
+    version, tags = "", []
+    for line in doc.splitlines():
+        key, _, val = line.strip().partition(":")
+        if key.lower() == "version":
+            version = val.strip()
+        elif key.lower() == "tags":
+            tags = [t.strip() for t in val.split(",") if t.strip()]
+    return version, tags
+
+
 @app.get("/scripts")
 def list_scripts():
-    return [p.stem for p in sorted(SCRIPTS_DIR.glob("*.py"))]
+    out = []
+    for p in sorted(SCRIPTS_DIR.glob("*.py")):
+        version, tags = _read_meta(p.read_text())
+        out.append({"name": p.stem, "version": version, "tags": tags})
+    return out
 
 
 @app.get("/exceptions")

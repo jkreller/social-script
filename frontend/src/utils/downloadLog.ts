@@ -3,6 +3,8 @@ import type { LogEntry, Prompt } from '../types'
 interface Params {
   userName: string
   script: string
+  version: string
+  tags: string[]
   log: LogEntry[]
 }
 
@@ -33,7 +35,7 @@ function resolveAnswer(prompt: Prompt, answer: string): string {
   return answer
 }
 
-export function downloadLog({ userName, script, log }: Params): void {
+export function downloadLog({ userName, script, version, tags, log }: Params): void {
   const startTime = log.find(e => e.type === 'start')?.timestamp ?? Date.now()
   const finishTime = log.findLast(e => e.type === 'finish')?.timestamp ?? Date.now()
 
@@ -42,6 +44,8 @@ export function downloadLog({ userName, script, log }: Params): void {
     '=========================',
     `User:     ${userName}`,
     `Script:   ${script}`,
+    `Version:  ${version}`,
+    `Tags:     ${tags.join(', ')}`,
     `Started:  ${new Date(startTime).toISOString()}`,
     `Finished: ${new Date(finishTime).toISOString()}`,
     '',

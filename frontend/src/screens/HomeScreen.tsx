@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getScripts } from '../api'
+import { getScripts, type ScriptInfo } from '../api'
 import btn from '../styles/buttons.module.css'
 import styles from './HomeScreen.module.css'
 
@@ -8,16 +8,16 @@ function formatName(s: string): string {
 }
 
 interface Props {
-  onPick: (script: string, userName: string, cameraOn: boolean) => void
+  onPick: (script: string, version: string, tags: string[], userName: string, cameraOn: boolean) => void
 }
 
 export default function HomeScreen({ onPick }: Props) {
-  const [scripts, setScripts] = useState<string[]>([])
+  const [scripts, setScripts] = useState<ScriptInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userName, setUserName] = useState('')
   const [camera, setCamera] = useState(true)
-  const [pendingScript, setPendingScript] = useState<string | null>(null)
+  const [pendingScript, setPendingScript] = useState<ScriptInfo | null>(null)
 
   useEffect(() => {
     getScripts()
@@ -34,7 +34,7 @@ export default function HomeScreen({ onPick }: Props) {
 
   const confirmStart = () => {
     if (pendingScript && userName.trim()) {
-      onPick(pendingScript, userName.trim(), camera)
+      onPick(pendingScript.name, pendingScript.version, pendingScript.tags, userName.trim(), camera)
     }
   }
 
@@ -58,16 +58,29 @@ export default function HomeScreen({ onPick }: Props) {
 
       {!loading && !error && (
         <div className={styles.list}>
-          {scripts.map(name => (
+          {scripts.map(script => {
+            const { name, version, tags } = script
+            return (
             <div
               key={name}
               className={styles.item}
               role="button"
-              onClick={() => setPendingScript(name)}
+              onClick={() => setPendingScript(script)}
             >
-              <span className={styles.itemName}>{formatName(name)}</span>
+              <div className={styles.itemHead}>
+                <span className={styles.itemName}>{formatName(name)}</span>
+                {version && <span className={styles.version}>{version}</span>}
+              </div>
+              {tags.length > 0 && (
+                <div className={styles.tags}>
+                  {tags.map(tag => (
+                    <span key={tag} className={styles.tag}>{tag}</span>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

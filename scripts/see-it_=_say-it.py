@@ -1,3 +1,9 @@
+"""
+Social script
+version: v1
+tags: simple, walking
+"""
+
 from social_script import *
 
 
