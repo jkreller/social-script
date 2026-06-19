@@ -40,25 +40,21 @@ def approach(opener):
 
 def catch_conversation_topic(group):
     # can you make out what they're talking about?
-    raw = io_read("Can you catch their topic?", headline="listen", input_type=InputType.yn).strip().lower()
-    return raw == "y"
+    return sense("Can you catch their topic?", headline="listen")
 
 
 def think_of_question(topic):
-    raw = io_read("Think of a question about the topic. Do you have any?", headline="think", input_type=InputType.yn).strip().lower()
-    if raw == "y":
+    if sense("Think of a question about the topic. Do you have any?", headline="think"):
         return question(instruction="Ask the question you have in mind")
     return None
 
 
 def catch_game(group):
-    raw = io_read("Can you tell what game they're playing?", headline="observe", input_type=InputType.yn).strip().lower()
-    return raw == "y"
+    return sense("Can you tell what game they're playing?", headline="observe")
 
 
 def assert_knowledge(subject):
-    raw = io_read("Do you know this game well enough to join?", headline="think", input_type=InputType.yn).strip().lower()
-    return raw == "y"
+    return sense("Do you know this game well enough to join?", headline="think")
 
 
 def random_question():
@@ -104,7 +100,7 @@ else:
         fear_level = assess_internal(fear)
         if fear_level <= 5:
             break
-        keep_trying = willing_to_continue()
+        keep_trying = assess_internal(willingness_to_continue)
 
     if reaction:
         flow()

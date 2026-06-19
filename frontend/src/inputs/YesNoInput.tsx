@@ -23,7 +23,6 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
         onClick={() => handleTap('y')}
       >
         <span className={styles.label}>Yes</span>
-        {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
       </div>
 
       <div className={styles.divider} />
@@ -38,6 +37,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
 
       <div className={styles.promptArea}>
         <p className={styles.promptText}>{prompt.text}</p>
+        {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
       </div>
     </div>
   )

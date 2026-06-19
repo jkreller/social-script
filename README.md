@@ -35,9 +35,14 @@ api/                    # stateless FastAPI server for running scripts over HTTP
 ├── requirements.txt
 └── README.md           # API docs
 
+frontend/               # React + Vite PWA — runs scripts client-side via Pyodide (offline)
+
 sketches/               # rough drafts and planning notes
 run.py                  # convenience entry point for running scripts from the CLI
 ```
+
+Each area carries a `CLAUDE.md` with its conventions: root (overall rules + stateless
+replay model), `scripts/` (how to write human-readable scripts), `frontend/` (the PWA).
 
 ---
 
@@ -125,9 +130,12 @@ Inner state is assessed intuitively, not measured precisely.
 
 ```python
 # correct
-fear_level = assess_internal(fear)
+fear_level = assess_internal(fear)   # 1–10 for scale states
 if fear_level > threshold:
     anchor()
+
+if not assess_internal(willingness_to_continue):   # binary states return a bool
+    exit_gracefully()
 
 # wrong – over-engineered
 def run(state: State, ctx: Context, cfg: Config):

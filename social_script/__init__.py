@@ -21,16 +21,17 @@ from social_script.actions import (
     exit_gracefully,
     assess_internal,
     assess_external,
+    walk,
     sit_down,
     observe_environment,
     find_group_of_people,
     interested_in,
     reduce_distance_to,
     show_interest_and_wait,
-    willing_to_continue,
     flow,
     observe,
     choose,
+    sense,
 )
 
 from social_script.phrases import (
@@ -50,12 +51,9 @@ from social_script.external_actions import (
 
 from social_script.states import (
     fear,
-    calm,
-    tension,
-    excitement,
-    hesitation,
     readiness_for_interaction,
     tiredness,
+    willingness_to_continue,
 )
 
 from social_script.environment import (
@@ -96,16 +94,17 @@ __all__ = [
     "exit_gracefully",
     "assess_internal",
     "assess_external",
+    "walk",
     "sit_down",
     "observe_environment",
     "find_group_of_people",
     "interested_in",
     "reduce_distance_to",
     "show_interest_and_wait",
-    "willing_to_continue",
     "flow",
     "observe",
     "choose",
+    "sense",
     # phrase categories
     "greeting",
     "exit",
@@ -119,12 +118,9 @@ __all__ = [
     "activity",
     # inner states
     "fear",
-    "calm",
-    "tension",
-    "excitement",
-    "hesitation",
     "readiness_for_interaction",
     "tiredness",
+    "willingness_to_continue",
     # environment
     "Person",
     "Group",

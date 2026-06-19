@@ -25,7 +25,9 @@ def breath_in_out(cycles: int = 1) -> None:
 
 
 def say(p) -> None:
-    """Deliver a phrase out loud."""
+    """Deliver a phrase out loud. Pass a phrase, or a plain string for a free-form line."""
+    if isinstance(p, str):
+        p = Phrase(instruction=p)
     label = str(p) if isinstance(p, Phrase) and p.instruction else f"Say: '{p}'"
     io_read(label, headline="say", input_type=InputType.enter)
 
@@ -46,20 +48,28 @@ def exit_gracefully() -> None:
     io_write("[ exit ]    Leave with composure. You're done.")
 
 
-def assess_internal(signal) -> int:
-    """Read an inner signal and return an intensity level from 1 (barely present) to 10 (overwhelming)."""
+def assess_internal(signal):
+    """Read an inner signal: a gut yes/no for binary states, else an intensity 1–10."""
+    return _assess(signal.question(), signal.input_type)
+
+
+def assess_external(entity, signal):
+    """Read a signal about an external person or group: yes/no for binary states, else 1–10."""
+    return _assess(signal.question(entity), signal.input_type)
+
+
+def _assess(question, input_type):
+    if input_type == InputType.yn:
+        return io_read(question, headline="assess", input_type=InputType.yn).strip().lower() == "y"
     while True:
-        raw = io_read(signal.question(), headline="assess", input_type=InputType.scale)
+        raw = io_read(question, headline="assess", input_type=InputType.scale)
         if raw.isdigit() and 1 <= int(raw) <= 10:
             return int(raw)
 
 
-def assess_external(entity, signal) -> int:
-    """Read a signal about an external person or group, from 1 (barely present) to 10 (very strong)."""
-    while True:
-        raw = io_read(signal.question(entity), headline="assess", input_type=InputType.scale)
-        if raw.isdigit() and 1 <= int(raw) <= 10:
-            return int(raw)
+def walk() -> None:
+    """Keep moving through the space, unhurried, letting it pass by."""
+    io_read("Keep walking. No destination, go as you feel.", headline="walk", input_type=InputType.enter)
 
 
 def sit_down() -> None:
@@ -82,8 +92,7 @@ def find_group_of_people():
 def interested_in(thing) -> bool:
     """Check whether you feel genuinely interested in this person or group."""
     entity_name = type(thing).__name__.lower()
-    raw = io_read(f"Are you interested in this {entity_name}?", headline="interest", input_type=InputType.yn).strip().lower()
-    return raw == "y"
+    return sense(f"Are you interested in this {entity_name}?", headline="interest")
 
 
 def reduce_distance_to(entity) -> None:
@@ -95,14 +104,7 @@ def reduce_distance_to(entity) -> None:
 def show_interest_and_wait():
     """Signal interest nonverbally – eye contact, a smile – and wait for a response."""
     io_read("Make eye contact. Smile if it fits. Wait.", headline="signal", input_type=InputType.enter)
-    raw = io_read("Did they react?", headline="signal", input_type=InputType.yn).strip().lower()
-    return raw == "y" or None
-
-
-def willing_to_continue() -> bool:
-    """Ask whether the human wants to keep trying."""
-    raw = io_read("Do you want to keep trying?", headline="try", input_type=InputType.yn).strip().lower()
-    return raw == "y"
+    return sense("Did they react?", headline="signal") or None
 
 
 def flow() -> None:
@@ -123,6 +125,12 @@ def observe(entity, kind):
 def choose(options: list) -> str:
     """Pick one from a list of options by reading the situation."""
     while True:
-        raw = io_read("Pick one (number):", headline="choose", input_type=InputType.choice, choices=options).strip()
+        raw = io_read("Pick one:", headline="choose", input_type=InputType.choice, choices=options).strip()
         if raw.isdigit() and 1 <= int(raw) <= len(options):
             return options[int(raw) - 1]
+
+
+def sense(prompt: str, *, headline: str = "sense") -> bool:
+    """Ask yourself an honest yes/no question and answer from the gut."""
+    raw = io_read(prompt, headline=headline, input_type=InputType.yn).strip().lower()
+    return raw == "y"
