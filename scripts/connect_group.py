@@ -1,117 +1,118 @@
 """
 Social script
-version: v1
-tags: slow, approaching
+version: v2
+tags: playful, group, multiple executors
 """
 
-import random
 from social_script import *
 
 
-def initialize_approach_with(group):
-    # pick an opener based on what the group is currently doing
-    group_activity = observe(group, Activity)
-    match group_activity:
-        case Activity.conversing:
-            topic = catch_conversation_topic(group)
-            if topic and (opener := think_of_question(topic)):
-                return opener
-            return question(choose([
-                "Who is the tallest of you all?",
-                "Wine or beer?",
-                "Who is the most chaotic in your group?",
-            ]))
-        case Activity.gaming:
-            game = catch_game(group)
-            if game and assert_knowledge(game):
-                return question("Can I join you?")
-            else:
-                return question("What do you play?")
-        case _:
-            return random_question()
+# An art-project game. The app is in charge: it gives short orders, everyone
+# just does what it says. "The app made us" lifts the fear of looking stupid
+# off any one person. You do one brave thing — take it to people you don't
+# know — then the app runs the room and gets passed around.
 
 
-def approach(opener):
-    # say the opener, then hold space for their response
-    try:
-        say(opener)
-    except FearTooHigh:
-        breath_in_out(3)
-        approach(opener)
-        return
+# --- the decks the app deals from: short, concrete, weave-able, a little unhinged ---
 
-    hold_posture()
-    flow()
+THINGS = [
+    "a goat", "a fire alarm", "your ex", "free pizza", "a minor crime",
+    "a celebrity (you swear it was them)", "the police", "a very large bill",
+    "a missing shoe", "a karaoke machine", "someone's grandma", "a bet you regret",
+    "a stranger's wedding", "a trampoline", "a confession of love", "a parking ticket",
+    "an unexpected kebab", "a group-chat meltdown", "a llama (or was it an alpaca)",
+    "a 3am decision", "a borrowed costume", "a suspicious smell", "a minor betrayal",
+    "an inflatable flamingo", "a wrong number that changed everything",
+    "a dare that escalated", "a very confident wrong guess", "one too many",
+]
+
+GLUE = ["But then…", "Therefore…", "Meanwhile…", "Suddenly…", "Which is when…", "Unfortunately…"]
+
+PICKS = [
+    "your last encounter with an animal that didn't go to plan",
+    "the worst trip you've ever taken",
+    "a childhood crime you got away with",
+    "where you'd run away to, and why",
+    "the last thing you got way too competitive about",
+    "a time you got caught doing something dumb",
+    "the strangest thing you've been paid to do",
+    "a lie that spiralled out of control",
+    "your closest brush with someone famous",
+    "the most trouble a group chat got you into",
+    "a hidden skill nobody would guess you have",
+    "the worst date in living memory",
+    "a time you were absurdly lucky",
+    "something you believed way too long as a kid",
+    "the dumbest thing you've done on a dare",
+    "the pettiest revenge you've ever taken",
+    "a travel story that went sideways",
+    "the weirdest place you've fallen asleep",
+    "a rule you broke and don't regret",
+    "your most expensive mistake",
+    "a time a stranger genuinely surprised you",
+    "a childhood sin you've never confessed",
+]
 
 
-def catch_conversation_topic(group):
-    # can you make out what they're talking about?
-    return sense("Can you catch their topic?", headline="listen")
+def approach_strangers():
+    # the dare: people you don't actually know. find them, get close, explain yourself.
+    group = find_group_of_people()
+    reduce_distance_to(group)
+    # your own words — it's an art project, the app's running you, and: got a minute?
+    say(question(instruction="Your words: it's an art project, the app's running you — got a few minutes?"))
+    return sense("Are they in?", headline="check")
 
 
-def think_of_question(topic):
-    if sense("Think of a question about the topic. Do you have any?", headline="think"):
-        return question(instruction="Ask the question you have in mind")
-    return None
+def tell_a_story_together(players):
+    # one dumb story, one line each, glued with but/therefore (good stories TURN, they
+    # don't just "and then…"), plus a concrete thing to work in (specifics = funny + vivid)
+    say(question(instruction="Start out loud: 'This story is about…' — and run with it."))
+    hand_over()
+    for _ in range(players):
+        say(question(instruction=f"{deal(GLUE)} add a line — work in {deal(THINGS)}."))
+        hand_over()
+    # land the nonsense somewhere REAL — that's what turns a laugh into a memory
+    say(question(instruction="Last line: bring it home — land it on something real about tonight or your life."))
 
 
-def catch_game(group):
-    return sense("Can you tell what game they're playing?", headline="observe")
+def truth_or_lie(players):
+    # a forced secret element makes a true story sound fake and gives a lie an anchor —
+    # so nobody can read the tells. the reveal at the end is where you actually connect.
+    for _ in range(players):
+        say(question(instruction=f"Read out loud: {deal(PICKS)}."))
+        say(question(instruction=f"(don't read aloud):\ninclude \"{deal(THINGS)}\" into your answer."))
+        say(question(instruction="Tell it — true, or a total lie. Sell it either way."))
+        say(question(instruction="Group: truth or lie? Lock it in — then reveal, and if you lied, give us the real one."))
+        hand_over()
 
 
-def assert_knowledge(subject):
-    return sense("Do you know this game well enough to join?", headline="think")
-
-
-def random_question():
-    options = [
-        "What's the most random skill among you all?",
-        "What's something your group is weirdly proud of?",
-        "What would you all be doing right now if you weren't here?",
-        "What's the most controversial opinion in your group about something completely unimportant?",
-        "If your group had a theme song, what would it be?",
-        "What's the last thing that had all of you laughing?",
-        "Who in your group would surprise people the most?",
-        "If you all had to eat one thing forever, could you even agree on what?",
-    ]
-    return question(random.choice(options))
+def land_it():
+    # peak-end: people keep the high point and the last beat — leave a good one
+    say(question(instruction="Whoever's holding me: call the night's best moment. Then put me down — done."))
 
 
 # --- main flow ---
 
-sit_down()
-observe_environment()
+play_along()
 
-group = None
-while not group:
-    wait()
-    potential_group = find_group_of_people()
-    if interested_in(potential_group) and assess_external(potential_group, readiness_for_interaction) > 5:
-        group = potential_group
+# the dare: bring in people you don't actually know. not optional — that's the point.
+while not approach_strangers():
+    say(question(instruction="No worries — thank them, no pressure. On to the next group."))
 
-fear_level = assess_internal(fear)
+# it's an art project and the app films — never film anyone who hasn't said yes
+say(question(instruction="Tell them the app films the game for the project. Everyone okay with that?"))
 
-if fear_level <= 5:
-    opener = initialize_approach_with(group)
-    approach(opener)
+# the app gives everyone a turn — explain the passing your own way
+say(question(instruction="Your words: the app gives each of you a go — you'll pass it round."))
+hand_over()
+
+players = count_heads()
+
+# the whole group picks the game, together
+say(question(instruction="Whole group — decide this one together:"))
+if choose(["Tell a story together", "Truth or lie"]) == "Tell a story together":
+    tell_a_story_together(players)
 else:
-    if not distance_of(me, group).in_understanding_range:
-        reduce_distance_to(group)
+    truth_or_lie(players)
 
-    keep_trying = True
-    while keep_trying:
-        reaction = show_interest_and_wait()
-        if reaction:
-            break
-        fear_level = assess_internal(fear)
-        if fear_level <= 5:
-            break
-        keep_trying = assess_internal(willingness_to_continue)
-
-    if reaction:
-        flow()
-    elif fear_level <= 5:
-        opener = initialize_approach_with(group)
-        approach(opener)
-    else:
-        exit_gracefully()
+land_it()

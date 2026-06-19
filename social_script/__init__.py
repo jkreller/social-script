@@ -34,6 +34,13 @@ from social_script.actions import (
     sense,
 )
 
+from social_script.play import (
+    play_along,
+    hand_over,
+    count_heads,
+    deal,
+)
+
 from social_script.phrases import (
     greeting,
     exit,
@@ -105,6 +112,11 @@ __all__ = [
     "observe",
     "choose",
     "sense",
+    # play
+    "play_along",
+    "hand_over",
+    "count_heads",
+    "deal",
     # phrase categories
     "greeting",
     "exit",
