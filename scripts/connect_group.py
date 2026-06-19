@@ -69,7 +69,7 @@ def tell_a_story_together(players):
     say(question(instruction="Start out loud: 'This story is about…' — and run with it."))
     hand_over()
     for _ in range(players):
-        say(question(instruction=f"{deal(GLUE)} add a line — work in {deal(THINGS)}."))
+        say(question(instruction=f"{deal(GLUE)}\n\n…add a line — include\n\"{deal(THINGS)}\"."))
         hand_over()
     # land the nonsense somewhere REAL — that's what turns a laugh into a memory
     say(question(instruction="Last line: bring it home — land it on something real about tonight or your life."))
