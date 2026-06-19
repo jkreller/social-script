@@ -72,6 +72,11 @@ export default function App() {
     setAnswers(prev => prev.slice(0, -1))
   }, [])
 
+  const handleBack = useCallback(() => {
+    setLog(l => [...l, { type: 'back', timestamp: Date.now(), stepIndex: answers.length - 1 }])
+    setAnswers(prev => prev.slice(0, -1))
+  }, [answers.length])
+
   const reset = useCallback(() => {
     setRecording(r => { if (r) URL.revokeObjectURL(r.url); return null })
     setUserName('')
@@ -94,7 +99,7 @@ export default function App() {
             cameraOn={cameraOn}
             onAnswer={handleAnswer}
             onDone={handleDone}
-            onExit={reset}
+            onBack={handleBack}
             onRollback={handleRollback}
             onStepShow={handleStepShow}
             onExceptionSelect={handleExceptionSelect}

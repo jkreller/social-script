@@ -80,7 +80,7 @@ def truth_or_lie(players):
     # so nobody can read the tells. the reveal at the end is where you actually connect.
     for _ in range(players):
         say(question(instruction=f"Read out loud: {deal(PICKS)}."))
-        say(question(instruction=f"(don't read aloud):\ninclude \"{deal(THINGS)}\" into your answer."))
+        say(question(instruction=f"(don't read aloud):\n\ninclude \"{deal(THINGS)}\" into your answer."))
         say(question(instruction="Tell it — true, or a total lie. Sell it either way."))
         say(question(instruction="Group: truth or lie? Lock it in — then reveal, and if you lied, give us the real one."))
         hand_over()

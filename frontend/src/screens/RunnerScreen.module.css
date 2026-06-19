@@ -38,8 +38,21 @@
   background: var(--border);
 }
 
-.topRight {
+.topLeft {
+  flex: 1;
   display: flex;
+}
+
+.topCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.topRight {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .exceptionBtn {
@@ -173,6 +186,19 @@
 
 .exceptionRow:active {
   background: var(--border);
+}
+
+.backBtn {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
 }
 
 .cancelBtn {

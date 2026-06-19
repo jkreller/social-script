@@ -16,14 +16,14 @@ interface Props {
   cameraOn: boolean
   onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
   onDone: (recording: Recording | null) => void
-  onExit: () => void
+  onBack: () => void
   onRollback: () => void
   onStepShow: (stepIndex: number, prompt: Prompt) => void
   onExceptionSelect: (name: string, label: string) => void
   onException: (name: string, label: string, note: string, decision: 'continue' | 'stop', exceptionStr: string) => void
 }
 
-export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onExit, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
+export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onBack, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
   const { videoRef, switchCamera, stop: stopRecording } = useRecorder(cameraOn)
   const finish = useCallback(async () => onDone(await stopRecording()), [onDone, stopRecording])
   const [prompt, setPrompt] = useState<Prompt | null>(null)
@@ -147,14 +147,24 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
   }
 
   const interactive = exceptions.length > 0 && prompt && !loading && !error && !uncaught
+  const canGoBack = answers.length > 0 && prompt && !loading && !error && !uncaught
 
   return (
     <div className={styles.root}>
       {cameraOn && <CameraLayer videoRef={videoRef} />}
       <div className={styles.topBar}>
-        <button className={styles.exitBtn} onClick={() => setShowConfirm(true)} aria-label="Exit">
-          ×
-        </button>
+        <div className={styles.topLeft}>
+          <button className={styles.exitBtn} onClick={() => setShowConfirm(true)} aria-label="Exit">
+            ×
+          </button>
+        </div>
+        <div className={styles.topCenter}>
+          {canGoBack && (
+            <button className={styles.backBtn} onClick={onBack} aria-label="Back">
+              ↺ previous step
+            </button>
+          )}
+        </div>
         <div className={styles.topRight}>
           {cameraOn && (
             <button className={styles.exceptionBtn} onPointerDown={switchCamera} aria-label="Switch camera">
@@ -208,7 +218,7 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
             <button className={btn.btnSecondary} onClick={() => setShowConfirm(false)}>
               Keep going
             </button>
-            <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={async () => { await stopRecording(); onExit() }}>
+            <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={finish}>
               Quit
             </button>
           </div>
