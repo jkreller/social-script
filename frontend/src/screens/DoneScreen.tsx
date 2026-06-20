@@ -1,5 +1,5 @@
+import { useEffect, useMemo } from 'react'
 import type { LogEntry } from '../types'
-import type { Recording } from '../hooks/useRecorder'
 import { downloadLog, safeName } from '../utils/downloadLog'
 import btn from '../styles/buttons.module.css'
 import styles from './DoneScreen.module.css'
@@ -10,18 +10,24 @@ interface Props {
   version: string
   tags: string[]
   log: LogEntry[]
-  recording: Recording | null
+  clips: Blob[]
   onRestart: () => void
 }
 
-export default function DoneScreen({ userName, script, version, tags, log, recording, onRestart }: Props) {
+export default function DoneScreen({ userName, script, version, tags, log, clips, onRestart }: Props) {
   const dateStr = new Date(log.find(e => e.type === 'start')?.timestamp ?? Date.now()).toISOString().slice(0, 10)
 
-  const downloadVideo = (r: Recording) => {
-    const ext = r.blob.type.includes('mp4') ? 'mp4' : 'webm'
+  // One object URL per clip; revoke them when the screen goes away. A run yields more than
+  // one clip only when it was interrupted (one per segment between interruptions).
+  const urls = useMemo(() => clips.map(c => URL.createObjectURL(c)), [clips])
+  useEffect(() => () => urls.forEach(u => URL.revokeObjectURL(u)), [urls])
+
+  const downloadVideo = (blob: Blob, url: string, index: number) => {
+    const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
+    const suffix = clips.length > 1 ? `_${index + 1}` : ''
     const a = document.createElement('a')
-    a.href = r.url
-    a.download = `video_${safeName(script)}_${safeName(userName)}_${dateStr}.${ext}`
+    a.href = url
+    a.download = `video_${safeName(script)}_${safeName(userName)}_${dateStr}${suffix}.${ext}`
     a.click()
   }
 
@@ -35,11 +41,11 @@ export default function DoneScreen({ userName, script, version, tags, log, recor
       >
         Download Log
       </button>
-      {recording && (
-        <button className={btn.btnSecondary} onClick={() => downloadVideo(recording)}>
-          Download Video
+      {urls.map((url, i) => (
+        <button key={url} className={btn.btnSecondary} onClick={() => downloadVideo(clips[i], url, i)}>
+          {clips.length > 1 ? `Download Video ${i + 1}` : 'Download Video'}
         </button>
-      )}
+      ))}
       <button className={btn.btnSecondary} onClick={onRestart}>
         Return Home
       </button>

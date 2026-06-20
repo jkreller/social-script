@@ -2,11 +2,13 @@ import { useState, useCallback, useEffect } from 'react'
 import styles from './App.module.css'
 import HomeScreen from './screens/HomeScreen'
 import RunnerScreen from './screens/RunnerScreen'
+import PausedScreen from './screens/PausedScreen'
 import DoneScreen from './screens/DoneScreen'
-import type { Recording } from './hooks/useRecorder'
+import { PAUSED_KEY } from './hooks/useRecorder'
+import { getClips, clearClips } from './utils/recordingStore'
 import type { Prompt, LogEntry } from './types'
 
-type Screen = 'home' | 'running' | 'done'
+type Screen = 'home' | 'running' | 'paused' | 'done'
 
 // Restore a run that survived the interpreter dying (iOS aggressively kills
 // backgrounded PWAs). Replay of `answers` lands back on the same prompt.
@@ -14,8 +16,14 @@ const SAVED = (() => {
   try { return JSON.parse(localStorage.getItem('run') || 'null') } catch { return null }
 })()
 
+// A run interrupted mid-recording leaves this flag set (see useRecorder). On the next
+// foreground/launch we land on the Resume/Finish prompt instead of straight back in the run.
+const PAUSED = (() => {
+  try { return localStorage.getItem(PAUSED_KEY) === '1' } catch { return false }
+})()
+
 export default function App() {
-  const [screen, setScreen] = useState<Screen>(SAVED?.screen ?? 'home')
+  const [screen, setScreen] = useState<Screen>(SAVED ? (PAUSED ? 'paused' : SAVED.screen ?? 'home') : 'home')
   const [script, setScript] = useState(SAVED?.script ?? '')
   const [version, setVersion] = useState<string>(SAVED?.version ?? '')
   const [tags, setTags] = useState<string[]>(SAVED?.tags ?? [])
@@ -23,14 +31,23 @@ export default function App() {
   const [userName, setUserName] = useState(SAVED?.userName ?? '')
   const [log, setLog] = useState<LogEntry[]>(SAVED?.log ?? [])
   const [cameraOn, setCameraOn] = useState<boolean>(SAVED?.cameraOn ?? true)
-  const [recording, setRecording] = useState<Recording | null>(null)
+  const [clips, setClips] = useState<Blob[]>([])
 
   useEffect(() => {
-    if (screen === 'home') localStorage.removeItem('run')
+    if (screen === 'home') { localStorage.removeItem('run'); localStorage.removeItem(PAUSED_KEY) }
     else localStorage.setItem('run', JSON.stringify({ screen, script, version, tags, userName, cameraOn, answers, log }))
   }, [screen, script, version, tags, userName, cameraOn, answers, log])
 
+  // The Done screen lists every saved clip (recovered + just-finished). Load them whenever
+  // we land on it — covers a normal finish, finishing from paused, and relaunching onto Done.
+  useEffect(() => {
+    if (screen === 'done') getClips().then(setClips).catch(() => {})
+  }, [screen])
+
   const handlePick = useCallback((name: string, ver: string, scriptTags: string[], user: string, camera: boolean) => {
+    localStorage.removeItem(PAUSED_KEY)
+    clearClips().catch(() => {})
+    setClips([])
     setScript(name)
     setVersion(ver)
     setTags(scriptTags)
@@ -38,7 +55,6 @@ export default function App() {
     setAnswers([])
     setLog([{ type: 'start', timestamp: Date.now() }])
     setCameraOn(camera)
-    setRecording(null)
     setScreen('running')
   }, [])
 
@@ -62,9 +78,24 @@ export default function App() {
     }
   }, [])
 
-  const handleDone = useCallback((rec: Recording | null) => {
+  const handleDone = useCallback(() => {
     setLog(l => [...l, { type: 'finish', timestamp: Date.now() }])
-    setRecording(rec)
+    setScreen('done')
+  }, [])
+
+  // The recording was finalized on interruption; let the human choose what's next.
+  const handlePaused = useCallback(() => setScreen('paused'), [])
+
+  // Resume: the unmounted RunnerScreen remounts fresh, so a new clip starts recording;
+  // the preserved `answers` replay to the prompt we left off on.
+  const handleResume = useCallback(() => {
+    localStorage.removeItem(PAUSED_KEY)
+    setScreen('running')
+  }, [])
+
+  const handleFinishFromPaused = useCallback(() => {
+    setLog(l => [...l, { type: 'finish', timestamp: Date.now() }])
+    localStorage.removeItem(PAUSED_KEY)
     setScreen('done')
   }, [])
 
@@ -78,7 +109,8 @@ export default function App() {
   }, [answers.length])
 
   const reset = useCallback(() => {
-    setRecording(r => { if (r) URL.revokeObjectURL(r.url); return null })
+    clearClips().catch(() => {})
+    setClips([])
     setUserName('')
     setLog([])
     setScreen('home')
@@ -99,12 +131,18 @@ export default function App() {
             cameraOn={cameraOn}
             onAnswer={handleAnswer}
             onDone={handleDone}
+            onPaused={handlePaused}
             onBack={handleBack}
             onRollback={handleRollback}
             onStepShow={handleStepShow}
             onExceptionSelect={handleExceptionSelect}
             onException={handleException}
           />
+        </div>
+      )}
+      {screen === 'paused' && (
+        <div key="paused" className={styles.screen}>
+          <PausedScreen onResume={handleResume} onFinish={handleFinishFromPaused} />
         </div>
       )}
       {screen === 'done' && (
@@ -115,7 +153,7 @@ export default function App() {
             version={version}
             tags={tags}
             log={log}
-            recording={recording}
+            clips={clips}
             onRestart={reset}
           />
         </div>

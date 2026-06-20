@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getExceptions, postStep } from '../api'
 import type { ExceptionInfo, ExceptionType, Prompt } from '../types'
-import { useRecorder, type Recording } from '../hooks/useRecorder'
+import { useRecorder } from '../hooks/useRecorder'
 import CameraLayer from '../components/CameraLayer'
 import EnterInput from '../inputs/EnterInput'
 import YesNoInput from '../inputs/YesNoInput'
@@ -15,7 +15,8 @@ interface Props {
   answers: string[]
   cameraOn: boolean
   onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
-  onDone: (recording: Recording | null) => void
+  onDone: () => void
+  onPaused: () => void
   onBack: () => void
   onRollback: () => void
   onStepShow: (stepIndex: number, prompt: Prompt) => void
@@ -23,9 +24,9 @@ interface Props {
   onException: (name: string, label: string, note: string, decision: 'continue' | 'stop', exceptionStr: string) => void
 }
 
-export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onBack, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
-  const { videoRef, switchCamera, stop: stopRecording } = useRecorder(cameraOn)
-  const finish = useCallback(async () => onDone(await stopRecording()), [onDone, stopRecording])
+export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onPaused, onBack, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
+  const { videoRef, switchCamera, stop: stopRecording } = useRecorder(cameraOn, onPaused)
+  const finish = useCallback(async () => { await stopRecording(); onDone() }, [onDone, stopRecording])
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

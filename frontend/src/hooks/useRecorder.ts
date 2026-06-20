@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { addClip } from '../utils/recordingStore'
 
 export type Facing = 'front' | 'back'
 
-export interface Recording {
-  url: string
-  blob: Blob
-}
+// localStorage flag, read by App on the next foreground/launch: a run was interrupted
+// mid-recording and is awaiting the human's Resume/Finish choice. Written synchronously
+// in the hide handler so it survives even when the async clip-save can't finish before
+// iOS freezes the page.
+export const PAUSED_KEY = 'paused'
 
 // Prefer MP4/H.264 (plays natively in QuickTime, iMessage, editors); fall back to webm
 // where MediaRecorder can't produce MP4 (Firefox). Empty string lets MediaRecorder pick.
@@ -27,12 +29,18 @@ const VIDEO_BPS = 2_000_000 // ~2 Mbps H.264 @ 720p
 const AUDIO_BPS = 128_000   // 128 kbps AAC
 
 /**
- * Records one camera at a time (front by default, mic audio included) for the whole run.
- * The active camera is drawn into an offscreen canvas and the canvas stream is recorded,
- * so switchCamera() can swap the source without ever interrupting the recorder — the
- * result is a single continuous file. NOTE: getUserMedia needs HTTPS off localhost.
+ * Records one camera at a time (front by default, mic audio included). The active camera
+ * is drawn into an offscreen canvas and the canvas stream is recorded, so switchCamera()
+ * can swap the source without interrupting the recorder.
+ *
+ * A recording ends on a clean finish (stop()) OR the first interruption — lock, background,
+ * notification pull, close (visibilitychange→hidden / pagehide). On interruption we finalize
+ * a playable clip right away (iOS MP4 is only valid after a clean stop), append it to the
+ * clip store, and flag the run paused via `onInterrupted` so the app can offer Resume
+ * (records a fresh clip) or Finish. Each finalized clip is appended to recordingStore.
+ * NOTE: getUserMedia needs HTTPS off localhost.
  */
-export function useRecorder(enabled: boolean) {
+export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const cameraTrack = useRef<MediaStreamTrack | null>(null)
@@ -42,7 +50,56 @@ export function useRecorder(enabled: boolean) {
   const chunks = useRef<Blob[]>([])
   const startedRef = useRef(false)
   const switchingRef = useRef(false)
+  const wakeLock = useRef<WakeLockSentinel | null>(null)
+  const detachListeners = useRef<() => void>(() => {})
+  const onInterruptedRef = useRef(onInterrupted)
+  onInterruptedRef.current = onInterrupted
   const [facing, setFacing] = useState<Facing>('front')
+
+  // iOS suspends requestAnimationFrame — and with it the draw() loop that feeds the
+  // recorder — when the screen dims or the page is hidden, freezing the picture while
+  // audio keeps going. A screen wake lock keeps the display (and the render loop) alive
+  // while recording; it's released the moment the recording ends. We don't re-acquire on
+  // return, because any hide ends the recording (see interrupt). Best-effort: iOS < 16.4
+  // and browsers without the API just go without.
+  const acquireWakeLock = useCallback(async () => {
+    if (document.visibilityState !== 'visible') return
+    try { wakeLock.current = (await navigator.wakeLock?.request('screen')) ?? null }
+    catch { /* denied or unsupported → no lock */ }
+  }, [])
+
+  // End the recording, save the clip, release everything. Idempotent: claims the recorder
+  // ref synchronously so a second trigger (e.g. pagehide right after visibilitychange) is a
+  // no-op. Used by both a clean finish and an interruption.
+  const finalize = useCallback(async () => {
+    cancelAnimationFrame(rafId.current)
+    const rec = recorder.current
+    recorder.current = null
+    detachListeners.current()
+    detachListeners.current = () => {}
+    wakeLock.current?.release().catch(() => {})
+    wakeLock.current = null
+    let blob: Blob | null = null
+    if (rec) {
+      blob = await new Promise<Blob>(resolve => {
+        rec.onstop = () => resolve(new Blob(chunks.current, { type: rec.mimeType || 'video/webm' }))
+        if (rec.state !== 'inactive') rec.stop()
+        else rec.onstop!(new Event('stop'))
+      })
+    }
+    cameraTrack.current?.stop()
+    audioTrack.current?.stop()
+    if (blob && blob.size) { try { await addClip(blob) } catch { /* storage unavailable */ } }
+  }, [])
+
+  // Hidden/closed while recording: flag the run paused (sync, so it survives a kill), let
+  // the app react, then finalize the current clip.
+  const interrupt = useCallback(() => {
+    if (!recorder.current) return
+    try { localStorage.setItem(PAUSED_KEY, '1') } catch { /* ignore */ }
+    onInterruptedRef.current?.()
+    finalize()
+  }, [finalize])
 
   const openCamera = async (f: Facing) => {
     const s = await navigator.mediaDevices.getUserMedia({
@@ -60,7 +117,7 @@ export function useRecorder(enabled: boolean) {
     v.play().catch(() => {})
   }
 
-  // Acquire once. Teardown happens only via stop() (not effect cleanup), so React
+  // Acquire once. Teardown happens only via finalize() (not effect cleanup), so React
   // StrictMode's throwaway unmount can't kill the stream before recording starts.
   useEffect(() => {
     if (!enabled || startedRef.current) return
@@ -123,8 +180,19 @@ export function useRecorder(enabled: boolean) {
       rec.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
       rec.start()
       recorder.current = rec
+      acquireWakeLock()
+
+      // Finalize on the first sign of leaving: visibilitychange→hidden (earliest, while JS
+      // is still alive) with pagehide as a close/navigation backstop.
+      const onVisibility = () => { if (document.visibilityState === 'hidden') interrupt() }
+      document.addEventListener('visibilitychange', onVisibility)
+      window.addEventListener('pagehide', interrupt)
+      detachListeners.current = () => {
+        document.removeEventListener('visibilitychange', onVisibility)
+        window.removeEventListener('pagehide', interrupt)
+      }
     })()
-  }, [enabled])
+  }, [enabled, acquireWakeLock, interrupt])
 
   const switchCamera = useCallback(async () => {
     if (switchingRef.current || !cameraTrack.current) return
@@ -142,22 +210,7 @@ export function useRecorder(enabled: boolean) {
     switchingRef.current = false
   }, [facing])
 
-  const stop = useCallback(async (): Promise<Recording | null> => {
-    cancelAnimationFrame(rafId.current)
-    const rec = recorder.current
-    const out = rec ? await new Promise<Recording>(resolve => {
-      rec.onstop = () => {
-        const blob = new Blob(chunks.current, { type: rec.mimeType || 'video/webm' })
-        resolve({ url: URL.createObjectURL(blob), blob })
-      }
-      if (rec.state !== 'inactive') rec.stop()
-      else rec.onstop!(new Event('stop'))
-    }) : null
-    cameraTrack.current?.stop()
-    audioTrack.current?.stop()
-    recorder.current = null
-    return out
-  }, [])
+  const stop = useCallback(() => finalize(), [finalize])
 
   return { videoRef, facing, switchCamera, stop }
 }
