@@ -25,7 +25,7 @@ interface Props {
 }
 
 export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onPaused, onBack, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
-  const { videoRef, switchCamera, stop: stopRecording } = useRecorder(cameraOn, onPaused)
+  const { videoRef, stop: stopRecording } = useRecorder(cameraOn, onPaused)
   const finish = useCallback(async () => { await stopRecording(); onDone() }, [onDone, stopRecording])
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [loading, setLoading] = useState(true)
@@ -167,11 +167,6 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
           )}
         </div>
         <div className={styles.topRight}>
-          {cameraOn && (
-            <button className={styles.exceptionBtn} onPointerDown={switchCamera} aria-label="Switch camera">
-              ⇄
-            </button>
-          )}
           {interactive && (
             <button className={styles.exceptionBtn} onClick={() => setShowException(true)} aria-label="Raise exception">
               ⚑

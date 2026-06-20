@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { addClip } from '../utils/recordingStore'
-
-export type Facing = 'front' | 'back'
 
 // localStorage flag, read by App on the next foreground/launch: a run was interrupted
 // mid-recording and is awaiting the human's Resume/Finish choice. Written synchronously
@@ -29,39 +27,35 @@ const VIDEO_BPS = 2_000_000 // ~2 Mbps H.264 @ 720p
 const AUDIO_BPS = 128_000   // 128 kbps AAC
 
 /**
- * Records one camera at a time (front by default, mic audio included). The active camera
- * is drawn into an offscreen canvas and the canvas stream is recorded, so switchCamera()
- * can swap the source without interrupting the recorder.
+ * Records the front camera + mic for the whole run by recording the getUserMedia
+ * MediaStream **directly**. We deliberately do NOT route through an offscreen canvas:
+ * canvas.captureStream() + MediaRecorder is unreliable on iOS (it freezes the picture
+ * after ~15s and can emit black / unseekable / wrong-duration files — WebKit bugs 229611,
+ * 216832, 181663). Recording the track directly is immune to that, since MediaRecorder
+ * pulls frames straight from the camera regardless of page rendering.
  *
  * A recording ends on a clean finish (stop()) OR the first interruption — lock, background,
- * notification pull, close (visibilitychange→hidden / pagehide). On interruption we finalize
- * a playable clip right away (iOS MP4 is only valid after a clean stop), append it to the
- * clip store, and flag the run paused via `onInterrupted` so the app can offer Resume
- * (records a fresh clip) or Finish. Each finalized clip is appended to recordingStore.
- * NOTE: getUserMedia needs HTTPS off localhost.
+ * notification pull, close (visibilitychange→hidden / pagehide) — finalizing a playable clip
+ * and flagging the run paused via `onInterrupted` so the app can offer Resume (a fresh clip)
+ * or Finish. Each finalized clip is appended to recordingStore. NOTE: getUserMedia needs
+ * HTTPS off localhost.
  */
 export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const cameraTrack = useRef<MediaStreamTrack | null>(null)
   const audioTrack = useRef<MediaStreamTrack | null>(null)
-  const rafId = useRef<number>(0)
   const recorder = useRef<MediaRecorder | null>(null)
   const chunks = useRef<Blob[]>([])
   const startedRef = useRef(false)
-  const switchingRef = useRef(false)
   const wakeLock = useRef<WakeLockSentinel | null>(null)
   const detachListeners = useRef<() => void>(() => {})
   const onInterruptedRef = useRef(onInterrupted)
   onInterruptedRef.current = onInterrupted
-  const [facing, setFacing] = useState<Facing>('front')
 
-  // iOS suspends requestAnimationFrame — and with it the draw() loop that feeds the
-  // recorder — when the screen dims or the page is hidden, freezing the picture while
-  // audio keeps going. A screen wake lock keeps the display (and the render loop) alive
-  // while recording; it's released the moment the recording ends. We don't re-acquire on
-  // return, because any hide ends the recording (see interrupt). Best-effort: iOS < 16.4
-  // and browsers without the API just go without.
+  // iOS suspends background timers and can throttle the page, and locking the screen hides
+  // it (→ finalize). A screen wake lock keeps the display awake while recording so the run
+  // isn't needlessly split into clips. Released the moment the recording ends. Best-effort:
+  // iOS < 16.4 and browsers without the API just go without.
   const acquireWakeLock = useCallback(async () => {
     if (document.visibilityState !== 'visible') return
     try { wakeLock.current = (await navigator.wakeLock?.request('screen')) ?? null }
@@ -72,7 +66,6 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
   // ref synchronously so a second trigger (e.g. pagehide right after visibilitychange) is a
   // no-op. Used by both a clean finish and an interruption.
   const finalize = useCallback(async () => {
-    cancelAnimationFrame(rafId.current)
     const rec = recorder.current
     recorder.current = null
     detachListeners.current()
@@ -82,13 +75,20 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
     let blob: Blob | null = null
     if (rec) {
       blob = await new Promise<Blob>(resolve => {
-        rec.onstop = () => resolve(new Blob(chunks.current, { type: rec.mimeType || 'video/webm' }))
-        if (rec.state !== 'inactive') rec.stop()
-        else rec.onstop!(new Event('stop'))
+        const done = () => resolve(new Blob(chunks.current, { type: rec.mimeType || 'video/webm' }))
+        rec.onstop = done
+        if (rec.state !== 'inactive') {
+          rec.stop()
+          // iOS sometimes never fires onstop; fall back to the buffered chunks so a finish
+          // (or interruption) can't hang forever.
+          setTimeout(done, 1500)
+        } else done()
       })
     }
     cameraTrack.current?.stop()
     audioTrack.current?.stop()
+    cameraTrack.current = null
+    audioTrack.current = null
     if (blob && blob.size) { try { await addClip(blob) } catch { /* storage unavailable */ } }
   }, [])
 
@@ -100,22 +100,6 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
     onInterruptedRef.current?.()
     finalize()
   }, [finalize])
-
-  const openCamera = async (f: Facing) => {
-    const s = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: f === 'front' ? 'user' : 'environment', width: { ideal: 1280 } },
-    })
-    return s.getVideoTracks()[0] ?? null
-  }
-
-  const showTrack = (track: MediaStreamTrack) => {
-    const v = videoRef.current
-    if (!v) return
-    v.srcObject = new MediaStream([track])
-    v.muted = true
-    v.playsInline = true
-    v.play().catch(() => {})
-  }
 
   // Acquire once. Teardown happens only via finalize() (not effect cleanup), so React
   // StrictMode's throwaway unmount can't kill the stream before recording starts.
@@ -130,49 +114,23 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
         audioTrack.current = a.getAudioTracks()[0] ?? null
       } catch { /* no mic → video-only */ }
 
-      let track: MediaStreamTrack | null = null
-      try { track = await openCamera('front') } catch { /* handled below */ }
-      if (!track) { audioTrack.current?.stop(); return }
+      let camera: MediaStream | null = null
+      try {
+        camera = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 } },
+        })
+      } catch { /* handled below */ }
+      const track = camera?.getVideoTracks()[0] ?? null
+      if (!track) { audioTrack.current?.stop(); audioTrack.current = null; return }
       cameraTrack.current = track
-      showTrack(track)
 
-      // Wait for the decoded frame size before sizing the canvas. getSettings() is
-      // unreliable on iOS Safari (reports the sensor's landscape orientation even when
-      // frames are portrait), which squeezes the recording; videoWidth/videoHeight is
-      // the true frame and drawImage then fills the canvas 1:1.
-      const v0 = videoRef.current
-      if (v0 && !(v0.videoWidth && v0.videoHeight)) {
-        await new Promise<void>(resolve =>
-          v0.addEventListener('loadedmetadata', () => resolve(), { once: true }))
-      }
-
-      const canvas = document.createElement('canvas')
-      canvasRef.current = canvas
-      const ctx = canvas.getContext('2d')!
-      // Size the canvas to the true decoded frame BEFORE captureStream() so the recorder
-      // locks in the correct (portrait or landscape) aspect ratio, not the 300×150 default.
+      // Record the camera+mic stream directly; show it as the faint preview too.
+      const stream = new MediaStream([track, audioTrack.current].filter(Boolean) as MediaStreamTrack[])
       const v = videoRef.current
-      if (v?.videoWidth && v.videoHeight) {
-        canvas.width = v.videoWidth; canvas.height = v.videoHeight
-      } else {
-        // Fallback only if the element never reported a frame size.
-        const s0 = track.getSettings()
-        if (s0.width && s0.height) { canvas.width = s0.width; canvas.height = s0.height }
-      }
-      const draw = () => {
-        const v = videoRef.current
-        if (v && v.readyState >= 2) {
-          if (canvas.width !== v.videoWidth) { canvas.width = v.videoWidth; canvas.height = v.videoHeight }
-          ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
-        }
-        rafId.current = requestAnimationFrame(draw)
-      }
-      draw()
+      if (v) { v.srcObject = stream; v.muted = true; v.playsInline = true; v.play().catch(() => {}) }
 
-      const out = canvas.captureStream()
-      if (audioTrack.current) out.addTrack(audioTrack.current)
       const mime = pickMime()
-      const rec = new MediaRecorder(out, {
+      const rec = new MediaRecorder(stream, {
         ...(mime ? { mimeType: mime } : {}),
         videoBitsPerSecond: VIDEO_BPS,
         audioBitsPerSecond: AUDIO_BPS,
@@ -194,23 +152,7 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
     })()
   }, [enabled, acquireWakeLock, interrupt])
 
-  const switchCamera = useCallback(async () => {
-    if (switchingRef.current || !cameraTrack.current) return
-    switchingRef.current = true
-    const next: Facing = facing === 'front' ? 'back' : 'front'
-    try {
-      const track = await openCamera(next) // acquire before stopping the old one
-      if (track) {
-        cameraTrack.current?.stop()
-        cameraTrack.current = track
-        showTrack(track)
-        setFacing(next)
-      }
-    } catch { /* acquisition failed → stay on current camera */ }
-    switchingRef.current = false
-  }, [facing])
-
   const stop = useCallback(() => finalize(), [finalize])
 
-  return { videoRef, facing, switchCamera, stop }
+  return { videoRef, stop }
 }
