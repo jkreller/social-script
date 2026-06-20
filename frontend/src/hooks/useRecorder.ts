@@ -116,8 +116,13 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
 
       let camera: MediaStream | null = null
       try {
+        // ~540p, ≤30 fps. iOS/iPadOS 26 has an AVFoundation H.264 *playback* bug where HD
+        // (720p) / high-fps clips freeze the picture on the device while audio keeps going,
+        // even though the file is valid and plays fine elsewhere (Apple FB / forums 807818).
+        // Staying below the HD/high-fps trigger — and within Baseline L3.0 (avc1.42E01E) —
+        // produces a stream the iOS 26 decoder handles reliably.
         camera = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 1280 } },
+          video: { facingMode: 'user', width: { ideal: 960 }, frameRate: { ideal: 30, max: 30 } },
         })
       } catch { /* handled below */ }
       const track = camera?.getVideoTracks()[0] ?? null
