@@ -32,6 +32,11 @@ def say(p) -> None:
     io_read(label, headline="say", input_type=InputType.enter)
 
 
+def do(action) -> None:
+    """Carry out a physical action."""
+    io_read(action, headline="action", input_type=InputType.enter)
+
+
 def wait() -> None:
     """Hold still and let silence do the work."""
     io_read("Let it settle.", headline="wait", input_type=InputType.enter)
@@ -122,12 +127,13 @@ def observe(entity, kind):
             return list(kind)[int(raw) - 1]
 
 
-def choose(options: list) -> str:
-    """Pick one from a list of options by reading the situation."""
+def choose(options, prompt: str = "Pick one"):
+    """Pick one option by reading the situation. Pass a list of strings, or an Enum."""
+    members = list(options) if isinstance(options, type) and issubclass(options, Enum) else options
     while True:
-        raw = io_read("Pick one:", headline="choose", input_type=InputType.choice, choices=options).strip()
-        if raw.isdigit() and 1 <= int(raw) <= len(options):
-            return options[int(raw) - 1]
+        raw = io_read(f"{prompt}:", headline="choose", input_type=InputType.choice, choices=[str(m) for m in members]).strip()
+        if raw.isdigit() and 1 <= int(raw) <= len(members):
+            return members[int(raw) - 1]
 
 
 def sense(prompt: str, *, headline: str = "sense") -> bool:

@@ -15,8 +15,8 @@ def hand_over() -> None:
     io_read("Pass me on.", headline="pass", input_type=InputType.enter)
 
 
-def count_heads() -> int:
-    """Ask how many hands the phone will go between."""
+def count_people() -> int:
+    """Ask how many people are playing."""
     while True:
         raw = io_read("How many of you are playing?", headline="count", input_type=InputType.scale).strip()
         if raw.isdigit() and 1 <= int(raw) <= 10:

@@ -16,6 +16,7 @@ from social_script.actions import (
     anchor,
     breath_in_out,
     say,
+    do,
     wait,
     hold_posture,
     exit_gracefully,
@@ -37,7 +38,7 @@ from social_script.actions import (
 from social_script.play import (
     play_along,
     hand_over,
-    count_heads,
+    count_people,
     deal,
 )
 
@@ -63,6 +64,11 @@ from social_script.states import (
     willingness_to_continue,
 )
 
+from social_script.games import (
+    story_telling,
+    truth_or_lie,
+)
+
 from social_script.environment import (
     Person,
     Group,
@@ -78,6 +84,7 @@ from social_script.exceptions import (
     RandomSituation,
     SensoryOverload,
     LostInterest,
+    Shame,
     ExternalReason,
 )
 
@@ -96,6 +103,7 @@ __all__ = [
     "anchor",
     "breath_in_out",
     "say",
+    "do",
     "wait",
     "hold_posture",
     "exit_gracefully",
@@ -115,7 +123,7 @@ __all__ = [
     # play
     "play_along",
     "hand_over",
-    "count_heads",
+    "count_people",
     "deal",
     # phrase categories
     "greeting",
@@ -133,6 +141,9 @@ __all__ = [
     "readiness_for_interaction",
     "tiredness",
     "willingness_to_continue",
+    # games
+    "story_telling",
+    "truth_or_lie",
     # environment
     "Person",
     "Group",
@@ -146,5 +157,6 @@ __all__ = [
     "RandomSituation",
     "SensoryOverload",
     "LostInterest",
+    "Shame",
     "ExternalReason",
 ]

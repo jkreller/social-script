@@ -1,7 +1,7 @@
 """
 Social script
 version: v2
-tags: playful, group, multiple executors
+tags: playful, approach, multiple executors
 """
 
 from social_script import *
@@ -12,8 +12,6 @@ from social_script import *
 # off any one person. You do one brave thing — take it to people you don't
 # know — then the app runs the room and gets passed around.
 
-
-# --- the decks the app deals from: short, concrete, weave-able, a little unhinged ---
 
 THINGS = [
     "a goat", "a fire alarm", "your ex", "free pizza", "a minor crime",
@@ -54,31 +52,34 @@ PICKS = [
 ]
 
 
+def move_on():
+    say("No worries — thank them, no pressure. On to the next group.")
+
+
+def explain():
+    say("Tell them the app films the game for the project. Everyone okay with that?")
+    say("Your words: the app gives each of you a go — you'll pass it round.")
+
+
 def approach_strangers():
-    # the dare: people you don't actually know. find them, get close, explain yourself.
     group = find_group_of_people()
     reduce_distance_to(group)
-    # your own words — it's an art project, the app's running you, and: got a minute?
     say("Your words: it's an art project, the app's running you — got a few minutes?")
     return sense("Are they in?", headline="check")
 
 
-def tell_a_story_together(players):
-    # one dumb story, one line each, glued with but/therefore (good stories TURN, they
-    # don't just "and then…"), plus a concrete thing to work in (specifics = funny + vivid)
-    say("Start out loud: 'This story is about…' — and run with it.")
+def play_story_telling(turns):
+    say("Start the story:\n\"This story is about…\"")
     hand_over()
-    for _ in range(players):
+    for _ in range(turns):
         say(f"{deal(GLUE)}\n\n…add a line — include\n\"{deal(THINGS)}\".")
         hand_over()
-    # land the nonsense somewhere REAL — that's what turns a laugh into a memory
-    say("Last line: bring it home — land it on something real about tonight or your life.")
+
+    say("Last line: bring it home, land it on something real.")
 
 
-def truth_or_lie(players):
-    # a forced secret element makes a true story sound fake and gives a lie an anchor —
-    # so nobody can read the tells. the reveal at the end is where you actually connect.
-    for _ in range(players):
+def play_truth_or_lie(turns):
+    for _ in range(turns):
         say(f"Read out loud: {deal(PICKS)}.")
         say(f"(don't read aloud):\n\ninclude \"{deal(THINGS)}\" into your answer.")
         say("Tell it — true, or a total lie. Sell it either way.")
@@ -86,33 +87,27 @@ def truth_or_lie(players):
         hand_over()
 
 
-def land_it():
-    # peak-end: people keep the high point and the last beat — leave a good one
-    say("Whoever's holding me: favourite part of the story? Then put me down — done.")
+def land_it(game):
+    say(f"Whoever's holding me: favourite {"part of the story" if game is story_telling else "story"}? Then put me down — done.")
 
 
 # --- main flow ---
 
 play_along()
 
-# the dare: bring in people you don't actually know. not optional — that's the point.
 while not approach_strangers():
-    say("No worries — thank them, no pressure. On to the next group.")
+    move_on()
 
-# it's an art project and the app films — never film anyone who hasn't said yes
-say("Tell them the app films the game for the project. Everyone okay with that?")
-
-# the app gives everyone a turn — explain the passing your own way
-say("Your words: the app gives each of you a go — you'll pass it round.")
+explain()
 hand_over()
 
-players = count_heads()
+players = count_people()
+turns = players * 2 if players < 5 else players
 
-# the whole group picks the game, together
-say("Whole group — decide this one together:")
-if choose(["Tell a story together", "Truth or lie"]) == "Tell a story together":
-    tell_a_story_together(players)
-else:
-    truth_or_lie(players)
+game = choose([story_telling, truth_or_lie], "Whole group – decide together")
+if game is story_telling:
+    play_story_telling(turns)
+elif game is truth_or_lie:
+    play_truth_or_lie(turns)
 
-land_it()
+land_it(game)

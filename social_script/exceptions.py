@@ -28,11 +28,15 @@ class LostInterest(AnyException):
     label = "Lost interest / not feeling it today"
 
 
+class Shame(AnyException):
+    label = "Shame — felt embarrassed or judged"
+
+
 class ExternalReason(AnyException):
     label = "Had to leave — external reason"
 
 
 INTERRUPT_MENU = [
     FearTooHigh, UnexpectedReaction, RandomSituation,
-    SensoryOverload, LostInterest, ExternalReason, AnyException,
+    SensoryOverload, LostInterest, Shame, ExternalReason, AnyException,
 ]
