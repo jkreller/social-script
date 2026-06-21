@@ -24,12 +24,12 @@ def breath_in_out(cycles: int = 1) -> None:
         io_read(f"{cue}Breathe in... and out.", headline="breathe", input_type=InputType.enter)
 
 
-def say(p) -> None:
+def say(p, *, headline="say") -> None:
     """Deliver a phrase out loud. Pass a phrase, or a plain string for a free-form line."""
     if isinstance(p, str):
         p = Phrase(instruction=p)
     label = str(p) if isinstance(p, Phrase) and p.instruction else f"Say: '{p}'"
-    io_read(label, headline="say", input_type=InputType.enter)
+    io_read(label, headline=headline, input_type=InputType.enter)
 
 
 def do(action) -> None:

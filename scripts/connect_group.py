@@ -1,7 +1,7 @@
 """
 Social script
-version: v2
-tags: playful, approach, multiple executors
+version: v2.1
+tags: playful, approach, group
 """
 
 from social_script import *
@@ -13,18 +13,58 @@ from social_script import *
 # know — then the app runs the room and gets passed around.
 
 
-THINGS = [
-    "a goat", "a fire alarm", "your ex", "free pizza", "a minor crime",
-    "a celebrity (you swear it was them)", "the police", "a very large bill",
-    "a missing shoe", "a karaoke machine", "someone's grandma",
-    "a stranger's wedding", "a trampoline", "a love story", "a parking ticket",
-    "a kebab", "a group-chat meltdown", "a llama (or alpaca?)", "chaos",
-    "a 3am decision", "a borrowed costume", "a suspicious smell", "a minor lie",
-    "an inflatable flamingo", "the number 42",
-    "a letter from the future", "a very confident wrong guess", "your favourite movie",
+STORY_MOVES = [
+    # — include a thing —
+    'include "a goat"',
+    'include "a fire alarm"',
+    'include "your ex"',
+    'include "free pizza"',
+    'include "a minor crime"',
+    'include "a celebrity (you swear it was them)"',
+    'include "the police"',
+    'include "a very large bill"',
+    'include "a missing shoe"',
+    'include "a karaoke machine"',
+    'include "someone\'s grandma"',
+    'include a person of this group',
+    'include "a stranger\'s wedding"',
+    'include "a trampoline"',
+    'include "a love story"',
+    'include "a parking ticket"',
+    'include "a kebab"',
+    'include "a llama (or alpaca?)"',
+    'include "chaos"',
+    'include "a borrowed costume"',
+    'include "a suspicious smell"',
+    'include "a minor lie"',
+    'include "an inflatable flamingo"',
+    'include "the number 42"',
+    'include "a letter from the future"',
+    'include "the Titanic"',
+    # — story twist —
+    "give it an unexpected twist",
+    "make the main character fall in love",
+    "fast-forward 10 years",
+    "bring in a villain",
+    "reveal it was all a dream",
+    "reveal a shocking secret",
+    "make everything go wrong",
+    "give someone a superpower",
+    # — make it personal —
+    "set it in your actual hometown",
+    "include your favourite band",
+    "make a friend of yours appear",
+    "reference something you did this week",
+    "set a scene in a place you love",
+    "add something only this group would know",
+    "bring in your most embarrassing habit",
+    "make your pet appear (real or imagined)",
 ]
 
-GLUE = ["Next…", "Then…", "But then…", "Therefore…", "Meanwhile…", "Suddenly…", "Which is when…", "Unfortunately…"]
+FREE_MOVE = "your move — take it anywhere"
+
+# roughly one in three turns is a free move
+STORY_POOL = STORY_MOVES + [FREE_MOVE] * 18
 
 PICKS = [
     "your last encounter with an animal that didn't go to plan",
@@ -58,21 +98,21 @@ def move_on():
 
 def explain():
     say("Tell them the app films the game for the project. Everyone okay with that?")
-    say("Your words: the app gives each of you a go — you'll pass it round.")
+    say("The app gives each of you a go — you'll pass it round.")
 
 
 def approach_strangers():
     group = find_group_of_people()
     reduce_distance_to(group)
-    say("Your words: it's an art project, the app's running you — got a few minutes?")
+    say("Say: it's an art project, the app's running you — got a few minutes?")
     return sense("Are they in?", headline="check")
 
 
 def play_story_telling(turns):
-    say("Start the story:\n\"This story is about…\"")
+    say("Start the story:\n\"This story is about…\" (name a person of this group)")
     hand_over()
     for _ in range(turns):
-        say(f"{deal(GLUE)}\n\n…add a line — include\n\"{deal(THINGS)}\".")
+        say(deal(STORY_POOL), headline="continue the story")
         hand_over()
 
     say("Last line: bring it home, land it on something real.")
@@ -80,10 +120,8 @@ def play_story_telling(turns):
 
 def play_truth_or_lie(turns):
     for _ in range(turns):
-        say(f"Read out loud: {deal(PICKS)}.")
-        say(f"(don't read aloud):\n\ninclude \"{deal(THINGS)}\" into your answer.")
-        say("Tell it — true, or a total lie. Sell it either way.")
-        say("Group: truth or lie? Lock it in — then reveal, and if you lied, give us the real one.")
+        say(f"Read out loud:\n\"{deal(PICKS)}\"\n\nTrue or lie — sell it. Press continue when done.")
+        say("Group: truth or lie?\nThen reveal, and if lie, tell the real one.")
         hand_over()
 
 
@@ -99,12 +137,14 @@ while not approach_strangers():
     move_on()
 
 explain()
-hand_over()
 
 players = count_people()
 turns = players * 2 if players < 5 else players
 
-game = choose([story_telling, truth_or_lie], "Whole group – decide together")
+game = choose([story_telling, truth_or_lie], "Decide together")
+
+hand_over()
+
 if game is story_telling:
     play_story_telling(turns)
 elif game is truth_or_lie:
