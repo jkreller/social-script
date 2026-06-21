@@ -43,5 +43,4 @@ export type LogEntry =
   | { type: 'step_answer';      timestamp: number; stepIndex: number; prompt: Prompt; answer: string }
   | { type: 'exception_select'; timestamp: number; exceptionName: string; exceptionLabel: string }
   | { type: 'exception';        timestamp: number; exceptionName: string; exceptionLabel: string; note: string; decision: 'continue' | 'stop' }
-  | { type: 'back';             timestamp: number; stepIndex: number }
   | { type: 'finish';           timestamp: number }

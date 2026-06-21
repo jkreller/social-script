@@ -80,9 +80,6 @@ export function formatLog({ userName, script, version, tags, log }: Params): str
       const noteStr = truncate(entry.note)
       lines.push(`[${elapsed}]  Exception raised: ${entry.exceptionName}  |  exception  |  "${noteStr}"  →  (${entry.decision})`)
 
-    } else if (entry.type === 'back') {
-      lines.push(`[${elapsed}]  ↩ Went back to step ${String(entry.stepIndex + 1)}`)
-
     } else if (entry.type === 'finish') {
       lines.push(`[${elapsed}]  DONE`)
     }
