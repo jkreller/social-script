@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Recorder test</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font: 15px/1.5 -apple-system, system-ui, sans-serif; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  p.note { margin: 0 0 12px; opacity: .7; font-size: 13px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  button { font: inherit; padding: 12px 14px; border: 1px solid #888; border-radius: 10px;
+           background: #f2f2f2; color: #111; cursor: pointer; }
+  button.cfg { flex: 1 1 46%; text-align: left; }
+  button:active { background: #ddd; }
+  button:disabled { opacity: .4; }
+  #stop { background: #b33; color: #fff; border-color: #b33; }
+  label { font-size: 13px; opacity: .8; }
+  input[type=number] { width: 64px; font: inherit; padding: 6px; }
+  video { width: 100%; background: #000; border-radius: 10px; display: block; margin: 6px 0; }
+  #log { white-space: pre-wrap; font: 12px/1.45 ui-monospace, Menlo, monospace;
+         background: #1113; padding: 10px; border-radius: 10px; max-height: 38vh; overflow: auto; }
+  .lbl { font-size: 12px; font-weight: 600; opacity: .7; text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 4px; }
+  a.dl { display: inline-block; margin: 6px 0; }
+</style>
+</head>
+<body>
+  <h1>iOS recorder config test</h1>
+  <p class="note">Tap a config to record, then watch the playback below: scrub past ~15s and check the picture keeps moving. Live preview is on top, recorded result below.</p>
+
+  <div class="row">
+    <label>Record seconds: <input id="secs" type="number" value="20" min="5" max="60" /></label>
+    <button id="stop" disabled>Stop now</button>
+  </div>
+
+  <div class="row">
+    <button class="cfg" data-cfg="1">1 · Current (separate A+V, forced mp4/avc1 + bitrate)</button>
+    <button class="cfg" data-cfg="2">2 · Single stream, no options</button>
+    <button class="cfg" data-cfg="3">3 · Single stream, video/mp4 only</button>
+    <button class="cfg" data-cfg="4">4 · Single stream, VIDEO ONLY</button>
+    <button class="cfg" data-cfg="5">5 · Single, no options, timeslice 1s</button>
+  </div>
+
+  <div class="lbl">Live preview (during recording)</div>
+  <video id="preview" autoplay muted playsinline></video>
+
+  <div class="lbl">Recorded result (scrub past 15s)</div>
+  <video id="playback" controls playsinline></video>
+  <a id="dl" class="dl" hidden download>Download this clip</a>
+
+  <div class="lbl">Log</div>
+  <div id="log"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const logEl = $('log'), preview = $('preview'), playback = $('playback'), dl = $('dl');
+const cfgBtns = [...document.querySelectorAll('.cfg')];
+let stream = null, recorder = null, chunks = [], stopTimer = null, ticker = null;
+
+function log(msg) {
+  const t = new Date().toISOString().slice(11, 19);
+  logEl.textContent += `[${t}] ${msg}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function pickMime(forced) {
+  if (forced && (!window.MediaRecorder || !MediaRecorder.isTypeSupported || MediaRecorder.isTypeSupported(forced))) return forced;
+  return '';
+}
+
+async function teardown() {
+  if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+  if (ticker) { clearInterval(ticker); ticker = null; }
+  try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) {}
+  recorder = null;
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  preview.srcObject = null;
+}
+
+// Build the MediaStream + MediaRecorder options for a config number.
+async function acquire(cfg) {
+  if (cfg === 1) {
+    // Current app behaviour: two separate getUserMedia calls, combined.
+    let audioTrack = null;
+    try { audioTrack = (await navigator.mediaDevices.getUserMedia({ audio: true })).getAudioTracks()[0]; }
+    catch (e) { log('audio getUserMedia failed: ' + e); }
+    const v = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, frameRate: { ideal: 30, max: 30 } } });
+    const s = new MediaStream([v.getVideoTracks()[0], audioTrack].filter(Boolean));
+    const opts = { videoBitsPerSecond: 2_000_000, audioBitsPerSecond: 128_000 };
+    const m = pickMime('video/mp4;codecs=avc1.42E01E,mp4a.40.2'); if (m) opts.mimeType = m;
+    return { s, opts };
+  }
+  // Configs 2–5: ONE combined getUserMedia call.
+  const wantAudio = cfg !== 4;
+  const s = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'user', width: { ideal: 960 }, frameRate: { ideal: 30, max: 30 } },
+    audio: wantAudio,
+  });
+  let opts = {};
+  if (cfg === 3) { const m = pickMime('video/mp4'); if (m) opts.mimeType = m; }
+  return { s, opts };
+}
+
+async function run(cfg) {
+  await teardown();
+  playback.removeAttribute('src'); playback.load(); dl.hidden = true;
+  chunks = [];
+  cfgBtns.forEach(b => b.disabled = true); $('stop').disabled = false;
+  const secs = Math.max(5, Math.min(60, +$('secs').value || 20));
+  const timeslice = cfg === 5 ? 1000 : undefined;
+
+  try {
+    log(`--- config ${cfg} : acquiring camera/mic ---`);
+    const { s, opts } = await acquire(cfg);
+    stream = s;
+    preview.srcObject = s;
+    try { await preview.play(); } catch (e) {}
+
+    const vt = s.getVideoTracks()[0];
+    log('video track: ' + (vt ? JSON.stringify(vt.getSettings()) : 'NONE'));
+    log('audio tracks: ' + s.getAudioTracks().length);
+    if (vt) vt.addEventListener('mute', () => log('!! video track MUTED at ' + elapsed() + 's'));
+    if (vt) vt.addEventListener('ended', () => log('!! video track ENDED at ' + elapsed() + 's'));
+
+    log('MediaRecorder opts: ' + JSON.stringify(opts) + (timeslice ? ` + timeslice ${timeslice}ms` : ''));
+    recorder = new MediaRecorder(s, opts);
+    log('chosen mimeType: ' + recorder.mimeType);
+    recorder.ondataavailable = e => { if (e.data && e.data.size) { chunks.push(e.data); log('chunk ' + chunks.length + ': ' + e.data.size + ' bytes'); } };
+    recorder.onstop = finish;
+    recorder.onerror = e => log('!! recorder error: ' + (e.error || e));
+
+    startTs = Date.now();
+    timeslice ? recorder.start(timeslice) : recorder.start();
+    log(`recording ~${secs}s …`);
+    ticker = setInterval(() => log('… t=' + elapsed() + 's'), 5000);
+    stopTimer = setTimeout(() => { if (recorder && recorder.state !== 'inactive') recorder.stop(); }, secs * 1000);
+  } catch (e) {
+    log('!! FAILED: ' + e);
+    await teardown();
+    cfgBtns.forEach(b => b.disabled = false); $('stop').disabled = true;
+  }
+}
+
+let startTs = 0;
+const elapsed = () => ((Date.now() - startTs) / 1000).toFixed(1);
+
+function finish() {
+  if (ticker) { clearInterval(ticker); ticker = null; }
+  if (stopTimer) { clearTimeout(stopTimer); stopTimer = null; }
+  const type = (recorder && recorder.mimeType) || (chunks[0] && chunks[0].type) || 'video/mp4';
+  const blob = new Blob(chunks, { type });
+  log(`stopped. ${chunks.length} chunk(s), ${blob.size} bytes, type ${type}`);
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  preview.srcObject = null;
+  const url = URL.createObjectURL(blob);
+  playback.src = url;
+  playback.onloadedmetadata = () => log('playback duration: ' + playback.duration.toFixed(2) + 's (scrub past 15s to check the picture moves)');
+  dl.href = url; dl.download = 'rectest.' + (type.includes('mp4') ? 'mp4' : 'webm'); dl.hidden = false;
+  cfgBtns.forEach(b => b.disabled = false); $('stop').disabled = true;
+}
+
+cfgBtns.forEach(b => b.addEventListener('click', () => run(+b.dataset.cfg)));
+$('stop').addEventListener('click', () => { if (recorder && recorder.state !== 'inactive') recorder.stop(); });
+log('ready. iOS ' + (navigator.userAgent.match(/OS [\d_]+/) || ['?'])[0] + '. Pick a config.');
+</script>
+</body>
+</html>
