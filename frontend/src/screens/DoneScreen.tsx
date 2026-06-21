@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import type { LogEntry } from '../types'
 import { downloadLog, safeName } from '../utils/downloadLog'
+import { downloadZip } from '../utils/downloadZip'
 import btn from '../styles/buttons.module.css'
 import styles from './DoneScreen.module.css'
 
@@ -35,17 +36,34 @@ export default function DoneScreen({ userName, script, version, tags, log, clips
     <div className={styles.root}>
       <span className={styles.label}>complete</span>
       <span className={styles.message}>Script finished.</span>
-      <button
-        className={btn.btnPrimary}
-        onClick={() => downloadLog({ userName, script, version, tags, log })}
-      >
-        Download Log
-      </button>
-      {urls.map((url, i) => (
-        <button key={url} className={btn.btnSecondary} onClick={() => downloadVideo(clips[i], url, i)}>
-          {clips.length > 1 ? `Download Video ${i + 1}` : 'Download Video'}
+      {clips.length > 0 ? (
+        <>
+          <button
+            className={btn.btnPrimary}
+            onClick={() => downloadZip({ userName, script, version, tags, log, clips })}
+          >
+            Download ZIP
+          </button>
+          <button
+            className={btn.btnSecondary}
+            onClick={() => downloadLog({ userName, script, version, tags, log })}
+          >
+            Download Log
+          </button>
+          {urls.map((url, i) => (
+            <button key={url} className={btn.btnSecondary} onClick={() => downloadVideo(clips[i], url, i)}>
+              {clips.length > 1 ? `Download Video ${i + 1}` : 'Download Video'}
+            </button>
+          ))}
+        </>
+      ) : (
+        <button
+          className={btn.btnPrimary}
+          onClick={() => downloadLog({ userName, script, version, tags, log })}
+        >
+          Download Log
         </button>
-      ))}
+      )}
       <button className={btn.btnSecondary} onClick={onRestart}>
         Return Home
       </button>

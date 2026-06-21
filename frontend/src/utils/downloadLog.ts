@@ -35,7 +35,7 @@ function resolveAnswer(prompt: Prompt, answer: string): string {
   return answer
 }
 
-export function downloadLog({ userName, script, version, tags, log }: Params): void {
+export function formatLog({ userName, script, version, tags, log }: Params): string {
   const startTime = log.find(e => e.type === 'start')?.timestamp ?? Date.now()
   const finishTime = log.findLast(e => e.type === 'finish')?.timestamp ?? Date.now()
 
@@ -88,7 +88,12 @@ export function downloadLog({ userName, script, version, tags, log }: Params): v
     }
   }
 
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+  return lines.join('\n')
+}
+
+export function downloadLog({ userName, script, version, tags, log }: Params): void {
+  const startTime = log.find(e => e.type === 'start')?.timestamp ?? Date.now()
+  const blob = new Blob([formatLog({ userName, script, version, tags, log })], { type: 'text/plain;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   const dateStr = new Date(startTime).toISOString().slice(0, 10)

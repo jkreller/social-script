@@ -115,9 +115,13 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
       const v = videoRef.current
       if (v) { v.srcObject = stream; v.muted = true; v.playsInline = true; v.play().catch(() => {}) }
 
-      // No forced mimeType/bitrate — iOS picks mp4/H.264/AAC. The timeslice is what keeps the
-      // video track from stalling on iOS (see TIMESLICE_MS).
-      const rec = new MediaRecorder(stream)
+      // No forced mimeType — iOS picks mp4/H.264/AAC. Bitrate caps keep clips shareable
+      // (~192 MB/5 min vs the ~350 MB browser default) without touching resolution.
+      // The timeslice is what keeps the video track from stalling on iOS (see TIMESLICE_MS).
+      const rec = new MediaRecorder(stream, {
+        videoBitsPerSecond: 5_000_000,
+        audioBitsPerSecond: 128_000,
+      })
       rec.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
       rec.start(TIMESLICE_MS)
       recorder.current = rec

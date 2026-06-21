@@ -5,7 +5,7 @@ from enum import Enum
 
 class Game(Enum):
     story_telling = "Tell a story together"
-    truth_or_lie  = "Truth or lie"
+    truth_or_lie  = "Creative lies – tell the truth or invent a lie"
 
     def __str__(self) -> str:
         return self.value
