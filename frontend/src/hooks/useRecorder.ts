@@ -96,8 +96,8 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
 
     ;(async () => {
       // One combined stream (front camera + mic). On iOS, two separate getUserMedia streams
-      // are an instability source; a single stream is the recommended pattern. ~540p / ≤30 fps.
-      const constraints = { facingMode: 'user', width: { ideal: 960 }, frameRate: { ideal: 30, max: 30 } }
+      // are an instability source; a single stream is the recommended pattern.
+      const constraints = { facingMode: 'user', width: { ideal: 1280 } }
       let stream: MediaStream | null = null
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: true })
