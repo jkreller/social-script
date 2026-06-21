@@ -7,32 +7,18 @@ import { addClip } from '../utils/recordingStore'
 // iOS freezes the page.
 export const PAUSED_KEY = 'paused'
 
-// Prefer MP4/H.264 (plays natively in QuickTime, iMessage, editors); fall back to webm
-// where MediaRecorder can't produce MP4 (Firefox). Empty string lets MediaRecorder pick.
-function pickMime(): string {
-  const types = [
-    'video/mp4;codecs=avc1.42E01E,mp4a.40.2', // H.264 baseline + AAC
-    'video/mp4;codecs=avc1',
-    'video/mp4',
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=vp8,opus',
-    'video/webm',
-  ]
-  return types.find(t => MediaRecorder.isTypeSupported?.(t)) ?? ''
-}
-
-// Capped so a long run (~30 min) stays compact on phone storage while keeping
-// documentation-grade quality. Tune VIDEO_BPS down to ~1_500_000 for smaller files.
-const VIDEO_BPS = 2_000_000 // ~2 Mbps H.264 @ 720p
-const AUDIO_BPS = 128_000   // 128 kbps AAC
+// How often MediaRecorder flushes a chunk. This is NOT just for periodic saving: on iOS,
+// recording audio+video without a timeslice stalls the *video* track after ~15s (the picture
+// freezes while audio keeps going). Starting with a timeslice keeps the encoder pipeline alive
+// so the video records for the whole run. Verified on-device (iOS 26.5). Bonus: chunks are
+// already flushed every second, so an interruption/kill loses at most ~1s of footage.
+const TIMESLICE_MS = 1000
 
 /**
- * Records the front camera + mic for the whole run by recording the getUserMedia
- * MediaStream **directly**. We deliberately do NOT route through an offscreen canvas:
- * canvas.captureStream() + MediaRecorder is unreliable on iOS (it freezes the picture
- * after ~15s and can emit black / unseekable / wrong-duration files — WebKit bugs 229611,
- * 216832, 181663). Recording the track directly is immune to that, since MediaRecorder
- * pulls frames straight from the camera regardless of page rendering.
+ * Records the front camera + mic for the whole run by recording one combined getUserMedia
+ * MediaStream directly (no offscreen canvas, no forced codec/bitrate — letting iOS pick its
+ * native mp4/H.264/AAC). The recorder is started with a timeslice; see TIMESLICE_MS for why
+ * that's load-bearing on iOS.
  *
  * A recording ends on a clean finish (stop()) OR the first interruption — lock, background,
  * notification pull, close (visibilitychange→hidden / pagehide) — finalizing a playable clip
@@ -109,39 +95,31 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
     startedRef.current = true
 
     ;(async () => {
+      // One combined stream (front camera + mic). On iOS, two separate getUserMedia streams
+      // are an instability source; a single stream is the recommended pattern. ~540p / ≤30 fps.
+      const constraints = { facingMode: 'user', width: { ideal: 960 }, frameRate: { ideal: 30, max: 30 } }
+      let stream: MediaStream | null = null
       try {
-        const a = await navigator.mediaDevices.getUserMedia({ audio: true })
-        audioTrack.current = a.getAudioTracks()[0] ?? null
-      } catch { /* no mic → video-only */ }
-
-      let camera: MediaStream | null = null
-      try {
-        // ~540p, ≤30 fps. iOS/iPadOS 26 has an AVFoundation H.264 *playback* bug where HD
-        // (720p) / high-fps clips freeze the picture on the device while audio keeps going,
-        // even though the file is valid and plays fine elsewhere (Apple FB / forums 807818).
-        // Staying below the HD/high-fps trigger — and within Baseline L3.0 (avc1.42E01E) —
-        // produces a stream the iOS 26 decoder handles reliably.
-        camera = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 960 }, frameRate: { ideal: 30, max: 30 } },
-        })
-      } catch { /* handled below */ }
-      const track = camera?.getVideoTracks()[0] ?? null
-      if (!track) { audioTrack.current?.stop(); audioTrack.current = null; return }
+        stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: true })
+      } catch {
+        // Mic denied/unavailable → fall back to video-only so a no-mic device still records.
+        try { stream = await navigator.mediaDevices.getUserMedia({ video: constraints }) }
+        catch { return /* no camera */ }
+      }
+      const track = stream.getVideoTracks()[0] ?? null
+      if (!track) { stream.getTracks().forEach(t => t.stop()); return }
       cameraTrack.current = track
+      audioTrack.current = stream.getAudioTracks()[0] ?? null
 
-      // Record the camera+mic stream directly; show it as the faint preview too.
-      const stream = new MediaStream([track, audioTrack.current].filter(Boolean) as MediaStreamTrack[])
+      // Show the same stream as the faint preview.
       const v = videoRef.current
       if (v) { v.srcObject = stream; v.muted = true; v.playsInline = true; v.play().catch(() => {}) }
 
-      const mime = pickMime()
-      const rec = new MediaRecorder(stream, {
-        ...(mime ? { mimeType: mime } : {}),
-        videoBitsPerSecond: VIDEO_BPS,
-        audioBitsPerSecond: AUDIO_BPS,
-      })
+      // No forced mimeType/bitrate — iOS picks mp4/H.264/AAC. The timeslice is what keeps the
+      // video track from stalling on iOS (see TIMESLICE_MS).
+      const rec = new MediaRecorder(stream)
       rec.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
-      rec.start()
+      rec.start(TIMESLICE_MS)
       recorder.current = rec
       acquireWakeLock()
 
