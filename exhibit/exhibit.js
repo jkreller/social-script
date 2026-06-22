@@ -122,10 +122,7 @@ function updateView() {
   if (idx === prevFrameIdx) return
   prevFrameIdx = idx
 
-  if (activeEl) {
-    activeEl.classList.remove('active')
-    activeEl.querySelector('.inline-vars')?.remove()
-  }
+  if (activeEl) activeEl.classList.remove('active')
   activeEl = null
 
   if (idx >= 0) {
@@ -142,6 +139,7 @@ function updateView() {
         .filter(([k]) => idents.has(k))
         .map(([k, v]) => `${k} = ${v}`)
       if (parts.length) {
+        el.querySelector('.inline-vars')?.remove()
         const span = document.createElement('span')
         span.className = 'inline-vars'
         span.textContent = parts.join('  ·  ')
