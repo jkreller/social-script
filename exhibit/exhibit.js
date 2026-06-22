@@ -274,7 +274,6 @@ async function main() {
   }
 
   setCurrentTime(0)
-  play()
 }
 
 main()
