@@ -10,12 +10,14 @@ interface Props {
   script: string
   version: string
   tags: string[]
+  answers: string[]
+  cameraOn: boolean
   log: LogEntry[]
   clips: Blob[]
   onRestart: () => void
 }
 
-export default function DoneScreen({ userName, script, version, tags, log, clips, onRestart }: Props) {
+export default function DoneScreen({ userName, script, version, tags, answers, cameraOn, log, clips, onRestart }: Props) {
   const dateStr = new Date(log.find(e => e.type === 'start')?.timestamp ?? Date.now()).toISOString().slice(0, 10)
 
   // One object URL per clip; revoke them when the screen goes away. A run yields more than
@@ -40,13 +42,13 @@ export default function DoneScreen({ userName, script, version, tags, log, clips
         <>
           <button
             className={btn.btnPrimary}
-            onClick={() => downloadZip({ userName, script, version, tags, log, clips })}
+            onClick={() => downloadZip({ userName, script, version, tags, answers, cameraOn, log, clips })}
           >
             Download ZIP
           </button>
           <button
             className={btn.btnSecondary}
-            onClick={() => downloadLog({ userName, script, version, tags, log })}
+            onClick={() => downloadLog({ userName, script, version, tags, answers, cameraOn, log })}
           >
             Download Log
           </button>
@@ -59,7 +61,7 @@ export default function DoneScreen({ userName, script, version, tags, log, clips
       ) : (
         <button
           className={btn.btnPrimary}
-          onClick={() => downloadLog({ userName, script, version, tags, log })}
+          onClick={() => downloadLog({ userName, script, version, tags, answers, cameraOn, log })}
         >
           Download Log
         </button>

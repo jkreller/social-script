@@ -146,6 +146,8 @@ export default function App() {
             script={script}
             version={version}
             tags={tags}
+            answers={answers}
+            cameraOn={cameraOn}
             log={log}
             clips={clips}
             onRestart={reset}
