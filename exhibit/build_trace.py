@@ -13,11 +13,14 @@ import sys
 import json
 import re
 import runpy
+import builtins
+import types
 from pathlib import Path
 
 root = Path(__file__).parent.parent
 sys.path.insert(0, str(root))
 
+import social_script
 from social_script._internal.driver import (
     set_driver, clear_driver, ReplayDriver, NeedInput,
 )
@@ -25,6 +28,27 @@ from social_script.exceptions import AnyException, INTERRUPT_MENU
 
 _EXC = {c.__name__: c for c in INTERRUPT_MENU}
 _PAT = re.compile(r'^(\w+)\((.*)\)$')
+
+# Names the script gets for free (imported verbs/states/phrases + builtins).
+# These are environment, not the script's own runtime variables, so we hide them.
+_ENV_NAMES = set(dir(social_script)) | set(dir(builtins))
+
+
+def _short(v):
+    """Compact repr of a value for inline display; long values are truncated."""
+    r = repr(v)
+    return r if len(r) <= 80 else r[:77] + '...'
+
+
+def _snapshot(f_locals):
+    """The script's own variables in a frame, as display strings."""
+    return {
+        k: _short(v) for k, v in f_locals.items()
+        if not k.startswith('__')
+        and k not in _ENV_NAMES
+        and not callable(v)
+        and not isinstance(v, types.ModuleType)
+    }
 
 
 def _to_replay(answer):
@@ -57,7 +81,9 @@ def build_raw_events(script_name, answers):
 
         def tracer(frame, event, arg):
             if event == 'line' and frame.f_code.co_filename == target_abs:
-                events.append({'kind': 'line', 'line': frame.f_lineno})
+                # entry-state snapshot: values as they are when this line begins
+                events.append({'kind': 'line', 'line': frame.f_lineno,
+                                'vars': _snapshot(frame.f_locals)})
             return tracer
 
         class TracingDriver(ReplayDriver):
@@ -134,7 +160,7 @@ def build_timed_trace(events, log):
             current_lines = []
             prev_step = evt['stepIndex']
         else:
-            current_lines.append(evt['line'])
+            current_lines.append(evt)
 
     if current_lines:
         segments.append((prev_step, current_lines))
@@ -167,11 +193,12 @@ def build_timed_trace(events, log):
             t_end = t_start + 500
 
         m = len(lines)
-        for i, line in enumerate(lines):
+        for i, evt in enumerate(lines):
             t = t_start + i * (t_end - t_start) / m
             timed_trace.append({
                 'time': round((t - session_start) / 1000, 3),
-                'line': line,
+                'line': evt['line'],
+                'vars': evt['vars'],
             })
 
     return timed_trace

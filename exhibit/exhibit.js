@@ -13,6 +13,7 @@ let logDuration = 0     // seconds
 let currentTime = 0         // seconds
 
 let lineDivs = {}           // line number (1-based) → <div> element
+let lineIdents = {}         // line number (1-based) → Set of identifier names on that line
 let activeEl = null         // currently highlighted <div>
 let prevFrameIdx = -1       // last frame index returned by findActiveFrame
 
@@ -82,6 +83,8 @@ function renderSource(source) {
   const highlighted = hljs.highlight(source, { language: 'python' }).value
   const lines = splitHighlightedLines(highlighted)
   lineDivs = {}
+  lineIdents = {}
+  const rawLines = source.split('\n')
   const sourceEl = document.getElementById('source')
   sourceEl.innerHTML = lines.map((html, i) => {
     const n = i + 1
@@ -89,6 +92,7 @@ function renderSource(source) {
   }).join('')
   for (let n = 1; n <= lines.length; n++) {
     lineDivs[n] = document.getElementById(`L${n}`)
+    lineIdents[n] = new Set(rawLines[n - 1].match(/[A-Za-z_]\w*/g) || [])
   }
 }
 
@@ -118,16 +122,31 @@ function updateView() {
   if (idx === prevFrameIdx) return
   prevFrameIdx = idx
 
-  if (activeEl) activeEl.classList.remove('active')
+  if (activeEl) {
+    activeEl.classList.remove('active')
+    activeEl.querySelector('.inline-vars')?.remove()
+  }
   activeEl = null
 
   if (idx >= 0) {
-    const line = log.timed_trace[idx].line
-    const el = lineDivs[line]
+    const frame = log.timed_trace[idx]
+    const el = lineDivs[frame.line]
     if (el) {
       el.classList.add('active')
       el.scrollIntoView({ block: 'center', behavior: 'smooth' })
       activeEl = el
+
+      const vars = frame.vars || {}
+      const idents = lineIdents[frame.line] || new Set()
+      const parts = Object.entries(vars)
+        .filter(([k]) => idents.has(k))
+        .map(([k, v]) => `${k} = ${v}`)
+      if (parts.length) {
+        const span = document.createElement('span')
+        span.className = 'inline-vars'
+        span.textContent = parts.join('  ·  ')
+        el.appendChild(span)
+      }
     }
   }
 }
