@@ -52,7 +52,8 @@ ACTIONS = [
 def take_a_dare():
     while True:
         try:
-            do(deal(ACTIONS))
+            action = deal(ACTIONS)
+            do(action)
             return
         except AnyException:
             pass  # refused — deal another
