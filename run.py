@@ -1,17 +1,21 @@
 import sys
+import json
 import runpy
 from pathlib import Path
 
 root = Path(__file__).parent
 sys.path.insert(0, str(root))
 
-from social_script.exceptions import AnyException
+from social_script.exceptions import AnyException, parse_answer
 from social_script._internal.driver import (
     CLIDriver, ReplayDriver, NeedInput, InputType, set_driver, clear_driver, handle_exception
 )
 
 script = root / "scripts" / sys.argv[1]
 answers = []
+
+if len(sys.argv) > 2:
+    answers = [parse_answer(a) for a in json.loads(sys.argv[2])]
 
 while True:
     driver = ReplayDriver(answers)
