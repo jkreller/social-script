@@ -1,19 +1,9 @@
 # Pyodide entry-point adapter — the browser-side counterpart of api/main.py.
 # Loaded once at worker startup (worker.ts reads this file via ?raw and calls
 # py.runPython). The three functions it defines are called by name from JS.
-import re, runpy, json, os, glob, ast
+import runpy, json, os, glob, ast
 from social_script._internal.driver import set_driver, clear_driver, ReplayDriver, NeedInput
-from social_script.exceptions import AnyException, INTERRUPT_MENU
-
-# Build a lookup so serialised exception strings like "FearTooHigh(note)"
-# can be converted back into live exception instances during replay.
-_EXC = {c.__name__: c for c in INTERRUPT_MENU}
-_PAT = re.compile(r'^(\w+)\((.*)\)$')
-
-def _replay(a):
-    # Plain answers pass through as strings; exception strings become instances.
-    m = _PAT.match(a)
-    return _EXC[m.group(1)](m.group(2)) if m and m.group(1) in _EXC else a
+from social_script.exceptions import AnyException, INTERRUPT_MENU, parse_answer
 
 def _read_meta(src):
     # version + tags live in the script's module docstring, as labeled lines. Read via
@@ -41,7 +31,7 @@ def list_exceptions():
 
 def step(script, answers_json):
     # Replay the script with all answers so far; stop at the next unanswered prompt.
-    driver = ReplayDriver([_replay(a) for a in json.loads(answers_json)])
+    driver = ReplayDriver([parse_answer(a) for a in json.loads(answers_json)])
     set_driver(driver)
     try:
         runpy.run_path('scripts/%s.py' % script, run_name='__main__')

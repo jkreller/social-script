@@ -40,3 +40,12 @@ INTERRUPT_MENU = [
     FearTooHigh, UnexpectedReaction, RandomSituation,
     SensoryOverload, LostInterest, Shame, ExternalReason, AnyException,
 ]
+
+import re as _re
+_EXC_PAT = _re.compile(r'^(\w+)\((.*)\)$', _re.DOTALL)
+_EXC_MAP = {c.__name__: c for c in INTERRUPT_MENU}
+
+def parse_answer(s: str):
+    """Convert a stored answer string to an exception instance, or return it unchanged."""
+    m = _EXC_PAT.match(s)
+    return _EXC_MAP[m.group(1)](m.group(2)) if m and m.group(1) in _EXC_MAP else s
