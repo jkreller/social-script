@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Social Script — Exhibit</title>
+  <link rel="stylesheet" href="exhibit.css">
+</head>
+<body>
+
+  <p id="status">Loading…</p>
+
+  <div id="app" hidden>
+
+    <div id="left-pane">
+      <div id="code-panel">
+        <pre id="source"></pre>
+      </div>
+
+      <div id="controls">
+        <span id="time-display">0:00 / 0:00</span>
+        <button class="ctrl-btn" id="play-pause" title="Play / Pause">▶</button>
+        <button class="ctrl-btn" id="step-back" title="Previous line">◀</button>
+        <input type="range" id="scrubber" min="0" max="100" value="0">
+        <button class="ctrl-btn" id="step-fwd" title="Next line">▶</button>
+        <span id="script-name"></span>
+      </div>
+    </div>
+
+    <div id="video-panel" hidden>
+      <video id="session-video"></video>
+    </div>
+
+  </div>
+
+  <script src="packages/highlight.min.js"></script>
+  <script type="module" src="exhibit.js"></script>
+</body>
+</html>
