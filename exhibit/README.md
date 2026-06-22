@@ -6,13 +6,13 @@ A standalone gallery page that steps through a social_script source file in sync
 
 ```
 exhibit/
-  build_trace.py        generate a session file from a recorded run
+  build_trace.py        generate session files from recorded runs
   index.html            the page (served as a static file)
   exhibit.js            all client logic
   exhibit.css           styles
   packages/             bundled JS dependencies (e.g. highlight.js)
-  sessions/             pre-generated session JSON files
-    example.json        synthetic connect_group session
+  logs-in/              drop exported PWA run JSONs here
+  logs-out/             generated session JSONs (read by the viewer)
 ```
 
 ## How to generate a session
@@ -22,17 +22,13 @@ After finishing a session in the PWA, open DevTools → Console and run:
 ```js
 copy(localStorage.getItem('run'))
 ```
-Paste the output into a file, e.g. `run.json`.
+Paste the output into a file and drop it in `exhibit/logs-in/` (any filename, must end in `.json`).
 
 **2. Build the trace.**
 ```sh
-python exhibit/build_trace.py <script_name> run.json exhibit/sessions/<name>.json
+python exhibit/build_trace.py
 ```
-Example:
-```sh
-python exhibit/build_trace.py connect_group run.json exhibit/sessions/my_session.json
-```
-This replays the session with `sys.settrace` to capture per-line timing, then writes a session JSON containing the script source and a timed trace.
+Reads every `*.json` in `logs-in/`, replays each session with `sys.settrace` to capture per-line timing, and writes matching files to `logs-out/`.
 
 ## How to run
 
@@ -44,10 +40,7 @@ Then open:
 ```
 http://localhost:8000/exhibit/?s=<name>
 ```
-where `<name>` matches the filename in `sessions/` (without `.json`). The example session:
-```
-http://localhost:8000/exhibit/?s=example
-```
+where `<name>` matches the filename in `logs-out/` (without `.json`).
 
 ## Controls
 
