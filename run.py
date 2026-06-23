@@ -1,5 +1,6 @@
 import sys
 import json
+import random
 import runpy
 from pathlib import Path
 
@@ -17,9 +18,16 @@ answers = []
 if len(sys.argv) > 2:
     answers = [parse_answer(a) for a in json.loads(sys.argv[2])]
 
+if len(sys.argv) > 3:
+    seed = int(sys.argv[3])
+else:
+    seed = random.randint(0, 0xFFFFFFFF)
+    print(f"seed: {seed}")
+
 while True:
     driver = ReplayDriver(answers)
     set_driver(driver)
+    random.seed(seed)
 
     try:
         runpy.run_path(str(script), run_name="__main__")

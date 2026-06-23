@@ -49,7 +49,15 @@ replay model), `scripts/` (how to write human-readable scripts), `frontend/` (th
 ## Running a script
 
 ```bash
-python run.py connect_group.py
+python run.py <script>.py [answers_json] [seed]
+```
+
+- `answers_json` — optional JSON array of pre-recorded answers to fast-forward through
+- `seed` — optional integer seed for reproducible randomness; if omitted, one is generated and printed
+
+```bash
+python run.py connect_group.py          # fresh run, prints seed
+python run.py connect_group.py '[]' 42  # same seed, same random choices
 ```
 
 ---

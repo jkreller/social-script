@@ -13,6 +13,7 @@ import styles from './RunnerScreen.module.css'
 interface Props {
   script: string
   answers: string[]
+  seed: number
   cameraOn: boolean
   onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
   onDone: () => void
@@ -25,7 +26,7 @@ interface Props {
   onClipEnd: (timestamp: number) => void
 }
 
-export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onPaused, onRollback, onStepShow, onExceptionSelect, onException, onClipStart, onClipEnd }: Props) {
+export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer, onDone, onPaused, onRollback, onStepShow, onExceptionSelect, onException, onClipStart, onClipEnd }: Props) {
   const [execReady, setExecReady] = useState(!cameraOn)
   const { videoRef, stop: stopRecording } = useRecorder(
     cameraOn,
@@ -61,7 +62,7 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
     setError(null)
     setUncaught(null)
 
-    postStep({ script, answers }, ctrl.signal)
+    postStep({ script, answers, seed }, ctrl.signal)
       .then(res => {
         if (ctrl.signal.aborted) return
         if (res.error) {
@@ -110,7 +111,7 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
     const ctrl = new AbortController()
     abortRef.current = ctrl
 
-    postStep({ script, answers }, ctrl.signal)
+    postStep({ script, answers, seed }, ctrl.signal)
       .then(res => {
         if (ctrl.signal.aborted) return
         if (res.error) { setError(res.error); setLoading(false); return }

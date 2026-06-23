@@ -6,6 +6,7 @@ interface Params {
   version: string
   tags: string[]
   answers: string[]
+  seed: number
   cameraOn: boolean
   log: LogEntry[]
 }
@@ -14,10 +15,10 @@ export function safeName(s: string): string {
   return s.replace(/[^a-z0-9]/gi, '_').toLowerCase()
 }
 
-export function downloadLog({ userName, script, version, tags, answers, cameraOn, log }: Params): void {
+export function downloadLog({ userName, script, version, tags, answers, seed, cameraOn, log }: Params): void {
   const startTime = log.find(e => e.type === 'start')?.timestamp ?? Date.now()
   const blob = new Blob(
-    [JSON.stringify({ screen: 'done', script, version, tags, userName, cameraOn, answers, log }, null, 2)],
+    [JSON.stringify({ screen: 'done', script, version, commit: __GIT_COMMIT__, tags, userName, seed, cameraOn, answers, log }, null, 2)],
     { type: 'application/json' },
   )
   const url = URL.createObjectURL(blob)

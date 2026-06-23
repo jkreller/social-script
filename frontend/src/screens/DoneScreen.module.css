@@ -23,3 +23,26 @@
   letter-spacing: -0.01em;
 }
 
+.zipRow {
+  position: relative;
+}
+
+.debugToggle {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  color: var(--border);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+}
+
+.debugToggle:hover {
+  color: var(--fg);
+}
+

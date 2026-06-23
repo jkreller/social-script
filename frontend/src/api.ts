@@ -49,6 +49,6 @@ export function getExceptions(): Promise<ExceptionType[]> {
 // fresh, microsecond-fast replay, so there is nothing to abort. RunnerScreen
 // still discards stale responses via its own AbortController check.
 export async function postStep(body: StepRequest, _signal?: AbortSignal): Promise<StepResponse> {
-  const r = await call<Partial<StepResponse>>('step', body.script, JSON.stringify(body.answers))
+  const r = await call<Partial<StepResponse>>('step', body.script, JSON.stringify(body.answers), String(body.seed))
   return { prompt: r.prompt ?? null, done: r.done ?? false, error: r.error ?? null, exception: r.exception ?? null }
 }

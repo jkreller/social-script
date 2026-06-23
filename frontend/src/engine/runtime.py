@@ -1,7 +1,7 @@
 # Pyodide entry-point adapter — the browser-side counterpart of api/main.py.
 # Loaded once at worker startup (worker.ts reads this file via ?raw and calls
 # py.runPython). The three functions it defines are called by name from JS.
-import runpy, json, os, glob, ast
+import runpy, json, os, glob, ast, random
 from social_script._internal.driver import set_driver, clear_driver, ReplayDriver, NeedInput
 from social_script.exceptions import AnyException, INTERRUPT_MENU, parse_answer
 
@@ -29,8 +29,10 @@ def list_scripts():
 def list_exceptions():
     return json.dumps([{"name": c.__name__, "label": c.label} for c in INTERRUPT_MENU])
 
-def step(script, answers_json):
+def step(script, answers_json, seed_str=''):
     # Replay the script with all answers so far; stop at the next unanswered prompt.
+    if seed_str:
+        random.seed(int(seed_str))
     driver = ReplayDriver([parse_answer(a) for a in json.loads(answers_json)])
     set_driver(driver)
     try:

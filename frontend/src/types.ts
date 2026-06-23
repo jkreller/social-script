@@ -10,6 +10,7 @@ export interface Prompt {
 export interface StepRequest {
   script: string
   answers: string[]
+  seed: number
 }
 
 export interface ExceptionType {

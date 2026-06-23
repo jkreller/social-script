@@ -110,7 +110,10 @@ export function useRecorder(
       const constraints = { facingMode: 'user', width: { ideal: 1280 } }
       let stream: MediaStream | null = null
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: true })
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: constraints,
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        })
       } catch {
         // Mic denied/unavailable → fall back to video-only so a no-mic device still records.
         try { stream = await navigator.mediaDevices.getUserMedia({ video: constraints }) }

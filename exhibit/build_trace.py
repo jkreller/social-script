@@ -11,6 +11,7 @@ matching trace.json into the same subdirectory.
 
 import sys
 import json
+import random
 import re
 import runpy
 import builtins
@@ -59,7 +60,7 @@ def _to_replay(answer):
     return answer
 
 
-def build_raw_events(script_name, answers):
+def build_raw_events(script_name, answers, seed=None):
     """
     Run the script with sys.settrace; return a flat list of
       {kind: 'line', line: N} and {kind: 'step', stepIndex: N}
@@ -76,6 +77,8 @@ def build_raw_events(script_name, answers):
     replay_answers = [_to_replay(a) for a in answers]
 
     while True:
+        if seed is not None:
+            random.seed(seed)
         events = []
         step_idx = [0]
 
@@ -229,10 +232,11 @@ def main():
 
         answers = run_data['answers']
         log = run_data['log']
+        seed = run_data.get('seed')
 
         print(f'Building trace: {subdir.name}  ({len(answers)} answers, {len(log)} log entries)')
 
-        events = build_raw_events(script_name, answers)
+        events = build_raw_events(script_name, answers, seed=seed)
         n_lines = sum(1 for e in events if e['kind'] == 'line')
         n_steps = sum(1 for e in events if e['kind'] == 'step')
         print(f'  Traced {n_lines} line events across {n_steps} step boundaries')

@@ -31,11 +31,12 @@ export default function App() {
   const [userName, setUserName] = useState(SAVED?.userName ?? '')
   const [log, setLog] = useState<LogEntry[]>(SAVED?.log ?? [])
   const [cameraOn, setCameraOn] = useState<boolean>(SAVED?.cameraOn ?? true)
+  const [seed, setSeed] = useState<number>(SAVED?.seed ?? 0)
   const [clips, setClips] = useState<Blob[]>([])
 
   useEffect(() => {
     if (screen === 'home') { localStorage.removeItem('run'); localStorage.removeItem(PAUSED_KEY) }
-    else localStorage.setItem('run', JSON.stringify({ screen, script, version, tags, userName, cameraOn, answers, log }))
+    else localStorage.setItem('run', JSON.stringify({ screen, script, version, tags, userName, cameraOn, answers, log, seed }))
   }, [screen, script, version, tags, userName, cameraOn, answers, log])
 
   // The Done screen lists every saved clip (recovered + just-finished). Load them whenever
@@ -55,6 +56,7 @@ export default function App() {
     setAnswers([])
     setLog([{ type: 'start', timestamp: Date.now() }])
     setCameraOn(camera)
+    setSeed(Math.floor(Math.random() * 0xFFFFFFFF))
     setScreen('running')
   }, [])
 
@@ -137,6 +139,7 @@ export default function App() {
           <RunnerScreen
             script={script}
             answers={answers}
+            seed={seed}
             cameraOn={cameraOn}
             onAnswer={handleAnswer}
             onDone={handleDone}
@@ -163,6 +166,7 @@ export default function App() {
             version={version}
             tags={tags}
             answers={answers}
+            seed={seed}
             cameraOn={cameraOn}
             log={log}
             clips={clips}

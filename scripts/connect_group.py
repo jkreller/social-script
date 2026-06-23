@@ -117,7 +117,8 @@ def play_story_telling(turns):
     say("Start the story:\n\"This story is about…\" (name a person of this group)")
     hand_over()
     for _ in range(turns):
-        say(deal(STORY_POOL), headline="continue the story")
+        story_move = deal(STORY_POOL)
+        say(story_move, headline="continue the story")
         hand_over()
 
     say("Last line: bring it home, land it on something real.")

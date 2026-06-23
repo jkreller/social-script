@@ -1,8 +1,12 @@
+import { execSync } from 'child_process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    __GIT_COMMIT__: JSON.stringify(execSync('git rev-parse HEAD').toString().trim()),
+  },
   // Pyodide ships its own runtime; don't let esbuild pre-bundle it.
   optimizeDeps: { exclude: ['pyodide'] },
   // The engine worker imports Pyodide (code-split) — needs ES module output.
