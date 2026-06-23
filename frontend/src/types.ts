@@ -44,3 +44,5 @@ export type LogEntry =
   | { type: 'exception_select'; timestamp: number; exceptionName: string; exceptionLabel: string }
   | { type: 'exception';        timestamp: number; exceptionName: string; exceptionLabel: string; note: string; decision: 'continue' | 'stop' }
   | { type: 'finish';           timestamp: number }
+  | { type: 'clip_start';      timestamp: number; clip: number }
+  | { type: 'clip_end';        timestamp: number; clip: number }

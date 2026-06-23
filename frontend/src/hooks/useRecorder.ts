@@ -26,7 +26,12 @@ const TIMESLICE_MS = 1000
  * or Finish. Each finalized clip is appended to recordingStore. NOTE: getUserMedia needs
  * HTTPS off localhost.
  */
-export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
+export function useRecorder(
+  enabled: boolean,
+  onInterrupted?: () => void,
+  onReady?: (timestamp: number) => void,
+  onClipEnd?: (timestamp: number) => void,
+) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const cameraTrack = useRef<MediaStreamTrack | null>(null)
   const audioTrack = useRef<MediaStreamTrack | null>(null)
@@ -37,6 +42,10 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
   const detachListeners = useRef<() => void>(() => {})
   const onInterruptedRef = useRef(onInterrupted)
   onInterruptedRef.current = onInterrupted
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
+  const onClipEndRef = useRef(onClipEnd)
+  onClipEndRef.current = onClipEnd
 
   // iOS suspends background timers and can throttle the page, and locking the screen hides
   // it (→ finalize). A screen wake lock keeps the display awake while recording so the run
@@ -76,6 +85,7 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
     cameraTrack.current = null
     audioTrack.current = null
     if (blob && blob.size) { try { await addClip(blob) } catch { /* storage unavailable */ } }
+    onClipEndRef.current?.(Date.now())
   }, [])
 
   // Hidden/closed while recording: flag the run paused (sync, so it survives a kill), let
@@ -124,6 +134,7 @@ export function useRecorder(enabled: boolean, onInterrupted?: () => void) {
       })
       rec.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
       rec.start(TIMESLICE_MS)
+      onReadyRef.current?.(Date.now())
       recorder.current = rec
       acquireWakeLock()
 

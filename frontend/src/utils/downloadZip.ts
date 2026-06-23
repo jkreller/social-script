@@ -16,8 +16,9 @@ interface Params {
 
 export async function downloadZip({ userName, script, version, tags, answers, cameraOn, log, clips }: Params): Promise<void> {
   const startTime = log.find(e => e.type === 'start')?.timestamp ?? Date.now()
-  const dateStr = new Date(startTime).toISOString().slice(0, 10)
-  const base = `${safeName(script)}_${safeName(userName)}_${dateStr}`
+  const d = new Date(startTime)
+  const dateTimeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}_${String(d.getHours()).padStart(2, '0')}-${String(d.getMinutes()).padStart(2, '0')}`
+  const base = `${dateTimeStr}_${safeName(script)}_${safeName(userName)}`
   const clipExt = (blob: Blob) => blob.type.includes('mp4') ? 'mp4' : 'webm'
 
   const clipArrays = await Promise.all(clips.map(b => b.arrayBuffer().then(a => new Uint8Array(a))))

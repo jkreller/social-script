@@ -99,6 +99,20 @@ export default function App() {
     setScreen('done')
   }, [])
 
+  const handleClipStart = useCallback((timestamp: number) => {
+    setLog(l => {
+      const clip = l.filter(e => e.type === 'clip_start').length + 1
+      return [...l, { type: 'clip_start', timestamp, clip }]
+    })
+  }, [])
+
+  const handleClipEnd = useCallback((timestamp: number) => {
+    setLog(l => {
+      const clip = l.filter(e => e.type === 'clip_start').length
+      return [...l, { type: 'clip_end', timestamp, clip }]
+    })
+  }, [])
+
   const handleRollback = useCallback(() => {
     setAnswers(prev => prev.slice(0, -1))
   }, [])
@@ -131,6 +145,8 @@ export default function App() {
             onStepShow={handleStepShow}
             onExceptionSelect={handleExceptionSelect}
             onException={handleException}
+            onClipStart={handleClipStart}
+            onClipEnd={handleClipEnd}
           />
         </div>
       )}

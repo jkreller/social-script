@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Build exhibit session JSONs from all recorded PWA runs in exhibit/logs-in/.
+Build exhibit trace JSONs from all recorded PWA runs in exhibit/executions/.
 
 Usage:
   python exhibit/build_trace.py
 
-Reads every *.json file in exhibit/logs-in/, derives the script name from the
-'script' field inside each file, and writes a matching trace to exhibit/logs-out/.
+Reads log.json from each subdirectory of exhibit/executions/ and writes a
+matching trace.json into the same subdirectory.
 """
 
 import sys
@@ -205,29 +205,32 @@ def build_timed_trace(events, log):
 
 
 def main():
-    logs_in = root / 'exhibit' / 'logs-in'
-    logs_out = root / 'exhibit' / 'logs-out'
-    logs_out.mkdir(parents=True, exist_ok=True)
+    executions_dir = root / 'exhibit' / 'executions'
 
-    files = sorted(f for f in logs_in.glob('*.json') if not f.name.startswith('.'))
-    if not files:
-        print(f'No JSON files found in {logs_in}')
+    subdirs = sorted(d for d in executions_dir.iterdir() if d.is_dir())
+    if not subdirs:
+        print(f'No execution directories found in {executions_dir}')
         return
 
-    for run_json_path in files:
+    for subdir in subdirs:
+        run_json_path = subdir / 'log.json'
+        if not run_json_path.exists():
+            print(f'SKIP {subdir.name}: no log.json found')
+            continue
+
         with open(run_json_path) as f:
             run_data = json.load(f)
 
         script_name = run_data['script']
         script_path = root / 'scripts' / f'{script_name}.py'
         if not script_path.exists():
-            print(f'SKIP {run_json_path.name}: script not found ({script_path})')
+            print(f'SKIP {subdir.name}: script not found ({script_path})')
             continue
 
         answers = run_data['answers']
         log = run_data['log']
 
-        print(f'Building trace: {run_json_path.name}  ({len(answers)} answers, {len(log)} log entries)')
+        print(f'Building trace: {subdir.name}  ({len(answers)} answers, {len(log)} log entries)')
 
         events = build_raw_events(script_name, answers)
         n_lines = sum(1 for e in events if e['kind'] == 'line')
@@ -237,15 +240,24 @@ def main():
         timed_trace = build_timed_trace(events, log)
         print(f'  Built {len(timed_trace)} timed frames')
 
+        session_start_ts = next((e['timestamp'] for e in log if e['type'] == 'start'), None)
+        clip_start_entry = next((e for e in log if e['type'] == 'clip_start'), None)
+        if session_start_ts and clip_start_entry:
+            video_offset = round((clip_start_entry['timestamp'] - session_start_ts) / 1000, 3)
+        else:
+            video_offset = 0.0
+        print(f'  Video offset: {video_offset}s')
+
         source = script_path.read_text()
 
         session = {
             'script': script_name,
             'source': source,
+            'video_offset': video_offset,
             'timed_trace': timed_trace,
         }
 
-        out = logs_out / run_json_path.name
+        out = subdir / 'trace.json'
         with open(out, 'w') as f:
             json.dump(session, f, indent=2)
 

@@ -11,6 +11,7 @@
 let log = null          // loaded log JSON { script, source, timed_trace }
 let logDuration = 0     // seconds
 let currentTime = 0         // seconds
+let videoOffset = 0         // seconds: video t=0 maps to trace t=videoOffset
 
 let lineDivs = {}           // line number (1-based) → <div> element
 let lineIdents = {}         // line number (1-based) → Set of identifier names on that line
@@ -35,8 +36,8 @@ function setCurrentTime(t) {
   scrubberEl.value = currentTime
   timeDisplayEl.textContent = `${fmtTime(currentTime)} / ${fmtTime(logDuration)}`
   updateView()
-  if (videoEl && Math.abs(videoEl.currentTime - currentTime) > 0.3)
-    videoEl.currentTime = currentTime
+  if (videoEl && Math.abs(videoEl.currentTime - (currentTime - videoOffset)) > 0.3)
+    videoEl.currentTime = Math.max(0, currentTime - videoOffset)
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ function setCurrentTime(t) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 async function loadLog(name) {
-  const resp = await fetch(`logs-out/${name}.json`)
+  const resp = await fetch(`executions/${name}/trace.json`)
   if (!resp.ok) throw new Error(`Log "${name}" not found (${resp.status})`)
   return resp.json()
 }
@@ -161,7 +162,7 @@ function play() {
   playOffset = currentTime
   playStartWall = performance.now()
   playBtnEl.textContent = '⏸'
-  if (videoEl) { videoEl.currentTime = currentTime; videoEl.play().catch(() => {}) }
+  if (videoEl) { videoEl.currentTime = Math.max(0, currentTime - videoOffset); videoEl.play().catch(() => {}) }
   else rafId = requestAnimationFrame(tick)
 }
 
@@ -244,8 +245,11 @@ function showError(msg) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 async function findVideo(name) {
-  const path = `logs-video/${name}.mp4`
-  try { return (await fetch(path, { method: 'HEAD' })).ok ? path : null } catch { return null }
+  for (const ext of ['mp4', 'webm', 'mov', 'mkv']) {
+    const path = `executions/${name}/video_1.${ext}`
+    try { if ((await fetch(path, { method: 'HEAD' })).ok) return path } catch { /* continue */ }
+  }
+  return null
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -272,6 +276,7 @@ async function main() {
 
   const trace = log.timed_trace
   logDuration = trace.length ? trace[trace.length - 1].time + 1 : 0
+  videoOffset = log.video_offset ?? 0
 
   document.getElementById('status').hidden = true
   document.getElementById('app').hidden = false
@@ -285,7 +290,7 @@ async function main() {
     videoEl = document.getElementById('session-video')
     videoEl.src = videoPath
     document.getElementById('video-panel').hidden = false
-    videoEl.addEventListener('timeupdate', () => setCurrentTime(videoEl.currentTime))
+    videoEl.addEventListener('timeupdate', () => setCurrentTime(videoEl.currentTime + videoOffset))
     videoEl.addEventListener('play',  () => { if (!isPlaying) play() })
     videoEl.addEventListener('pause', () => { if (isPlaying)  pause() })
   }

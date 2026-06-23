@@ -1,6 +1,2 @@
-logs-in/*
-!logs-in/.gitkeep
-logs-out/*
-!logs-out/.gitkeep
-logs-video/*
-!logs-video/.gitkeep
+executions/*
+!executions/.gitkeep

@@ -21,10 +21,18 @@ interface Props {
   onStepShow: (stepIndex: number, prompt: Prompt) => void
   onExceptionSelect: (name: string, label: string) => void
   onException: (name: string, label: string, note: string, decision: 'continue' | 'stop', exceptionStr: string) => void
+  onClipStart: (timestamp: number) => void
+  onClipEnd: (timestamp: number) => void
 }
 
-export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onPaused, onRollback, onStepShow, onExceptionSelect, onException }: Props) {
-  const { videoRef, stop: stopRecording } = useRecorder(cameraOn, onPaused)
+export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDone, onPaused, onRollback, onStepShow, onExceptionSelect, onException, onClipStart, onClipEnd }: Props) {
+  const [execReady, setExecReady] = useState(!cameraOn)
+  const { videoRef, stop: stopRecording } = useRecorder(
+    cameraOn,
+    onPaused,
+    (ts) => { setExecReady(true); onClipStart(ts) },
+    onClipEnd,
+  )
   const finish = useCallback(async () => { await stopRecording(); onDone() }, [onDone, stopRecording])
   const [prompt, setPrompt] = useState<Prompt | null>(null)
   const [loading, setLoading] = useState(true)
@@ -44,6 +52,7 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
   }, [])
 
   useEffect(() => {
+    if (!execReady) return
     abortRef.current?.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -82,7 +91,7 @@ export default function RunnerScreen({ script, answers, cameraOn, onAnswer, onDo
 
     return () => ctrl.abort()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answers])
+  }, [answers, execReady])
 
   useEffect(() => {
     if (!uncaught) return
