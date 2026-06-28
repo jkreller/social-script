@@ -52,7 +52,7 @@ ACTIONS = [
 def take_a_dare():
     while True:
         try:
-            action = deal(ACTIONS)
+            action = pick_from(ACTIONS)
             do(action)
             return
         except AnyException:

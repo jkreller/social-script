@@ -1,4 +1,4 @@
-export type InputType = 'enter' | 'yn' | 'scale' | 'choice'
+export type InputType = 'enter' | 'yn' | 'scale' | 'choice' | 'text'
 
 export interface Prompt {
   headline: string | null

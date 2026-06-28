@@ -13,6 +13,7 @@ class InputType(Enum):
     yn     = "yn"
     scale  = "scale"
     choice = "choice"
+    text   = "text"
 
 
 class NeedInput(Exception):
@@ -60,6 +61,8 @@ class CLIDriver:
                 self._handle_interrupt()
         elif input_type == InputType.choice:
             hint = " (number): "
+        elif input_type == InputType.text:
+            hint = " — type it: "
         else:  # enter
             hint = " — press Enter "
         try:
@@ -126,18 +129,9 @@ def clear_driver():
 
 
 def io_read(text="", *, headline=None, input_type=InputType.enter, choices=None):
-    from social_script.exceptions import AnyException
-    driver = get_driver()
-    try:
-        return driver.input(text, headline=headline, input_type=input_type, choices=choices)
-    except AnyException:
-        if not isinstance(driver, ReplayDriver):
-            raise
-        if input_type in (InputType.scale, InputType.choice):
-            return '1'
-        if input_type == InputType.yn:
-            return 'n'
-        return ''
+    # Interrupts (AnyException) propagate to the script's try/except, or to the
+    # runner's top-level handler if the script doesn't catch them.
+    return get_driver().input(text, headline=headline, input_type=input_type, choices=choices)
 
 
 def io_write(*args, **kwargs):

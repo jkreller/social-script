@@ -23,6 +23,6 @@ def count_people() -> int:
             return int(raw)
 
 
-def deal(deck: list) -> str:
-    """Deal one card off the deck — the app picks, not you."""
+def pick_from(deck: list) -> str:
+    """Pick one item off the deck at random — the app picks, not you."""
     return random.choice(deck)

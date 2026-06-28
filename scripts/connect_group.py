@@ -117,7 +117,7 @@ def play_story_telling(turns):
     say("Start the story:\n\"This story is about…\" (name a person of this group)")
     hand_over()
     for _ in range(turns):
-        story_move = deal(STORY_POOL)
+        story_move = pick_from(STORY_POOL)
         say(story_move, headline="continue the story")
         hand_over()
 
@@ -126,7 +126,7 @@ def play_story_telling(turns):
 
 def play_truth_or_lie(turns):
     for _ in range(turns):
-        say(f"Read out loud:\n\"{deal(PICKS)}\"\n\nTrue or lie — sell it. Press continue when done.")
+        say(f"Read out loud:\n\"{pick_from(PICKS)}\"\n\nTrue or lie — sell it. Press continue when done.")
         say("Group: truth or lie?\nThen reveal, and if lie, tell the real one.")
         hand_over()
 

@@ -140,3 +140,32 @@ def sense(prompt: str, *, headline: str = "sense") -> bool:
     """Ask yourself an honest yes/no question and answer from the gut."""
     raw = io_read(prompt, headline=headline, input_type=InputType.yn).strip().lower()
     return raw == "y"
+
+
+def get_to_know(person) -> None:
+    """Ask their name and write it down — the start of knowing them."""
+    person.name = io_read("Ask their name — what is it?", headline="meet", input_type=InputType.text) or "them"
+
+
+def ask(person, about) -> None:
+    """Pose a question to someone — fill in what they've already told you."""
+    say(f"Ask {person} {about.format(name=person, first=person.first_thing, last=person.last_thing)}.", headline="ask")
+
+
+def listen_to(person) -> str:
+    """Catch one thing they just said and keep it on the person."""
+    thing = io_read(f"What did {person} say? One thing — a subject, an object, an idea.",
+                    headline="listen", input_type=InputType.text) or "that"
+    person.mentioned.append(thing)
+    return thing
+
+
+def tell(person, what) -> None:
+    """Say something to them, in your own words."""
+    say(f"Tell {person}: {what}", headline="tell")
+
+
+def assess_vibe(signal):
+    """Assess a signal for the whole situation — everyone included."""
+    from social_script.environment import everyone
+    return assess_external(everyone, signal)

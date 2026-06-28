@@ -33,13 +33,18 @@ from social_script.actions import (
     observe,
     choose,
     sense,
+    get_to_know,
+    ask,
+    listen_to,
+    tell,
+    assess_vibe,
 )
 
 from social_script.play import (
     play_along,
     hand_over,
     count_people,
-    deal,
+    pick_from,
 )
 
 from social_script.phrases import (
@@ -75,6 +80,7 @@ from social_script.environment import (
     Distance,
     distance_of,
     me,
+    everyone,
 )
 
 from social_script.exceptions import (
@@ -120,11 +126,16 @@ __all__ = [
     "observe",
     "choose",
     "sense",
+    "get_to_know",
+    "ask",
+    "listen_to",
+    "tell",
+    "assess_vibe",
     # play
     "play_along",
     "hand_over",
     "count_people",
-    "deal",
+    "pick_from",
     # phrase categories
     "greeting",
     "exit",
@@ -150,6 +161,7 @@ __all__ = [
     "Distance",
     "distance_of",
     "me",
+    "everyone",
     # exceptions
     "AnyException",
     "FearTooHigh",

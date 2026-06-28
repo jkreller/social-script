@@ -7,6 +7,7 @@ import EnterInput from '../inputs/EnterInput'
 import YesNoInput from '../inputs/YesNoInput'
 import ScaleInput from '../inputs/ScaleInput'
 import ChoiceInput from '../inputs/ChoiceInput'
+import TextInput from '../inputs/TextInput'
 import btn from '../styles/buttons.module.css'
 import styles from './RunnerScreen.module.css'
 
@@ -204,6 +205,9 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
           )}
           {prompt.input_type === 'choice' && (
             <ChoiceInput prompt={prompt} onSubmit={handleSubmit} />
+          )}
+          {prompt.input_type === 'text' && (
+            <TextInput prompt={prompt} onSubmit={handleSubmit} />
           )}
         </div>
       ) : null}

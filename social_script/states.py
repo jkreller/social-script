@@ -17,7 +17,7 @@ class State(Enum):
     def question(self, entity=None) -> str:
         if entity is None:
             return self.template.replace("is {entity}", "are you").replace("Is {entity}", "Are you")
-        entity_label = f"this {type(entity).__name__.lower()}"
+        entity_label = getattr(entity, "label", f"this {type(entity).__name__.lower()}")
         return self.template.format(entity=entity_label)
 
 
