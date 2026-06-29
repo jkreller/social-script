@@ -93,7 +93,7 @@ while keep_going:
 
     rounds_until_check = rounds_until_check - 1
     if rounds_until_check == 0:
-        keep_going = assess_vibe(person)   # check in with both of you
+        keep_going = assess_vibe(willingness_to_continue)   # check in with both of you
         rounds_until_check = 3             # then give it another three
 
 ask(person, "to come talk to you if your paths cross again")
