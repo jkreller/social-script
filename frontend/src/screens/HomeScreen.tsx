@@ -87,11 +87,11 @@ export default function HomeScreen({ onPick }: Props) {
       {pendingScript !== null && (
         <div className={styles.overlay} onClick={closeModal}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <span className={styles.modalLabel}>your name</span>
+            <span className={styles.modalLabel}>username</span>
             <input
               className={styles.nameInput}
               type="text"
-              placeholder="enter name"
+              placeholder="enter username"
               value={userName}
               autoFocus
               maxLength={80}

@@ -49,3 +49,4 @@ exit = Exit
 hold = Hold
 response = Response
 boundary = Boundary
+goodbye = Phrase(instruction="Say your goodbyes")

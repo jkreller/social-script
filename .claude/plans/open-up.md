@@ -97,7 +97,7 @@ def ask(person, about):
 
 def listen_to(person):
     "Catch one thing they just said and keep it on the person."
-    thing = io_read(f"What did {person} say? One thing — a subject, an object, an idea.", input_type=InputType.text)
+    thing = io_read(f"What did {person} say? One word only.", input_type=InputType.text)
     person.mentioned.append(thing or "that")
     return thing or "that"
 
@@ -279,8 +279,6 @@ def find_someone():
 
 
 # --- main flow ---
-
-play_along()
 
 person = find_someone()                # the one who's up for it
 get_to_know(person)                    # ask their name

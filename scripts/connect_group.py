@@ -1,6 +1,6 @@
 """
 Social script
-version: v2.1
+version: v2.2
 tags: playful, approach, group
 """
 
@@ -136,8 +136,6 @@ def land_it(game):
 
 
 # --- main flow ---
-
-play_along()
 
 while not approach_strangers():
     move_on()

@@ -13,10 +13,6 @@
   transform: translateY(-50%);
   z-index: 5;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 32px;
 }
 
 .promptText {
@@ -25,11 +21,10 @@
   line-height: 1.45;
   white-space: pre-line; /* honor \n in script prompts as line breaks */
   color: var(--fg);
+  width: 100%;
   text-align: center;
   background: var(--bg);
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  max-width: 320px;
+  padding: 25px 32px;
 }
 
 .zone {
@@ -78,7 +73,7 @@
 
 .headline {
   position: absolute;
-  bottom: calc(100% + 8px); /* just above the centered prompt text */
+  bottom: calc(100% + 15px); /* just above the centered prompt text */
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;

@@ -26,6 +26,8 @@ from social_script.actions import (
     sit_down,
     observe_environment,
     find_group_of_people,
+    find_person,
+    explain,
     interested_in,
     reduce_distance_to,
     show_interest_and_wait,
@@ -41,7 +43,6 @@ from social_script.actions import (
 )
 
 from social_script.play import (
-    play_along,
     hand_over,
     count_people,
     pick_from,
@@ -55,6 +56,7 @@ from social_script.phrases import (
     boundary,
     phrase,
     question,
+    goodbye,
 )
 
 from social_script.external_actions import (
@@ -119,6 +121,8 @@ __all__ = [
     "sit_down",
     "observe_environment",
     "find_group_of_people",
+    "find_person",
+    "explain",
     "interested_in",
     "reduce_distance_to",
     "show_interest_and_wait",
@@ -132,7 +136,6 @@ __all__ = [
     "tell",
     "assess_vibe",
     # play
-    "play_along",
     "hand_over",
     "count_people",
     "pick_from",
@@ -144,6 +147,7 @@ __all__ = [
     "boundary",
     "phrase",
     "question",
+    "goodbye",
     # external activity
     "Activity",
     "activity",

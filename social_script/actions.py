@@ -94,6 +94,23 @@ def find_group_of_people():
     return Group()
 
 
+def find_person():
+    """Scan the room and identify a single person to approach."""
+    from social_script.environment import Person
+    io_read("Scan the room for someone interesting.", headline="find", input_type=InputType.enter)
+    return Person()
+
+
+def explain() -> bool:
+    """Explain the art-project context and capture consent."""
+    io_read(
+        "Explain: you're doing an art project, you're being programmed and it's being filmed.",
+        headline="explain",
+        input_type=InputType.enter,
+    )
+    return sense("Are they still okay with it?", headline="ask")
+
+
 def interested_in(thing) -> bool:
     """Check whether you feel genuinely interested in this person or group."""
     entity_name = type(thing).__name__.lower()
@@ -143,19 +160,24 @@ def sense(prompt: str, *, headline: str = "sense") -> bool:
 
 
 def get_to_know(person) -> None:
-    """Ask their name and write it down — the start of knowing them."""
-    person.name = io_read("Ask their name — what is it?", headline="meet", input_type=InputType.text) or "them"
+    person.name = io_read("Ask how they want to be called?", headline="get to know", input_type=InputType.text) or "them"
 
 
-def ask(person, about) -> None:
+def ask(person, about, *, returns: InputType = InputType.enter):
     """Pose a question to someone — fill in what they've already told you."""
-    say(f"Ask {person} {about.format(name=person, first=person.first_thing, last=person.last_thing)}.", headline="ask")
+    raw = io_read(
+        f"{about.format(name=person, first=person.first_thing, last=person.last_thing)}",
+        headline=f"ask {person}",
+        input_type=returns,
+    )
+    if returns == InputType.yn:
+        return raw.strip().lower() == "y"
+    return raw
 
 
 def listen_to(person) -> str:
     """Catch one thing they just said and keep it on the person."""
-    thing = io_read(f"What did {person} say? One thing — a subject, an object, an idea.",
-                    headline="listen", input_type=InputType.text) or "that"
+    thing = io_read(f"What did {person} say?\nIn 2-3 words.", headline="listen", input_type=InputType.text) or "that"
     person.mentioned.append(thing)
     return thing
 

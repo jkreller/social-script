@@ -1,6 +1,6 @@
 """
 Social script
-version: v1
+version: v1.1
 tags: playful, pass-on, multiple executors
 """
 
@@ -68,8 +68,6 @@ def land_it():
 
 
 # --- main flow ---
-
-play_along()
 
 while True:
     take_a_dare()
