@@ -11,4 +11,4 @@ sleep 1
 "$PYTHON" server.py &
 sleep 2
 
-chromium-browser --kiosk --disable-smooth-scrolling http://localhost:8000/code
+chromium --kiosk --disable-smooth-scrolling http://localhost:8000/code
