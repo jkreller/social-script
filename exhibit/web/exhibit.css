@@ -1,0 +1,354 @@
+:root {
+  --bg: #f5f0e8;
+  --fg: #1a1a1a;
+  --muted: #8a8480;
+  --accent: #b5600a;
+  --border: #d8d0c4;
+  --font: 'JetBrains Mono', 'Courier New', monospace;
+  --radius: 4px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+}
+
+/* `hidden` must always win over the layout rules below (ID/class selectors
+   would otherwise out-specify the browser's [hidden] { display:none }). */
+[hidden] { display: none !important; }
+
+/* Each view is a full-screen layer; only the un-hidden one shows. Internal
+   scrolling (list, code) lives inside these — the page itself never scrolls. */
+.screen {
+  position: fixed;
+  inset: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Landing page (/)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.landing-page {
+  display: flex;
+}
+
+#landing {
+  margin: auto;
+  max-width: 560px;
+  padding: 40px;
+  text-align: center;
+}
+
+#landing h1 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+#landing > p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+.landing-links {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.landing-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.landing-link:hover,
+.landing-link:active {
+  border-color: var(--accent);
+}
+
+.landing-link-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.landing-link-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Code page (/code) — controller: dark kiosk, list + code + transport
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.code-page {
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+/* ── List view ── */
+
+#list-view {
+  overflow-y: auto;
+}
+
+#list {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exec {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 64px;
+  padding: 16px 18px;
+  text-align: left;
+  background: #252526;
+  border: 1px solid #3c3c3c;
+  border-radius: var(--radius);
+  color: #d4d4d4;
+  font-family: var(--font);
+  cursor: pointer;
+}
+
+.exec:hover,
+.exec:active {
+  border-color: var(--accent);
+}
+
+.exec-script {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.exec-meta {
+  font-size: 13px;
+  color: #858585;
+}
+
+.exec-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  color: #d89a5b;
+  border: 1px solid #3c3c3c;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* ── Code view ── */
+
+#code-view {
+  display: flex;
+  flex-direction: column;
+}
+
+#code-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 36px 48px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+pre#source {
+  font-family: var(--font);
+  font-size: 18px;          /* larger for across-the-room reading */
+  line-height: 1.75;
+  white-space: pre;
+  tab-size: 4;
+}
+
+.src-line {
+  display: block;
+  padding: 1px 8px;
+  border-radius: var(--radius);
+}
+
+.src-line.active {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.lineno {
+  display: inline-block;
+  min-width: 2.8em;
+  margin-right: 1.4em;
+  text-align: right;
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0.55;
+  user-select: none;
+}
+
+.inline-vars {
+  margin-left: 1.5em;
+  color: #888888;
+  font-style: italic;
+  opacity: 0.65;
+  user-select: none;
+}
+
+/* ── Transport bar ── */
+
+#controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  background: #252526;
+  border-top: 1px solid #3c3c3c;
+}
+
+.ctrl-btn {
+  background: transparent;
+  border: 1px solid #4a4a4a;
+  border-radius: var(--radius);
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 12px 16px;
+  line-height: 1;
+}
+
+.ctrl-btn:hover,
+.ctrl-btn:active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#play-pause {
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+}
+
+.time {
+  font-size: 13px;
+  color: #b0b0b0;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+#scrubber {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #4a4a4a;
+  cursor: pointer;
+}
+
+#scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+#scrubber::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+#script-name {
+  margin-left: auto;
+  font-size: 11px;
+  color: #858585;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ── Syntax tokens (highlight.js — VS Code dark) ── */
+
+.hljs-keyword            { color: #569cd6; }
+.hljs-built_in           { color: #4ec9b0; }
+.hljs-string             { color: #ce9178; }
+.hljs-comment            { color: #6a9955; }
+.hljs-number             { color: #b5cea8; }
+.hljs-title              { color: #dcdcaa; }
+.hljs-params             { color: #9cdcfe; }
+.hljs-attr               { color: #9cdcfe; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Video page (/video) — passive mirror: full-screen video
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.video-page {
+  background: #000;
+}
+
+#video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e0e0e0;
+  font-size: 22px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 24px;
+}
+
+#empty-overlay {
+  z-index: 30;
+  background: #000;
+  pointer-events: none;
+}
+
+#waiting-overlay {
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
+
+#mute-overlay {
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
