@@ -3,26 +3,27 @@
 A gallery viewer that steps through a `social_script` source file in sync with a
 recorded session video, split across **two devices**:
 
-- **`/video`** — the *controller* (a tablet). Shows a list of recorded executions,
-  plays the video, and is the clock master.
-- **`/code`** — the *follower* (a display driven by the Raspberry Pi). Shows the code and
-  highlights the current line in sync. No controls of its own.
+- **`/code`** — the *controller* (a display driven by the Raspberry Pi). Shows the
+  execution list and the code, and drives play/pause/step/scrub.
+- **`/video`** — the *follower* (a tablet). Mirrors whatever the code view is doing —
+  plays, pauses and seeks the recorded video to match. No controls of its own.
 
-A small local server keeps the two in sync: the video device POSTs its playback state,
-the code device polls it (~4×/s) over plain HTTP. No WebSocket, no build step, no npm.
+A small local server keeps the two in sync: the code device POSTs its playback state,
+the video device polls it (~4×/s) over plain HTTP. No WebSocket, no build step, no npm.
 
 ## Files
 
 ```
 exhibit/
   server.py            FastAPI: serves the pages, /api/executions, /api/state, assets
+  run_pi.sh            restart the server and open the code view in kiosk Chromium
   requirements.txt     fastapi + uvicorn (plain — no compiling on the Pi)
   build_trace.py       generate trace.json from recorded runs
   web/                 everything served to browsers
     index.html         landing: links to the two devices
-    video.html         controller page (tablet)
-    code.html          follower page (Pi display)
-    video.js, code.js, sync.js
+    code.html          controller page (Pi display)
+    video.html         follower page (tablet)
+    code.js, video.js, sync.js
     exhibit.css
     packages/          bundled JS dependencies (highlight.js)
   executions/          one dir per run: log.json, trace.json, video_1.<ext>
@@ -44,7 +45,7 @@ timing and writes `trace.json` next to each `log.json`):
 python exhibit/build_trace.py
 ```
 
-The execution list on `/video` is built by scanning `executions/`; script and executor
+The execution list on `/code` is built by scanning `executions/`; script and executor
 names are read from each `log.json`. No filenames or query params to manage.
 
 ## How to run (Raspberry Pi + tablet)
@@ -55,20 +56,24 @@ On the Pi (once):
 pip install -r exhibit/requirements.txt
 ```
 
-Start the server (binds `0.0.0.0:8000` and prints its LAN IP):
+Each time you want to (re)start the exhibit: kill any server still running, start a
+fresh one (binds `0.0.0.0:8000` and prints its LAN IP), then open the code view in
+kiosk Chromium:
 
 ```sh
-python exhibit/server.py
+pkill -f exhibit/server.py
+python exhibit/server.py &
+chromium-browser --kiosk --disable-smooth-scrolling http://localhost:8000/code
 ```
 
-- On the Pi's display, open the code view fullscreen, e.g.:
-  ```sh
-  chromium-browser --kiosk http://localhost:8000/code
-  ```
-- On the tablet (same Wi-Fi), open `http://<pi-lan-ip>:8000/video`.
+`--disable-smooth-scrolling` avoids fighting the Pi's compositor when the active line
+jumps; add other `--disable-*` kiosk flags (extensions, sync, translate, ...) if the Pi
+feels sluggish, but the page itself is light enough to not need them.
 
-Pick an execution on the tablet and press play — the code view follows. Pause, seek and
-switching executions are all mirrored within a poll interval.
+Then, on the tablet (same Wi-Fi), open `http://<pi-lan-ip>:8000/video`.
+
+Pick an execution on the code view (Pi) and press play — the tablet's video follows.
+Pause, seek and switching executions are all mirrored within a poll interval.
 
 > The tablet streams the video from the Pi over Wi-Fi (the server supports HTTP range
 > requests, so seeking works). For smooth playback on the Pi's Wi-Fi, keep videos as
@@ -77,8 +82,9 @@ switching executions are all mirrored within a poll interval.
 ## How sync works
 
 `server.py` holds one in-memory state dict — `{rev, execution, time, playing}`, where
-`time` is in the trace timeline. The video page converts `video.currentTime +
-video_offset` and `POST`s it on play/pause/seek/timeupdate; the code page `GET`s it every
-~250 ms and, when `rev` changed, loads the selected trace and sets the highlighted line.
-Every request is stateless, so a device can be reloaded or reconnected at any time and
-catches up on its next poll.
+`time` is in the trace timeline. The code page (master) `POST`s it on
+select/play/pause/step/scrub; the video page `GET`s it every ~250 ms and, when `rev`
+changed, loads the matching video and seeks to `time - video_offset`. Every request is
+stateless, so a device can be reloaded or reconnected at any time and catches up on its
+next poll. Selecting nothing (`execution: null`) tells the video page to clear its video
+and show a prompt to pick one on the code view.
