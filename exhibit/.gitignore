@@ -1,2 +1,3 @@
 executions/*
 !executions/.gitkeep
+.venv/

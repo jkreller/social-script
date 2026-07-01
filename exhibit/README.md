@@ -16,6 +16,7 @@ the video device polls it (~4×/s) over plain HTTP. No WebSocket, no build step,
 ```
 exhibit/
   server.py            FastAPI: serves the pages, /api/executions, /api/state, assets
+  install_pi.sh        one-time setup: create a venv and install requirements
   run_pi.sh            restart the server and open the code view in kiosk Chromium
   requirements.txt     fastapi + uvicorn (plain — no compiling on the Pi)
   build_trace.py       generate trace.json from recorded runs
@@ -53,8 +54,11 @@ names are read from each `log.json`. No filenames or query params to manage.
 On the Pi (once):
 
 ```sh
-pip install -r exhibit/requirements.txt
+./exhibit/install_pi.sh
 ```
+
+(Raspberry Pi OS blocks system-wide `pip install`, so this creates a venv at
+`exhibit/.venv` and installs the requirements into it.)
 
 Each time you want to (re)start the exhibit, run:
 
