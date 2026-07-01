@@ -12,4 +12,4 @@ sleep 1
 sleep 2
 
 export DISPLAY=:0
-chromium --kiosk --disable-smooth-scrolling http://localhost:8000/code
+chromium --kiosk --disable-smooth-scrolling --disable-gpu http://localhost:8000/code
