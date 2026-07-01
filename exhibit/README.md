@@ -56,19 +56,14 @@ On the Pi (once):
 pip install -r exhibit/requirements.txt
 ```
 
-Each time you want to (re)start the exhibit: kill any server still running, start a
-fresh one (binds `0.0.0.0:8000` and prints its LAN IP), then open the code view in
-kiosk Chromium:
+Each time you want to (re)start the exhibit, run:
 
 ```sh
-pkill -f exhibit/server.py
-python exhibit/server.py &
-chromium-browser --kiosk --disable-smooth-scrolling http://localhost:8000/code
+./exhibit/run_pi.sh
 ```
 
-`--disable-smooth-scrolling` avoids fighting the Pi's compositor when the active line
-jumps; add other `--disable-*` kiosk flags (extensions, sync, translate, ...) if the Pi
-feels sluggish, but the page itself is light enough to not need them.
+It kills any server still running, starts a fresh one (binds `0.0.0.0:8000` and prints
+its LAN IP), and opens the code view in kiosk Chromium.
 
 Then, on the tablet (same Wi-Fi), open `http://<pi-lan-ip>:8000/video`.
 
