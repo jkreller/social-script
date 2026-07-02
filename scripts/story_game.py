@@ -1,6 +1,6 @@
 """
-Connect group
-version: v3
+Story game
+version: v1
 tags: playful, approach, group
 """
 
@@ -23,7 +23,11 @@ def summarize(story):
     # read all the story elements decided so far
     pass
 
-def pass_device(group):
+def read(story):
+    # read the whole story to the group
+    pass
+
+def pass_device(group, anyone=False):
     # pass the device to the next person in the group
     pass
 
@@ -52,7 +56,7 @@ def gather_feedback(group):
 participant_count = count_people()
 
 while participant_count < 3:
-    participant_count += find_more_people(3 - participant_count) # approach at least "3 - participant_count" people who join the group
+    participant_count += approach(3 - participant_count) # approach at least "3 - participant_count" people who join the group
 
 group = Group(participant_count)
 
@@ -91,11 +95,12 @@ while not story.is_complete():
 
 # Phase 3: listen to the story
 
-initiativeness = assess_vibe(initiativeness) # assert the vibe of the group
+initiativeness = assess_vibe(initiativeness) # assert the vibe of the group, do they want to approach a random person
 
 if initiativeness:
     while not person:
-        person = approach(group) # somebody of the group should approach a random person
+        pass_device(group, anyone=True)
+        person = approach()
 else:
     person = group.random_person()
 
