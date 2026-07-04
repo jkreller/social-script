@@ -30,11 +30,6 @@ social_script/          # core package — import with `from social_script impor
 scripts/                # the actual scripts — run these, not the package
 └── connect_group.py
 
-api/                    # stateless FastAPI server for running scripts over HTTP
-├── main.py
-├── requirements.txt
-└── README.md           # API docs
-
 frontend/               # React + Vite PWA — runs scripts client-side via Pyodide (offline)
 
 sketches/               # rough drafts and planning notes
@@ -60,20 +55,7 @@ python run.py connect_group.py          # fresh run, prints seed
 python run.py connect_group.py '[]' 42  # same seed, same random choices
 ```
 
----
-
-## Running the API server
-
-```bash
-pip install -r api/requirements.txt
-python -m uvicorn api.main:app --reload
-```
-
-The API server is stateless — it has no persistent state between requests. Each `/step` call re-runs the script from the beginning with all answers collected so far. The script is deterministic: given the same answers it always follows the same path, so re-running it just fast-forwards to the next unanswered prompt.
-
-`run.py` works on the same principle: it accumulates answers and drives the same stateless runner. The CLI additionally supports exception objects embedded in the `answers` list — when the user interrupts with Ctrl+C, the exception is stored at that position and injected back into the script's call stack on the next replay, so script-level exception handlers fire correctly.
-
-See [`api/README.md`](api/README.md) for endpoint docs.
+`run.py` accumulates answers and drives a stateless runner: each run re-executes the script from the beginning with all answers collected so far. The script is deterministic: given the same answers it always follows the same path, so re-running it just fast-forwards to the next unanswered prompt. The CLI additionally supports exception objects embedded in the `answers` list — when the user interrupts with Ctrl+C, the exception is stored at that position and injected back into the script's call stack on the next replay, so script-level exception handlers fire correctly.
 
 ---
 

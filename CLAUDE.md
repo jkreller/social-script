@@ -13,7 +13,6 @@ possible. Readability beats cleverness, always.
 - `social_script/` — core package. `actions.py` (verbs), `phrases.py`, `states.py`,
   `environment.py`, `exceptions.py`, `_internal/driver.py` (I/O).
 - `scripts/` — the actual human-run scripts. See `scripts/CLAUDE.md` — different rules.
-- `api/` — stateless FastAPI runner.
 - `frontend/` — React + Vite PWA that runs the scripts client-side via Pyodide
   (offline, no API). See `frontend/CLAUDE.md`.
 
