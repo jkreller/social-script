@@ -50,6 +50,7 @@ while True:
             headline=prompt["headline"],
             input_type=InputType(prompt["input_type"]),
             choices=prompt["choices"],
+            allow_custom=prompt["allow_custom"],
         )
         answers.append(answer)
     except AnyException as e:

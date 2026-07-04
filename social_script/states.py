@@ -9,6 +9,7 @@ class State(Enum):
     readiness_for_interaction = ("How ready is {entity} for interaction?", InputType.scale)
     tiredness                 = ("How tired is {entity}?", InputType.scale)
     willingness_to_continue   = ("Is {entity} still willing to continue?", InputType.yn)
+    initiativeness            = ("Is {entity} in the mood to approach a stranger?", InputType.yn)
 
     def __init__(self, template, input_type):
         self.template = template
@@ -26,3 +27,4 @@ fear = State.fear
 readiness_for_interaction = State.readiness_for_interaction
 tiredness = State.tiredness
 willingness_to_continue = State.willingness_to_continue
+initiativeness = State.initiativeness

@@ -26,8 +26,9 @@ QUESTIONS = [
 
 def find_someone():
     observe_environment()
-    person = find_person()
-    reduce_distance_to(person)
+    find_people(alone_ok=True)
+    person = Person()
+    reduce_distance(person)
     person.up_for_interaction = ask(person, "Are they up for some interaction?", returns=InputType.yn)
 
     if not person.up_for_interaction:

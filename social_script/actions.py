@@ -2,7 +2,7 @@
 
 import random
 from enum import Enum
-from social_script._internal.driver import io_read, io_write, InputType
+from social_script._internal.driver import io_read, io_write, InputType, get_driver
 from social_script.phrases import Phrase
 
 
@@ -37,6 +37,16 @@ def do(action) -> None:
     io_read(action, headline="action", input_type=InputType.enter)
 
 
+def keep_in_mind(note) -> None:
+    """Take in something and carry it with you — a reason, a goal, nothing said out loud."""
+    io_read(note, headline="keep in mind", input_type=InputType.enter)
+
+
+def next_phase(title=None, description=None) -> None:
+    """Move the game into its next part."""
+    get_driver().advance_phase(title, description)
+
+
 def wait() -> None:
     """Hold still and let silence do the work."""
     io_read("Let it settle.", headline="wait", input_type=InputType.enter)
@@ -53,9 +63,11 @@ def exit_gracefully() -> None:
     io_write("[ exit ]    Leave with composure. You're done.")
 
 
-def assess_internal(signal):
-    """Read an inner signal: a gut yes/no for binary states, else an intensity 1–10."""
-    return _assess(signal.question(), signal.input_type)
+def assess_internal(signal, intro=None):
+    """Read an inner signal: a gut yes/no for binary states, else an intensity 1–10.
+    An optional intro sets the scene before the question."""
+    question = f"{intro}\n{signal.question()}" if intro else signal.question()
+    return _assess(question, signal.input_type)
 
 
 def assess_external(entity, signal):
@@ -87,18 +99,9 @@ def observe_environment() -> None:
     io_read("Look around. Take it all in.", headline="observe", input_type=InputType.enter)
 
 
-def find_group_of_people():
-    """Scan the room and identify a potential group to approach."""
-    from social_script.environment import Group
-    io_read("Scan the room for any group.", headline="find", input_type=InputType.enter)
-    return Group()
-
-
-def find_person():
-    """Scan the room and identify a single person to approach."""
-    from social_script.environment import Person
-    io_read("Scan the room for someone interesting.", headline="find", input_type=InputType.enter)
-    return Person()
+def find_people(alone_ok=False):
+    prompt = "Scan the room for one person or a group." if alone_ok else "Scan the room for any group."
+    io_read(prompt, headline="find", input_type=InputType.enter)
 
 
 def explain() -> bool:
@@ -117,10 +120,10 @@ def interested_in(thing) -> bool:
     return sense(f"Are you interested in this {entity_name}?", headline="interest")
 
 
-def reduce_distance_to(entity) -> None:
-    """Move physically closer to a person or group."""
-    entity_name = type(entity).__name__.lower()
-    io_read(f"Move closer to the {entity_name}, naturally.", headline="move", input_type=InputType.enter)
+def reduce_distance(to=None) -> None:
+    """Move physically closer — to a named person or group, or just to whoever's there."""
+    target = f" to the {type(to).__name__.lower()}" if to is not None else ""
+    io_read(f"Move closer{target}, naturally.", headline="move", input_type=InputType.enter)
 
 
 def show_interest_and_wait():
@@ -137,26 +140,37 @@ def flow() -> None:
 def observe(entity, kind):
     """Observe something specific about a person or group and return what you notice."""
     entity_name = type(entity).__name__.lower()
-    choices = [m.name for m in kind] if isinstance(kind, type) and issubclass(kind, Enum) else []
+    choices = [{"label": m.name, "description": None} for m in kind] if isinstance(kind, type) and issubclass(kind, Enum) else []
     while True:
         raw = io_read(f"What is the {entity_name} doing?", headline="observe", input_type=InputType.choice, choices=choices).strip()
         if raw.isdigit() and 1 <= int(raw) <= len(choices):
             return list(kind)[int(raw) - 1]
 
 
-def choose(options, prompt: str = "Pick one"):
-    """Pick one option by reading the situation. Pass a list of strings, or an Enum."""
+def choose(options, prompt: str = "Pick one", *, allow_custom: bool = False):
+    """Pick one option by reading the situation. Pass a list of strings/objects or an Enum;
+    an option may also be a (label, description) pair. With allow_custom, a typed answer that
+    isn't a list number is accepted as-is."""
     members = list(options) if isinstance(options, type) and issubclass(options, Enum) else options
+    pairs = [(o[0], o[1]) if isinstance(o, tuple) else (o, None) for o in members]
+    choices = [{"label": str(label), "description": desc} for label, desc in pairs]
     while True:
-        raw = io_read(f"{prompt}:", headline="choose", input_type=InputType.choice, choices=[str(m) for m in members]).strip()
-        if raw.isdigit() and 1 <= int(raw) <= len(members):
-            return members[int(raw) - 1]
+        raw = io_read(f"{prompt}:", headline="choose", input_type=InputType.choice, choices=choices, allow_custom=allow_custom).strip()
+        if raw.isdigit() and 1 <= int(raw) <= len(pairs):
+            return pairs[int(raw) - 1][0]
+        if allow_custom and raw:
+            return raw
 
 
 def sense(prompt: str, *, headline: str = "sense") -> bool:
     """Ask yourself an honest yes/no question and answer from the gut."""
     raw = io_read(prompt, headline=headline, input_type=InputType.yn).strip().lower()
     return raw == "y"
+
+
+def decide(prompt: str) -> str:
+    """Decide for yourself and type it in — the device is already in your hands."""
+    return io_read(f"{prompt}:", headline="decide", input_type=InputType.text)
 
 
 def get_to_know(person) -> None:

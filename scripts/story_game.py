@@ -7,69 +7,136 @@ tags: playful, approach, group
 from social_script import *
 
 
-def approach(group):
-    # one person of the group should approach a random person, let them decide by their own, just say "one of you"
-    pass
+ROLES = [
+    ("love fairy", "spread love and peace wherever the story goes"),
+    ("sci-fi nerd", "drag everything into space, robots and all"),
+    ("pragmatist", "keep it grounded — someone has to"),
+    ("crime author", "it's always the gardener!"),
+    ("fantasy fan", "dragons, magic, an unlikely quest"),
+    ("weirdo", "just make it weird, that's fun"),
+]
 
-def decide_story_element(person, story, element, number=None):
-    # let the person decide if they are willing to approach a random person throughout the game: assert_internal(initiativeness)
-    # save decision in their object
+JOIN_INVITE = "We're creating a story together. It's a game, wanna join playing?"
+QUICK_ASK = "Got a sec? Quick thing for our story."
 
-    # if yes, make them approach a random person to decide the story element
-    # if no, offer them a list of options or make them write their own answer
-    pass
+OPTIONS = {
+    Story.CHARACTER_COUNT: ["1", "2", "3", "4", "5"],
+    Story.WHO: [
+        "Friedrich Merz", "Spongebob", "An ant", "WALL-E", "A police officer",
+        "Herzschwestern", "Gregor Gysi", "The guy who invented Bauhaus", "ChatGPT",
+    ],
+    Story.WHERE: [
+        "M18", "Ilm-Park", "Mensa", "Old Cemetery", "Uni-Library", "Wood-Workshop",
+        "Weimar City Center", "Theaterplatz", "Bauhaus-Museum", "Parallel Universe",
+    ],
+    Story.WHEN: ["Prehistoric Times", "1980s", "During Summaery", "10 Years From Now", "2626"],
+    Story.GENRE: ["Drama", "Sci-Fi", "Horror", "Romance", "Action", "Psycho-Thriller", "Comedy", "Bauhaus"],
+    Story.OBJECT: ["Smartphone", "The Death Star", "M18-deposit-coin", "Mensa tray", "Bauhaus lamp", "Wrecking ball"],
+}
+
+
+def approach(purpose, min_count=None):
+    intro = f"We need {min_count} more person(s)." if min_count else None
+    if assess_internal(fear, intro) > 6:
+        breath_in_out(2)
+
+    find_people(alone_ok=True)
+    reduce_distance()
+    say(purpose)
+
+    if not sense("Are they in?"):
+        return Group() if min_count else None
+    if not min_count:
+        return Person()
+    joined = count_people("How many joined you?")
+    return Group(joined) if joined > 1 else Person()
+
+def get_to_know(number):
+    hand_over()
+    name = decide("Pick your username") or "them"
+    role = choose(ROLES, "What's your role", allow_custom=True)
+    person = Person(number, name, role)
+    return person
+
+def decide_story_element(who, story, element, number=None):
+    person = who.current_person if isinstance(who, Group) else who
+
+    if person.up_for_approaching is None:
+        person.up_for_approaching = assess_internal(initiativeness)
+
+    answer = None
+    if person.up_for_approaching:
+        stranger = approach(QUICK_ASK)
+        if stranger:
+            returns = InputType.scale if element is Story.CHARACTER_COUNT else InputType.text
+            answer = ask(stranger, element.question, returns=returns)
+
+    if answer is None:
+        options = OPTIONS[element] + [str(group.random_person())] if element is Story.WHO else OPTIONS[element]
+        answer = choose(options, element.question, allow_custom=element is not Story.CHARACTER_COUNT)
+
+    story.set(element, answer, number)
+    return int(answer) if element is Story.CHARACTER_COUNT else answer
 
 def summarize(story):
-    # read all the story elements decided so far
-    pass
+    say(f"Alright! Summary:\n{story.recap()}")
 
-def read(story):
-    # read the whole story to the group
-    pass
+def read(person, story):
+    do(f"Bring me to {person}.")
+    say(f"Read it out loud:\n{story.text()}")
 
 def pass_device(group, anyone=False):
-    # pass the device to the next person in the group
-    pass
+    if anyone:
+        do("Pass me to whoever feels like it.")
+        return
+    group.next_person()
+    do(f"Pass me to {group.current_person}{", the " + group.current_person.role if group.current_person.role else ''}.")
 
 def center_device(group):
-    # instruct the person to put the device in the center of everyone
-    pass
+    do("Put me in the middle, screen up, so everyone can see.")
 
 def brainstorm(story, group):
-    # make group select a user that has an idea
-    # when selected make them type the story part and make them select if they used a story element
-    # when all story elements were used, check if the story is complete
-    pass
+    choose(group.people, "Who's got an idea for the next part?")
+    part = decide("Say the next part of the story, then type it in.")
+    story.parts.append(part)
+
+    if story.not_yet_used:
+        used = choose(story.not_yet_used + ["none of them"], "Did you weave one of these in?")
+        story.use(used)
+
+    if not story.not_yet_used:
+        story.is_complete = sense("Does the story feel complete?")
 
 def gather_feedback(group):
-    # ask three questions:
-    # 1. How happy are you with the story? (scale)
-    # 2. How much fun did you have? (scale)
-    # 3. Would you like to play again? (yes/no)
-    pass
+    poll("How happy are you with the story?")
+    poll("How much fun did you have?")
+    say("Great — go again sometime!" if poll("Would you like to play again?", returns=InputType.yn) else goodbye)
 
 
 # --- main flow ---
 
-# Preparation: make a group
+# Phase 1: make it a group
+next_phase("Make it a group!", "Let's see if we're enough people to play")
 
 participant_count = count_people()
 
 while participant_count < 3:
-    participant_count += approach(3 - participant_count) # approach at least "3 - participant_count" people who join the group
+    participant_count += approach(JOIN_INVITE, 3 - participant_count).count
 
 group = Group(participant_count)
 
 
-# Phase 0: get to know each other
+# Phase 2: get to know each other
+next_phase("Great! Intro round!", "Let's see who's here")
 
 for number in range(group.size):
-    person = get_to_know(number) # get username and role and assign number and return person object
+    person = get_to_know(number)
     group.add(person)
     group.next_person()
 
 
-# Phase 1: find story elements
+# Phase 3: find story elements
+next_phase("Add ingredients to the soup!", "Pick who, where, when, the genre and an object.")
 
 story = Story()
 
@@ -77,30 +144,33 @@ character_count = decide_story_element(group, story, Story.CHARACTER_COUNT) # in
 
 for character_number in range(character_count):
     pass_device(group)
-    decide_story_element(group.current_person, story, Story.CHARACTER, character_number)
+    decide_story_element(group.current_person, story, Story.WHO, character_number)
 
-for element in [Story.WHO, Story.WHERE, Story.WHEN, Story.GENRE, Story.OBJECT]:
+for element in [Story.WHERE, Story.WHEN, Story.GENRE, Story.OBJECT]:
     pass_device(group)
     decide_story_element(group, story, element)
 
-
-# Phase 2: tell the story
-
 summarize(story)
 
-while not story.is_complete():
+
+# Phase 4: tell the story
+next_phase("Storytime!", "Everyone adds a part until it's complete.")
+
+while not story.is_complete:
     center_device(group)
     brainstorm(story, group)
 
 
 # Phase 3: listen to the story
+next_phase("Let's hear it!", "Curious what the story sounds like?")
 
 initiativeness = assess_vibe(initiativeness) # assert the vibe of the group, do they want to approach a random person
 
 if initiativeness:
+    person = None
     while not person:
         pass_device(group, anyone=True)
-        person = approach()
+        person = approach(QUICK_ASK)
 else:
     person = group.random_person()
 
@@ -108,5 +178,6 @@ read(person, story)
 
 
 # Phase 4: feedback
+next_phase("How was it?", "Quick feedback")
 
 gather_feedback(group)

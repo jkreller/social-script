@@ -107,8 +107,9 @@ def explain():
 
 
 def approach_strangers():
-    group = find_group_of_people()
-    reduce_distance_to(group)
+    find_people()
+    group = Group()
+    reduce_distance(group)
     say("Say: it's an art project, the app's running you — got a few minutes?")
     return sense("Are they in?", headline="check")
 

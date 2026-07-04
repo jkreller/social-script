@@ -1,11 +1,16 @@
 """People, groups, and spatial relations in the social environment."""
 
+import random
+
 
 class Person:
     # a single person in the environment — carries their name and everything
     # they've told you, so later questions can be built from their own words
-    def __init__(self, name=""):
+    def __init__(self, number=None, name="", role=None, up_for_approaching=None):
+        self.number = number
         self.name = name
+        self.role = role
+        self.up_for_approaching = up_for_approaching
         self.mentioned = []  # the real things they've told you, in order
 
     @property
@@ -16,6 +21,10 @@ class Person:
     def last_thing(self):  # where it is now
         return self.mentioned[-1] if self.mentioned else "that"
 
+    @property
+    def count(self) -> int:  # one person is one head
+        return 1
+
     def __str__(self):
         return self.name or "them"
 
@@ -24,11 +33,32 @@ class Person:
 
 
 class Group:
-    pass  # a group of people
+    # the people playing together, and whose turn it currently is
+    def __init__(self, size=0):
+        self.size = size
+        self.people = []
+        self.current = 0
+
+    @property
+    def count(self) -> int:  # how many heads in the group
+        return self.size
+
+    def add(self, person) -> None:
+        self.people.append(person)
+
+    @property
+    def current_person(self):
+        return self.people[self.current]
+
+    def next_person(self) -> None:
+        self.current = (self.current + 1) % self.size
+
+    def random_person(self):
+        return random.choice(self.people)
 
 
 class _Everyone:
-    label = "everyone"
+    label = "anyone"
 
 
 everyone = _Everyone()
