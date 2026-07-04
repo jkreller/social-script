@@ -1,117 +1,157 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Heart, Lightning, Fire, Star, Gem, Play, Camera, InfoCircle, HEX } from '../icons'
 import { getScripts, type ScriptInfo } from '../api'
+import { unlockAudio } from '../utils/sfx'
+import InfoOverlay from './InfoOverlay'
 import btn from '../styles/buttons.module.css'
 import styles from './HomeScreen.module.css'
 
-function formatName(s: string): string {
-  return s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-}
+// The one game this app runs. We still read its info from the engine (for the log),
+// but there's no script list any more — it's a single game.
+const GAME = 'story_game'
+const FALLBACK: ScriptInfo = { name: GAME, version: '', tags: [] }
+
+// The hero glyph cycles through these every 5s instead of sitting on one fixed icon.
+const GLYPHS = [Heart, Lightning, Fire, Star, Gem]
 
 interface Props {
   onPick: (script: string, version: string, tags: string[], userName: string, cameraOn: boolean) => void
 }
 
 export default function HomeScreen({ onPick }: Props) {
-  const [scripts, setScripts] = useState<ScriptInfo[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [game, setGame] = useState<ScriptInfo | null>(null)
+  const [booting, setBooting] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [infoOpen, setInfoOpen] = useState(false)
   const [userName, setUserName] = useState('')
   const [camera, setCamera] = useState(true)
-  const [pendingScript, setPendingScript] = useState<ScriptInfo | null>(null)
+  const [glyphIndex, setGlyphIndex] = useState(0)
 
   useEffect(() => {
     getScripts()
-      .then(setScripts)
-      .catch(e => setError(String(e)))
-      .finally(() => setLoading(false))
+      .then(list => setGame(list.find(s => s.name === GAME) ?? FALLBACK))
+      .catch(() => setGame(FALLBACK))
+      .finally(() => setBooting(false))
   }, [])
 
-  const closeModal = () => {
-    setPendingScript(null)
-    setUserName('')
-    setCamera(true)
+  useEffect(() => {
+    const id = setInterval(() => setGlyphIndex(i => (i + 1) % GLYPHS.length), 5000)
+    return () => clearInterval(id)
+  }, [])
+
+  const openDialog = () => { unlockAudio(); setDialogOpen(true) }
+  const closeDialog = () => { setDialogOpen(false); setUserName(''); setCamera(true) }
+
+  const start = () => {
+    const g = game ?? FALLBACK
+    if (userName.trim()) onPick(g.name, g.version, g.tags, userName.trim(), camera)
   }
 
-  const confirmStart = () => {
-    if (pendingScript && userName.trim()) {
-      onPick(pendingScript.name, pendingScript.version, pendingScript.tags, userName.trim(), camera)
-    }
-  }
+  const Glyph = GLYPHS[glyphIndex]
 
   return (
     <div className={styles.root}>
-      <div className={styles.header}>
-        <span className={styles.title}>Select Script</span>
-      </div>
+      <button className={styles.infoBtn} onClick={() => setInfoOpen(true)} aria-label="About">
+        <InfoCircle size={22} color={HEX.fg} />
+      </button>
 
-      {loading && (
-        <div className={styles.center}>
-          <span className={styles.statusText}>loading…</span>
-        </div>
-      )}
-
-      {error && (
-        <div className={styles.center}>
-          <span className={styles.errorText}>{error}</span>
-        </div>
-      )}
-
-      {!loading && !error && (
-        <div className={styles.list}>
-          {scripts.map(script => {
-            const { name, version, tags } = script
-            return (
-            <div
-              key={name}
-              className={styles.item}
-              role="button"
-              onClick={() => setPendingScript(script)}
+      <motion.div
+        className={styles.hero}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
+        <motion.div
+          className={styles.glyph}
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={glyphIndex}
+              style={{ display: 'flex' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
             >
-              <div className={styles.itemHead}>
-                <span className={styles.itemName}>{formatName(name)}</span>
-                {version && <span className={styles.version}>{version}</span>}
-              </div>
-              {tags.length > 0 && (
-                <div className={styles.tags}>
-                  {tags.map(tag => (
-                    <span key={tag} className={styles.tag}>{tag}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-            )
-          })}
-        </div>
-      )}
+              <Glyph size={64} appearance="palette" />
+            </motion.span>
+          </AnimatePresence>
+        </motion.div>
 
-      {pendingScript !== null && (
-        <div className={styles.overlay} onClick={closeModal}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <span className={styles.modalLabel}>username</span>
-            <input
-              className={styles.nameInput}
-              type="text"
-              placeholder="enter username"
-              value={userName}
-              autoFocus
-              maxLength={80}
-              onChange={e => setUserName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') confirmStart() }}
-            />
-            <label className={styles.cameraToggle}>
-              <input type="checkbox" checked={camera} onChange={e => setCamera(e.target.checked)} />
-              <span>record video</span>
-            </label>
-            <button
-              className={`${btn.btnSecondary} ${styles.confirmBtn}`}
-              disabled={!userName.trim()}
-              onClick={confirmStart}
+        <h1 className={styles.wordmark}>
+          <span className={`${styles.wordmarkLine} ${styles.wordmarkBold}`}>social</span>
+          <span className={styles.wordmarkLine}>_game</span>
+        </h1>
+      </motion.div>
+
+      <motion.button
+        className={`${btn.btnPrimary} ${styles.play}`}
+        onClick={openDialog}
+        disabled={booting}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.12, duration: 0.16, ease: 'easeOut' }}
+      >
+        <Play size={22} color={HEX.ink} />
+        {booting ? 'waking up…' : 'Play'}
+      </motion.button>
+
+      <AnimatePresence>
+        {dialogOpen && (
+          <motion.div
+            className={styles.overlay}
+            onClick={closeDialog}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
+          >
+            <motion.div
+              className={styles.dialog}
+              onClick={e => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.14, ease: 'easeOut' }}
             >
-              Start
-            </button>
-          </div>
-        </div>
-      )}
+              <span className={styles.dialogLabel}>what should we call you?</span>
+              <input
+                className={styles.nameInput}
+                type="text"
+                placeholder="your name"
+                value={userName}
+                autoFocus
+                maxLength={80}
+                onChange={e => setUserName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') start() }}
+              />
+
+              <button
+                className={`${styles.consent} ${camera ? styles.consentOn : ''}`}
+                onClick={() => setCamera(c => !c)}
+                type="button"
+              >
+                <span className={`${styles.consentIcon} ${!camera ? styles.consentIconOff : ''}`}>
+                  <Camera width={22} height={22} />
+                </span>
+                <span className={styles.consentText}>
+                  <span className={styles.consentTitle}>{camera ? 'Filming on' : 'Filming off'}</span>
+                </span>
+                <span className={`${styles.switch} ${camera ? styles.switchOn : ''}`}><span className={styles.knob} /></span>
+              </button>
+
+              <button className={`${btn.btnPrimary} ${styles.startBtn}`} disabled={!userName.trim()} onClick={start}>
+                Let's play
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <InfoOverlay open={infoOpen} onClose={() => setInfoOpen(false)} />
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion'
+import { Pause, HEX } from '../icons'
 import btn from '../styles/buttons.module.css'
 import styles from './PausedScreen.module.css'
 
@@ -11,11 +13,20 @@ interface Props {
 export default function PausedScreen({ onResume, onFinish }: Props) {
   return (
     <div className={styles.root}>
-      <span className={styles.label}>paused</span>
-      <span className={styles.message}>Recording saved.</span>
-      <span className={styles.hint}>Resume to keep going, or finish and download.</span>
-      <button className={btn.btnPrimary} onClick={onResume}>Resume run</button>
-      <button className={btn.btnSecondary} onClick={onFinish}>Finish &amp; save</button>
+      <motion.div
+        className={styles.glyph}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.18, ease: [0.2, 0.9, 0.3, 1] }}
+      >
+        <Pause size={48} color={HEX.accent} />
+      </motion.div>
+      <span className={styles.message}>Paused</span>
+      <span className={styles.hint}>Your footage is safe. Pick up where you left off, or wrap it up.</span>
+      <div className={styles.actions}>
+        <button className={btn.btnPrimary} onClick={onResume}>Resume</button>
+        <button className={btn.btnSecondary} onClick={onFinish}>Finish &amp; save</button>
+      </div>
     </div>
   )
 }

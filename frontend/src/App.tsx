@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { AnimatePresence, motion, type Transition } from 'framer-motion'
 import styles from './App.module.css'
 import HomeScreen from './screens/HomeScreen'
 import RunnerScreen from './screens/RunnerScreen'
@@ -21,6 +22,15 @@ const SAVED = (() => {
 const PAUSED = (() => {
   try { return localStorage.getItem(PAUSED_KEY) === '1' } catch { return false }
 })()
+
+// A quick snappy fade as screens swap (mode="wait" — one at a time).
+const SCREEN_TRANSITION: Transition = { duration: 0.14, ease: 'easeOut' }
+const SCREEN_ANIM = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: SCREEN_TRANSITION,
+}
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(SAVED ? (PAUSED ? 'paused' : SAVED.screen ?? 'home') : 'home')
@@ -129,51 +139,53 @@ export default function App() {
 
   return (
     <div className={styles.root}>
-      {screen === 'home' && (
-        <div key="home" className={styles.screen}>
-          <HomeScreen onPick={handlePick} />
-        </div>
-      )}
-      {screen === 'running' && (
-        <div key={`running-${script}`} className={styles.screen}>
-          <RunnerScreen
-            script={script}
-            answers={answers}
-            seed={seed}
-            cameraOn={cameraOn}
-            onAnswer={handleAnswer}
-            onDone={handleDone}
-            onPaused={handlePaused}
-            onRollback={handleRollback}
-            onStepShow={handleStepShow}
-            onExceptionSelect={handleExceptionSelect}
-            onException={handleException}
-            onClipStart={handleClipStart}
-            onClipEnd={handleClipEnd}
-          />
-        </div>
-      )}
-      {screen === 'paused' && (
-        <div key="paused" className={styles.screen}>
-          <PausedScreen onResume={handleResume} onFinish={handleFinishFromPaused} />
-        </div>
-      )}
-      {screen === 'done' && (
-        <div key="done" className={styles.screen}>
-          <DoneScreen
-            userName={userName}
-            script={script}
-            version={version}
-            tags={tags}
-            answers={answers}
-            seed={seed}
-            cameraOn={cameraOn}
-            log={log}
-            clips={clips}
-            onRestart={reset}
-          />
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {screen === 'home' && (
+          <motion.div key="home" className={styles.screen} {...SCREEN_ANIM}>
+            <HomeScreen onPick={handlePick} />
+          </motion.div>
+        )}
+        {screen === 'running' && (
+          <motion.div key={`running-${script}`} className={styles.screen} {...SCREEN_ANIM}>
+            <RunnerScreen
+              script={script}
+              answers={answers}
+              seed={seed}
+              cameraOn={cameraOn}
+              onAnswer={handleAnswer}
+              onDone={handleDone}
+              onPaused={handlePaused}
+              onRollback={handleRollback}
+              onStepShow={handleStepShow}
+              onExceptionSelect={handleExceptionSelect}
+              onException={handleException}
+              onClipStart={handleClipStart}
+              onClipEnd={handleClipEnd}
+            />
+          </motion.div>
+        )}
+        {screen === 'paused' && (
+          <motion.div key="paused" className={styles.screen} {...SCREEN_ANIM}>
+            <PausedScreen onResume={handleResume} onFinish={handleFinishFromPaused} />
+          </motion.div>
+        )}
+        {screen === 'done' && (
+          <motion.div key="done" className={styles.screen} {...SCREEN_ANIM}>
+            <DoneScreen
+              userName={userName}
+              script={script}
+              version={version}
+              tags={tags}
+              answers={answers}
+              seed={seed}
+              cameraOn={cameraOn}
+              log={log}
+              clips={clips}
+              onRestart={reset}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

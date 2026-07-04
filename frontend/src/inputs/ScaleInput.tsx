@@ -88,6 +88,7 @@ export default function ScaleInput({ prompt, onSubmit }: Props) {
           <span className={`${styles.value} ${!interacted ? styles.valueDim : ''}`}>
             {value}
           </span>
+          <span className={styles.valueScale}>/ 10</span>
         </div>
       </div>
 

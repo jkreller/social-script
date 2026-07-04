@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Check, Close, HEX } from '../icons'
 import type { Prompt } from '../types'
 import styles from './YesNoInput.module.css'
 
@@ -17,27 +19,31 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
 
   return (
     <div className={styles.root}>
-      <div
+      <motion.div
         className={`${styles.zone} ${styles.zoneYes} ${flashing === 'y' ? styles.flash : ''}`}
         role="button"
         onClick={() => handleTap('y')}
+        whileTap={{ scale: 0.96 }}
       >
+        <Check size={40} color={HEX.ink} />
         <span className={styles.label}>Yes</span>
-      </div>
+      </motion.div>
 
-      <div className={styles.divider} />
-
-      <div
+      <motion.div
         className={`${styles.zone} ${styles.zoneNo} ${flashing === 'n' ? styles.flash : ''}`}
         role="button"
         onClick={() => handleTap('n')}
+        whileTap={{ scale: 0.96 }}
       >
+        <Close size={40} color={HEX.fg} />
         <span className={styles.label}>No</span>
-      </div>
+      </motion.div>
 
       <div className={styles.promptArea}>
-        <p className={styles.promptText}>{prompt.text}</p>
-        {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
+        <div className={styles.promptCard}>
+          {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
+          <p className={styles.promptText}>{prompt.text}</p>
+        </div>
       </div>
     </div>
   )

@@ -1,0 +1,70 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: var(--scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--glow-accent);
+  padding: 36px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap);
+  height: var(--tap);
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.closeBtn:active {
+  transform: translate(2px, 2px);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-body);
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  text-shadow: var(--glow-accent);
+}
+
+.body {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  color: var(--fg);
+}
+
+.credit {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  color: var(--muted);
+  text-decoration: underline;
+}

@@ -1,33 +1,43 @@
-.btnPrimary {
-  padding: 12px 32px;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  background: var(--fg);
-  color: var(--bg);
+.btnPrimary,
+.btnSecondary {
+  padding: var(--sp-3) var(--sp-6);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-btn);
+  line-height: 1;
+  letter-spacing: 0.02em;
   border: none;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: opacity 120ms ease;
+  box-shadow: var(--glow-accent);
+  transition: transform 90ms var(--ease-snap), box-shadow 90ms var(--ease-snap), background 90ms ease;
 }
 
-.btnPrimary:active {
-  opacity: 0.75;
+.btnPrimary {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .btnSecondary {
-  padding: 12px 32px;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  background: transparent;
+  background: var(--surface);
   color: var(--fg);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 120ms ease;
+}
+
+/* Press into the shadow — the classic flat-pixel button feel. */
+.btnPrimary:active,
+.btnSecondary:active {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 var(--shadow);
 }
 
 .btnSecondary:active {
-  background: var(--border);
+  background: var(--surface-2);
+}
+
+.btnPrimary:disabled,
+.btnSecondary:disabled {
+  opacity: 0.45;
+  transform: none;
+  box-shadow: 2px 2px 0 var(--shadow);
+  cursor: default;
 }

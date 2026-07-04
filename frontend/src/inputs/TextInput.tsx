@@ -19,12 +19,16 @@ export default function TextInput({ prompt, onSubmit }: Props) {
         className={styles.field}
         type="text"
         value={value}
+        placeholder="type here…"
         autoFocus
         maxLength={120}
         onChange={e => setValue(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') submit() }}
       />
-      <button className={`${styles.confirmBtn}${!ok ? ` ${styles.hidden}` : ''}`} onClick={submit}>
+      <button
+        className={`${styles.confirmBtn}${!ok ? ` ${styles.hidden}` : ''}`}
+        onClick={submit}
+      >
         Confirm
       </button>
     </div>

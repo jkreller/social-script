@@ -1,172 +1,198 @@
 .root {
-  height: 100dvh;
+  position: relative;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
-}
-
-.header {
-  padding: 48px 32px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.title {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.list {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 0 32px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 120ms ease;
+  gap: 40px;
+  padding: 32px calc(24px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+  text-align: center;
 }
 
-.item:active {
-  background: var(--border);
-}
-
-.itemHead {
+.infoBtn {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap);
+  height: var(--tap);
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--fg);
+  cursor: pointer;
+  box-shadow: var(--glow-accent);
+  transition: transform 90ms var(--ease-snap), box-shadow 90ms var(--ease-snap);
+}
+
+.infoBtn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 
-.itemName {
-  font-size: 28px;
-  font-weight: 500;
-  color: var(--fg);
-  letter-spacing: -0.01em;
+.glyph {
+  color: var(--accent);
+  filter: drop-shadow(var(--glow-accent));
 }
 
-.version {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+/* Recreates the SOCIAL / _GAME logo wordmark — the one deliberate all-caps spot.
+   "social" is bold, "_game" is regular weight, matching the source artwork. */
+.wordmark {
+  text-align: right;
+  font-family: var(--font-logo);
+  line-height: 1.2;
+}
+
+.wordmarkLine {
+  display: block;
+  font-weight: 400;
+  font-size: var(--fs-hero);
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent);
+  text-shadow: var(--glow-accent);
 }
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.wordmarkBold { font-weight: 700; }
+
+.play {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--fs-body);
+  padding: 16px 46px;
 }
 
-.tag {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 10px;
-}
-
-.center {
-  flex: 1;
+/* --- start dialog (centered popup) --- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
 }
 
-.statusText {
-  font-size: 14px;
-  color: var(--muted);
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface-strong);
+  border-radius: var(--radius);
+  padding: 28px 24px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  box-shadow: var(--glow-accent);
 }
 
-.errorText {
-  font-size: 14px;
+.dialogLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-body);
+  text-align: center;
   color: var(--accent);
 }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+.nameInput {
+  width: 100%;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  color: var(--fg);
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+  outline: none;
 }
 
-.modal {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 32px;
+.nameInput::placeholder { color: var(--muted); }
+
+.consent {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  box-shadow: var(--glow-accent);
+}
+
+.consentIcon {
+  position: relative;
+  color: var(--fg);
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* Diagonal strike overlay for "off" — pixelarticons has no camera-off glyph. */
+.consentIconOff::after {
+  content: '';
+  position: absolute;
+  width: 130%;
+  height: 3px;
+  top: 50%;
+  left: -15%;
+  background: var(--pop-magenta);
+  transform: rotate(-45deg);
+}
+
+.consentText {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-width: 280px;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
-.modalLabel {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.nameInput {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  padding: 8px 0;
-  font-family: var(--font);
-  font-size: 24px;
-  font-weight: 500;
+.consentTitle {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-body);
   color: var(--fg);
-  outline: none;
-  user-select: text;
-  -webkit-user-select: text;
 }
 
-.nameInput::placeholder {
-  color: var(--muted);
+.switch {
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  background: var(--bg);
+  position: relative;
+  transition: background 120ms ease;
 }
 
-.cameraToggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-  cursor: pointer;
-}
+.switchOn { background: var(--accent); }
 
-.cameraToggle input {
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
   width: 18px;
   height: 18px;
-  accent-color: var(--accent);
-  cursor: pointer;
+  background: #fff;
+  transition: transform 120ms var(--ease-snap);
 }
 
-.confirmBtn {
-  align-self: flex-end;
-  padding: 10px 28px;
-}
+.switchOn .knob { transform: translateX(20px); }
 
-.confirmBtn:disabled {
-  opacity: 0.35;
-  cursor: default;
+.startBtn {
+  margin-top: 4px;
+  width: 100%;
 }

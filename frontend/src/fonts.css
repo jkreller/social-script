@@ -1,0 +1,49 @@
+/* Player Sans Mono — Justin Penner, SIL OFL 1.1 (see src/assets/fonts/LICENSE.txt).
+   Vendored locally (not on @fontsource) so the offline PWA can bundle it.
+   Used for the logo wordmark only. */
+
+/* Pixel Operator — Jayvee Enaguas (HarvettFox96), CC0. The app-wide type face for all
+   UI, headings and story text. The 400 weight uses the "HB" (half-bold) cut, not true
+   Regular — true Regular renders too thin/wispy at UI sizes; HB is the weight the
+   family ships specifically for legible default-weight text. Bold covers emphasis.
+   True Regular is also vendored at weight 300, for the rare spot (e.g. InfoOverlay
+   body copy) where even HB reads too bold. */
+@font-face {
+  font-family: 'Pixel Operator';
+  src: url('./assets/fonts/PixelOperator.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pixel Operator';
+  src: url('./assets/fonts/PixelOperatorHB.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pixel Operator';
+  src: url('./assets/fonts/PixelOperator-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Player Sans Mono';
+  src: url('./assets/fonts/PlayerSansMono8x13-Classic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Player Sans Mono';
+  src: url('./assets/fonts/PlayerSansMono8x13-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

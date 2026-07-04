@@ -1,6 +1,7 @@
 node_modules
 dist
 public/pyodide
+__pycache__
 .env.local
 .env
 *.local

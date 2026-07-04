@@ -1,10 +1,19 @@
 export type InputType = 'enter' | 'yn' | 'scale' | 'choice' | 'text'
 
+export interface Choice {
+  label: string
+  description: string | null
+}
+
 export interface Prompt {
   headline: string | null
   text: string
   input_type: InputType
-  choices: string[] | null
+  choices: Choice[] | null
+  allow_custom?: boolean   // choice screens: also accept a typed answer
+  phase: number
+  phase_title: string | null
+  phase_description: string | null
 }
 
 export interface StepRequest {

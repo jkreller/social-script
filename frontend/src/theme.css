@@ -1,13 +1,84 @@
 :root {
-  --bg: #f5f0e8;
-  --fg: #1a1a1a;
-  --muted: #8a8480;
-  --accent: #b5600a;
-  --border: #d8d0c4;
-  --zone-yes: #eae4da;
-  --zone-no: #ddd8cf;
-  --radius: 6px;
-  --font: 'JetBrains Mono', 'Courier New', monospace;
+  /* --- Brand palette (logo-match): vivid purple + signature yellow --- */
+  --bg: #8A00FF;                /* vivid purple — dominant background */
+  --surface: #7A00E0;           /* panel — slightly deeper for separation */
+  --surface-2: #9B2EFF;         /* raised / selected — lighter */
+  --surface-strong: #6600C2;    /* solid deep panel (popups, sheets, phase card) */
+
+  --fg: #ffffff;                /* white text */
+  --muted: #d9b3ff;             /* light lavender secondary text */
+
+  --accent: #FFD300;            /* brand yellow */
+  --accent-ink: #2a004d;        /* dark purple text on yellow */
+  --accent-soft: #ffe066;
+
+  --pop-magenta: #ff3d9a;
+  --pop-cyan: #21e6d6;
+  --pop-green: #8bff77;
+  /* legacy aliases so older references resolve */
+  --pop-violet: #9b45ff;
+  --pop-mint: #21e6d6;
+  --pop-sky: #21e6d6;
+  --pop-coral: #ff3d9a;
+
+  /* The logo's signature: the accent yellow at 30% opacity, offset — no dark outlines.
+     Definition comes from solid fills + this shadow, not borders. */
+  --shadow: rgba(255, 211, 0, 0.3);
+  --edge: var(--shadow); /* legacy alias — kept so any leftover var(--edge) ref still resolves */
+  --border: transparent;
+  --border-strong: transparent;
+
+  --radius: 0px;                /* square corners — flat pixel */
+  --radius-sm: 0px;
+
+  --glow-accent: 5px 5px 0 var(--shadow);
+  --glow-violet: 5px 5px 0 var(--shadow);
+
+  --border-w: 0px;              /* borderless direction */
+
+  /* One pixel-display family everywhere except the logo. Pixel Operator ships a real
+     Bold, so hierarchy comes from weight (see the font-weight overrides on headings,
+     labels and buttons) as well as the type scale below. */
+  --font-logo: 'Player Sans Mono', 'Courier New', monospace;      /* logo wordmark only */
+  --font-display: 'Pixel Operator', 'Courier New', monospace;     /* headings / labels / buttons */
+  --font-body: 'Pixel Operator', 'Courier New', monospace;        /* prompt / story / body text */
+
+  /* --- Type scale (mobile-first clamp). Pixel Operator is a bitmap font built on a
+     16px grid with a small x-height, so it reads noticeably smaller than a normal
+     sans/mono at the same font-size — every tier below runs larger to compensate. --- */
+  --fs-caption: 16px;                     /* version / debug / tiny */
+  --fs-label: 16px;                       /* yellow accent chips, eyebrows */
+  --fs-body-sm: clamp(17px, 4.4vw, 19px); /* descriptions, hints, consent sub */
+  --fs-body: clamp(19px, 5vw, 22px);      /* dialog body, general UI text */
+  --fs-btn: 19px;                         /* buttons */
+  --fs-prompt: clamp(22px, 6vw, 28px);    /* story / prompt main text */
+  --fs-h2: clamp(24px, 6.5vw, 30px);      /* choice text, secondary headings */
+  --fs-h1: clamp(28px, 8vw, 40px);        /* screen messages, phase title, yes/no */
+  --fs-value: clamp(56px, 16vw, 80px);    /* scale value */
+  --fs-hero: clamp(44px, 14vw, 76px);     /* logo wordmark */
+
+  --lh-tight: 1.1;    /* headings / display */
+  --lh-base: 1.35;    /* prompts */
+  --lh-relaxed: 1.5;  /* longer body copy */
+
+  /* --- Spacing scale --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 40px;
+
+  /* --- Consistency tokens (single source for values that used to drift) --- */
+  --tap: 44px;                        /* icon / control button size (was 40 & 42) */
+  --scrim: rgba(12, 4, 34, 0.72);     /* modal overlay dim (was 0.6 & 0.82) */
+  --pad-screen-top: 80px;             /* input-screen top padding */
+  --headline-pad: 4px 14px;           /* accent-chip padding */
+
+  /* snappy retro easing — minimal overshoot */
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 *,
@@ -26,9 +97,23 @@ body,
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: var(--bg);
   color: var(--fg);
-  font-family: var(--font);
-  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-body);
+  /* No forced antialiasing — it thins out Pixel Operator's bitmap strokes further. */
   user-select: none;
+}
+
+/* Solid bright purple field — shows through every screen. */
+body {
+  background: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

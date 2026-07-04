@@ -23,13 +23,13 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
       },
       manifest: {
-        name: 'Social Script Runner',
-        short_name: 'Script',
-        description: 'Execute social scripts step by step',
+        name: 'social_game',
+        short_name: 'social_game',
+        description: 'A little story, made together.',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#f5f0e8',
-        background_color: '#f5f0e8',
+        theme_color: '#8921ff',
+        background_color: '#8921ff',
         icons: [
           {
             src: 'pwa-64x64.png',

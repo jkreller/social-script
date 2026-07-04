@@ -1,12 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#f5f0e8"/>
-  <text
-    x="256"
-    y="340"
-    font-family="'JetBrains Mono', 'Courier New', monospace"
-    font-size="260"
-    font-weight="600"
-    text-anchor="middle"
-    fill="#b5600a"
-  >&gt;_</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" shape-rendering="crispEdges">
+  <rect width="512" height="512" fill="#8A00FF"/>
+  <!-- yellow-30% offset shadow, the brand's signature -->
+  <g fill="rgba(255,211,0,0.3)" transform="translate(10,10)">
+    <rect x="212" y="84"  width="88"  height="344"/>
+    <rect x="84"  y="212" width="344" height="88"/>
+  </g>
+  <!-- main pixel sparkle -->
+  <g fill="#FFD300">
+    <rect x="212" y="84"  width="88"  height="344"/>
+    <rect x="84"  y="212" width="344" height="88"/>
+  </g>
+  <!-- scattered pixel sparks -->
+  <rect x="72"  y="72"  width="28" height="28" fill="#FFD300"/>
+  <rect x="412" y="84"  width="22" height="22" fill="#ffffff"/>
+  <rect x="84"  y="412" width="22" height="22" fill="#ffffff"/>
+  <rect x="408" y="408" width="28" height="28" fill="#FFD300"/>
 </svg>

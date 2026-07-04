@@ -4,31 +4,42 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 32px;
+  gap: 14px;
+  padding: 32px calc(24px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
   text-align: center;
-  background: var(--bg);
 }
 
-.label {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.glyph {
   color: var(--accent);
+  filter: drop-shadow(var(--glow-accent));
+  margin-bottom: 6px;
 }
 
 .message {
-  font-size: 28px;
-  font-weight: 500;
-  color: var(--fg);
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-h1);
+  line-height: var(--lh-tight);
+  text-shadow: var(--glow-accent);
 }
 
 .hint {
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-body-sm);
   color: var(--muted);
-  line-height: 1.5;
+  line-height: var(--lh-relaxed);
   max-width: 300px;
-  margin-bottom: 12px;
 }
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.actions > button { width: 100%; }
