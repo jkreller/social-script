@@ -18,10 +18,10 @@ export default function InfoOverlay({ open, onClose }: Props) {
       </button>
       <span className={styles.title}>{t('about')}</span>
       <p className={styles.body}>
-        "social_game" is an art-project that investigates what happens when people run social interactions as code.
+        {t('"social_game" is an art-project that investigates what happens when people run social interactions as code.')}
       </p>
       <a className={styles.credit} href="https://pxlkit.xyz" target="_blank" rel="noreferrer">
-        {t('pixel icons by pxlkit.xyz')}
+        {t('icons by pxlkit.xyz')}
       </a>
     </Modal>
   )

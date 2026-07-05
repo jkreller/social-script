@@ -42,6 +42,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     'Finish & save': 'Beenden & speichern',
     'Close': 'Schließen',
     'about': 'Über',
+    '"social_game" is an art-project that investigates what happens when people run social interactions as code.': '"social_game" ist ein Kunstprojekt, das untersucht, was passiert, wenn Menschen soziale Interaktionen als Code ausführen.',
     'tap to continue': 'Tippen zum Weitermachen',
     'Yes': 'Ja',
     'No': 'Nein',
@@ -50,6 +51,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     'type here…': 'Hier eingeben…',
     'Go': 'Los',
     'chapter': 'Kapitel',
+    'icons by pxlkit.xyz': 'Icons von pxlkit.xyz',
   },
 }
 
