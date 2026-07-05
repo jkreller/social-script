@@ -73,7 +73,7 @@
   /* --- Consistency tokens (single source for values that used to drift) --- */
   --tap: 44px;                        /* icon / control button size (was 40 & 42) */
   --scrim: rgba(12, 4, 34, 0.72);     /* modal overlay dim (was 0.6 & 0.82) */
-  --pad-screen-top: 80px;             /* input-screen top padding */
+  --pad-screen-top: calc(80px + env(safe-area-inset-top, 0px)); /* input-screen top padding, clears the floating top bar */
   --headline-pad: 4px 14px;           /* accent-chip padding */
 
   /* snappy retro easing — minimal overshoot */

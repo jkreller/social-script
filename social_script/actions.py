@@ -153,9 +153,6 @@ def observe(entity, kind):
 
 
 def choose(options, prompt: str = "Pick one", *, allow_custom: bool = False):
-    """Pick one option by reading the situation. Pass a list of strings/objects or an Enum;
-    an option may also be a (label, description) pair. With allow_custom, a typed answer that
-    isn't a list number is accepted as-is."""
     members = list(options) if isinstance(options, type) and issubclass(options, Enum) else options
     pairs = [(o[0], o[1]) if isinstance(o, tuple) else (o, None) for o in members]
     choices = [{"label": str(label), "description": desc} for label, desc in pairs]
