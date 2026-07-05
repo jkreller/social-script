@@ -41,6 +41,21 @@ try/except — the runner steps back and lets them continue. Only catch an excep
 you want specific recovery (e.g. `breath_in_out(3)` then retry). See `connect_group.py`
 and `see-sth_say_sth.py` for the pattern.
 
+## Testing
+
+Run a script with `python run.py <script>.py` from the repo root. It plays through
+the terminal: answer each prompt as it appears (bare Enter for `enter`-type prompts,
+`y`/`n` for yes/no, a number for scale/choice prompts, free text for text prompts).
+
+To check a specific path without retyping it every time, replay a fixed list of
+answers non-interactively: `python run.py <script>.py '["3", "A", "1", ...]' 42`. The
+JSON array is the in-order answers (as plain strings, matching what you'd have typed);
+the trailing number is a random seed, for scripts that use `random` (e.g. picking a
+random person) — same seed + same answers always reproduces the same run, which is
+what makes a fix verifiable. If the list runs out before the script ends, it drops
+back to interactive input for the rest and keeps going — a quick way to build up a
+full answer list by playing through once, then reuse it to re-check after a change.
+
 ## Smell test before finishing
 
 Read it as the person about to do it. If a line feels technical, pushy, or unclear —
