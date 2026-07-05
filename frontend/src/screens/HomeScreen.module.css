@@ -33,6 +33,33 @@
   box-shadow: 0 0 0 var(--shadow);
 }
 
+.langBtn {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  left: calc(16px + env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  height: var(--tap);
+  padding: 0 12px;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: var(--glow-accent);
+  transition: transform 90ms var(--ease-snap), box-shadow 90ms var(--ease-snap);
+}
+
+.langBtn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+
 .hero {
   display: flex;
   flex-direction: column;

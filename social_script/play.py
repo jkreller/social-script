@@ -2,15 +2,16 @@
 
 import random
 from social_script._internal.driver import io_read, InputType
+from social_script._internal.i18n import _
 
 
 def hand_over() -> None:
-    io_read("Pass me on.", headline="pass", input_type=InputType.enter)
+    io_read(_("Pass me on."), headline=_("pass"), input_type=InputType.enter)
 
 
 def count_people(prompt: str = "How many of you are playing?") -> int:
     while True:
-        raw = io_read(prompt, headline="count", input_type=InputType.scale).strip()
+        raw = io_read(_(prompt), headline=_("count"), input_type=InputType.scale).strip()
         if raw.isdigit() and 1 <= int(raw) <= 10:
             return int(raw)
 
@@ -22,7 +23,7 @@ def pick_from(deck: list) -> str:
 
 def poll(question: str, *, returns: InputType = InputType.scale):
     """Put one question to the whole group and record a single shared answer."""
-    raw = io_read(question, headline="poll", input_type=returns).strip()
+    raw = io_read(_(question), headline=_("poll"), input_type=returns).strip()
     if returns == InputType.yn:
         return raw.lower() == "y"
     return raw
@@ -56,14 +57,14 @@ class Story:
         # offer a random group member as a WHO option, on top of the preset ones
         if element is Story.WHO and group is not None:
             member = group.random_person()
-            options = options + [f"{member.name}, the {member.role}"]
+            options = options + [_("{name}, the {role}", name=member.name, role=_(member.role))]
         return options
 
     def set(self, element, answer, number=None) -> None:
-        label = f"{element.label} {number}" if number is not None else element.label
-        self.ingredients.append({"icon": element.icon, "label": label, "value": str(answer)})
+        label = f"{_(element.label)} {number}" if number is not None else _(element.label)
+        self.ingredients.append({"icon": element.icon, "label": label, "value": _(str(answer))})
         if element is not Story.CHARACTER_COUNT:
-            self.not_yet_used.append(f"{label}: {answer}")
+            self.not_yet_used.append(f"{label}: {_(str(answer))}")
 
     def use(self, ingredient: str) -> None:
         if ingredient in self.not_yet_used:

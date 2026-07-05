@@ -4,6 +4,7 @@ import { Star, HEX } from '../icons'
 import confetti from 'canvas-confetti'
 import type { LogEntry } from '../types'
 import { playFinish } from '../utils/sfx'
+import { t } from '../i18n/strings'
 import { downloadLog, safeName } from '../utils/downloadLog'
 import { downloadZip } from '../utils/downloadZip'
 import btn from '../styles/buttons.module.css'
@@ -67,7 +68,7 @@ export default function DoneScreen({ userName, script, version, tags, answers, s
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.14 }}
       >
-        Game over!
+        {t('Game over!')}
       </motion.h1>
 
       <div className={styles.actions}>
@@ -78,12 +79,12 @@ export default function DoneScreen({ userName, script, version, tags, answers, s
                 className={btn.btnPrimary}
                 onClick={() => downloadZip({ userName, script, version, tags, answers, seed, cameraOn, log, clips })}
               >
-                Download ZIP
+                {t('Download ZIP')}
               </button>
               <button
                 className={styles.debugToggle}
                 onClick={() => setDebugOpen(v => !v)}
-                aria-label="Show debug downloads"
+                aria-label={t('Show debug downloads')}
               >
                 {debugOpen ? '▴' : '▾'}
               </button>
@@ -94,11 +95,11 @@ export default function DoneScreen({ userName, script, version, tags, answers, s
                   className={btn.btnSecondary}
                   onClick={() => downloadLog({ userName, script, version, tags, answers, seed, cameraOn, log })}
                 >
-                  Download Log
+                  {t('Download Log')}
                 </button>
                 {urls.map((url, i) => (
                   <button key={url} className={btn.btnSecondary} onClick={() => downloadVideo(clips[i], url, i)}>
-                    {clips.length > 1 ? `Download Video ${i + 1}` : 'Download Video'}
+                    {clips.length > 1 ? t('Download Video {n}', { n: i + 1 }) : t('Download Video')}
                   </button>
                 ))}
               </>
@@ -109,11 +110,11 @@ export default function DoneScreen({ userName, script, version, tags, answers, s
             className={btn.btnPrimary}
             onClick={() => downloadLog({ userName, script, version, tags, answers, seed, cameraOn, log })}
           >
-            Download Log
+            {t('Download Log')}
           </button>
         )}
         <button className={btn.btnSecondary} onClick={onRestart}>
-          Play again
+          {t('Play again')}
         </button>
       </div>
     </div>

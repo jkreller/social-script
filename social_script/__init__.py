@@ -12,6 +12,8 @@ from social_script._internal.driver import (
     InputType,
 )
 
+from social_script._internal.i18n import _
+
 from social_script.actions import (
     anchor,
     breath_in_out,
@@ -112,6 +114,7 @@ __all__ = [
     "ReplayDriver",
     "NeedInput",
     "InputType",
+    "_",
     # actions
     "anchor",
     "breath_in_out",

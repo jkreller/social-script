@@ -2,24 +2,26 @@
 
 from enum import Enum
 from social_script._internal.driver import InputType
+from social_script._internal.i18n import _
 
 
 class State(Enum):
-    fear                      = ("How afraid is {entity}?", InputType.scale)
-    readiness_for_interaction = ("How ready is {entity} for interaction?", InputType.scale)
-    tiredness                 = ("How tired is {entity}?", InputType.scale)
-    willingness_to_continue   = ("Is {entity} still willing to continue?", InputType.yn)
-    initiativeness            = ("Is {entity} in the mood to approach strangers today?", InputType.yn)
+    fear                      = ("How afraid is {entity}?", "Are you afraid?", InputType.scale)
+    readiness_for_interaction = ("How ready is {entity} for interaction?", "Are you ready for interaction?", InputType.scale)
+    tiredness                 = ("How tired is {entity}?", "Are you tired?", InputType.scale)
+    willingness_to_continue   = ("Is {entity} still willing to continue?", "Are you still willing to continue?", InputType.yn)
+    initiativeness            = ("Is {entity} in the mood to approach strangers today?", "Are you in the mood to approach strangers today?", InputType.yn)
 
-    def __init__(self, template, input_type):
+    def __init__(self, template, self_template, input_type):
         self.template = template
+        self.self_template = self_template
         self.input_type = input_type
 
     def question(self, entity=None) -> str:
         if entity is None:
-            return self.template.replace("is {entity}", "are you").replace("Is {entity}", "Are you")
+            return _(self.self_template)
         entity_label = getattr(entity, "label", f"this {type(entity).__name__.lower()}")
-        return self.template.format(entity=entity_label)
+        return _(self.template, entity=_(entity_label))
 
 
 # expose states as top-level names so scripts read naturally: assess_internal(fear)

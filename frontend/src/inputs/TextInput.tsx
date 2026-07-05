@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { t } from '../i18n/strings'
 import type { Prompt } from '../types'
 import styles from './TextInput.module.css'
 
@@ -20,7 +21,7 @@ export default function TextInput({ prompt, onSubmit }: Props) {
         <textarea
           className={`${styles.field} ${styles.fieldLong}`}
           value={value}
-          placeholder="type here…"
+          placeholder={t('type here…')}
           autoFocus
           rows={4}
           onChange={e => setValue(e.target.value)}
@@ -30,7 +31,7 @@ export default function TextInput({ prompt, onSubmit }: Props) {
           className={styles.field}
           type="text"
           value={value}
-          placeholder="type here…"
+          placeholder={t('type here…')}
           autoFocus
           maxLength={120}
           onChange={e => setValue(e.target.value)}
@@ -41,7 +42,7 @@ export default function TextInput({ prompt, onSubmit }: Props) {
         className={`${styles.confirmBtn}${!ok ? ` ${styles.hidden}` : ''}`}
         onClick={submit}
       >
-        Confirm
+        {t('Confirm')}
       </button>
     </div>
   )

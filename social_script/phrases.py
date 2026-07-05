@@ -1,6 +1,7 @@
 """Phrase library – named constants for spoken language, accessed as category.name."""
 
 from enum import Enum, auto
+from social_script._internal.i18n import _
 
 
 # Opening moves
@@ -38,8 +39,8 @@ class Phrase:
 
     def __str__(self) -> str:
         if self.instruction and self.content:
-            return f"{self.instruction}: {self.content}"
-        return self.content or self.instruction or "Say any phrase that you have in mind."
+            return f"{_(self.instruction)}: {self.content}"
+        return self.content or _(self.instruction) or _("Say any phrase that you have in mind.")
 
 
 greeting = Greeting

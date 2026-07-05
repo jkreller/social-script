@@ -75,8 +75,8 @@ def summarize(story):
     say(story.recap(), intro="Alright! Here's what we've got:", headline="tell everybody")
 
 def read(person, story):
-    do(f"Pass me to {person}.")
-    say(f"Read it out loud:\n{story.text()}")
+    do("Pass me to {person}.", person=person)
+    say("Read it out loud:\n{story_text}", story_text=story.text())
 
 def pass_device(group, anyone=False):
     if anyone:
@@ -86,7 +86,10 @@ def pass_device(group, anyone=False):
     group.next_person()
     person = group.current_person
     if person.name:
-        do(f"Pass me to {person}{',\nthe ' + person.role if person.role else ''}")
+        if person.role:
+            do("Pass me to {person},\nthe {role}", person=person, role=person.role)
+        else:
+            do("Pass me to {person}.", person=person)
     else:
         do("Pass me on.")
 

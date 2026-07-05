@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Gem, UserGroup, TypingDots, Potion, Scroll, Megaphone, Heart } from '../icons'
+import { t } from '../i18n/strings'
 import styles from './PhaseCard.module.css'
 
 type PhaseIcon = (p: { size?: number; appearance?: 'solid' | 'palette' }) => JSX.Element
@@ -41,7 +42,7 @@ export default function PhaseCard({ phase, title, description }: Props) {
         <Icon size={56} appearance="palette" />
       </motion.div>
       <motion.span className={styles.eyebrow} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-        chapter {phase}
+        {t('chapter')} {phase}
       </motion.span>
       {title && (
         <motion.span className={styles.title} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14, duration: 0.14 }}>

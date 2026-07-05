@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse, Play, Camera, InfoCircle, HEX } from '../icons'
 import { getScripts, type ScriptInfo } from '../api'
 import { unlockAudio } from '../utils/sfx'
+import { t } from '../i18n/strings'
+import { getLocale, toggleLocale } from '../utils/locale'
 import InfoOverlay from './InfoOverlay'
 import Modal from '../components/Modal'
 import btn from '../styles/buttons.module.css'
@@ -28,6 +30,7 @@ export default function HomeScreen({ onPick }: Props) {
   const [userName, setUserName] = useState('')
   const [camera, setCamera] = useState(true)
   const [glyphIndex, setGlyphIndex] = useState(0)
+  const [lang, setLang] = useState(getLocale())
 
   useEffect(() => {
     getScripts()
@@ -53,8 +56,12 @@ export default function HomeScreen({ onPick }: Props) {
 
   return (
     <div className={styles.root}>
-      <button className={styles.infoBtn} onClick={() => setInfoOpen(true)} aria-label="About">
+      <button className={styles.infoBtn} onClick={() => setInfoOpen(true)} aria-label={t('About')}>
         <InfoCircle size={22} color={HEX.fg} />
+      </button>
+
+      <button className={styles.langBtn} onClick={() => setLang(toggleLocale())} aria-label={t('Language')}>
+        {lang === 'en' ? 'DE' : 'EN'}
       </button>
 
       <motion.div
@@ -97,15 +104,15 @@ export default function HomeScreen({ onPick }: Props) {
         transition={{ delay: 0.12, duration: 0.16, ease: 'easeOut' }}
       >
         <Play size={22} color={HEX.ink} />
-        {booting ? 'waking up…' : 'Play'}
+        {booting ? t('waking up…') : t('Play')}
       </motion.button>
 
       <Modal open={dialogOpen} onBackdropClick={closeDialog} animate>
-        <span className={styles.dialogLabel}>what should we call you?</span>
+        <span className={styles.dialogLabel}>{t('what should we call you?')}</span>
         <input
           className={styles.nameInput}
           type="text"
-          placeholder="your name"
+          placeholder={t('your name')}
           value={userName}
           autoFocus
           maxLength={80}
@@ -122,13 +129,13 @@ export default function HomeScreen({ onPick }: Props) {
             <Camera width={22} height={22} />
           </span>
           <span className={styles.consentText}>
-            <span className={styles.consentTitle}>{camera ? 'Filming on' : 'Filming off'}</span>
+            <span className={styles.consentTitle}>{camera ? t('Filming on') : t('Filming off')}</span>
           </span>
           <span className={`${styles.switch} ${camera ? styles.switchOn : ''}`}><span className={styles.knob} /></span>
         </button>
 
         <button className={`${btn.btnPrimary} ${styles.startBtn}`} disabled={!userName.trim()} onClick={start}>
-          Let's play
+          {t('Let\'s play')}
         </button>
       </Modal>
 

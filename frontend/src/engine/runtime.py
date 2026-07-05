@@ -3,6 +3,7 @@
 # py.runPython). The three functions it defines are called by name from JS.
 import runpy, json, os, glob, ast, random
 from social_script._internal.driver import set_driver, clear_driver, ReplayDriver, NeedInput
+from social_script._internal.i18n import set_locale, _
 from social_script.exceptions import AnyException, INTERRUPT_MENU, parse_answer
 
 def _read_meta(src):
@@ -18,7 +19,8 @@ def _read_meta(src):
             tags = [t.strip() for t in val.split(",") if t.strip()]
     return version, tags
 
-def list_scripts():
+def list_scripts(locale='en'):
+    set_locale(locale)
     items = []
     for p in sorted(glob.glob('scripts/*.py')):
         with open(p) as f:
@@ -26,11 +28,13 @@ def list_scripts():
         items.append({"name": os.path.splitext(os.path.basename(p))[0], "version": version, "tags": tags})
     return json.dumps(items)
 
-def list_exceptions():
-    return json.dumps([{"name": c.__name__, "label": c.label} for c in INTERRUPT_MENU])
+def list_exceptions(locale='en'):
+    set_locale(locale)
+    return json.dumps([{"name": c.__name__, "label": _(c.label)} for c in INTERRUPT_MENU])
 
-def step(script, answers_json, seed_str=''):
+def step(script, answers_json, seed_str='', locale='en'):
     # Replay the script with all answers so far; stop at the next unanswered prompt.
+    set_locale(locale)
     if seed_str:
         random.seed(int(seed_str))
     driver = ReplayDriver([parse_answer(a) for a in json.loads(answers_json)])
@@ -41,7 +45,7 @@ def step(script, answers_json, seed_str=''):
     except NeedInput:
         return json.dumps({"prompt": driver.next_prompt, "done": False})
     except AnyException as e:
-        return json.dumps({"done": False, "exception": {"name": type(e).__name__, "label": type(e).label, "note": e.note or ""}})
+        return json.dumps({"done": False, "exception": {"name": type(e).__name__, "label": _(type(e).label), "note": e.note or ""}})
     except Exception as e:
         return json.dumps({"done": True, "error": str(e)})
     finally:

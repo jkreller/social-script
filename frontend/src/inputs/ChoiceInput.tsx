@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
+import { t } from '../i18n/strings'
 import type { Prompt } from '../types'
 import styles from './ChoiceInput.module.css'
 
@@ -97,13 +98,13 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
 
       {allowCustom && (
         <div className={styles.ownRow}>
-          <span className={styles.ownCaption}>or make up your own</span>
+          <span className={styles.ownCaption}>{t('or make up your own')}</span>
           <div className={styles.ownField}>
             <input
               className={styles.ownInput}
               type="text"
               value={own}
-              placeholder="type here…"
+              placeholder={t('type here…')}
               maxLength={120}
               onChange={e => setOwn(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') submitOwn() }}
@@ -112,7 +113,7 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
               className={`${styles.ownBtn}${!ownOk ? ` ${styles.hidden}` : ''}`}
               onClick={submitOwn}
             >
-              Go
+              {t('Go')}
             </button>
           </div>
         </div>

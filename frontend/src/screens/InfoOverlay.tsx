@@ -1,4 +1,5 @@
 import { Close, HEX } from '../icons'
+import { t } from '../i18n/strings'
 import Modal from '../components/Modal'
 import styles from './InfoOverlay.module.css'
 
@@ -12,15 +13,15 @@ interface Props {
 export default function InfoOverlay({ open, onClose }: Props) {
   return (
     <Modal open={open} onBackdropClick={onClose} cardClassName={styles.card} animate>
-      <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
+      <button className={styles.closeBtn} onClick={onClose} aria-label={t('Close')}>
         <Close size={20} color={HEX.fg} />
       </button>
-      <span className={styles.title}>about</span>
+      <span className={styles.title}>{t('about')}</span>
       <p className={styles.body}>
         "social_game" is an art-project that investigates what happens when people run social interactions as code.
       </p>
       <a className={styles.credit} href="https://pxlkit.xyz" target="_blank" rel="noreferrer">
-        pixel icons by pxlkit.xyz
+        {t('pixel icons by pxlkit.xyz')}
       </a>
     </Modal>
   )

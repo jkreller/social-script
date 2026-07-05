@@ -1,4 +1,5 @@
 import type { ExceptionType, StepRequest, StepResponse } from './types'
+import { getLocale } from './utils/locale'
 
 // These three functions used to `fetch()` the FastAPI backend. They now run the
 // exact same Python entirely on the client, inside a Pyodide Web Worker (see
@@ -38,17 +39,17 @@ export interface ScriptInfo {
 }
 
 export function getScripts(): Promise<ScriptInfo[]> {
-  return call('list_scripts')
+  return call('list_scripts', getLocale())
 }
 
 export function getExceptions(): Promise<ExceptionType[]> {
-  return call('list_exceptions')
+  return call('list_exceptions', getLocale())
 }
 
 // `_signal` is kept for signature compatibility but ignored: a worker step is a
 // fresh, microsecond-fast replay, so there is nothing to abort. RunnerScreen
 // still discards stale responses via its own AbortController check.
 export async function postStep(body: StepRequest, _signal?: AbortSignal): Promise<StepResponse> {
-  const r = await call<Partial<StepResponse>>('step', body.script, JSON.stringify(body.answers), String(body.seed))
+  const r = await call<Partial<StepResponse>>('step', body.script, JSON.stringify(body.answers), String(body.seed), getLocale())
   return { prompt: r.prompt ?? null, done: r.done ?? false, error: r.error ?? null, exception: r.exception ?? null }
 }

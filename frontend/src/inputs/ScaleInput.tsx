@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { t } from '../i18n/strings'
 import type { Prompt } from '../types'
 import styles from './ScaleInput.module.css'
 
@@ -96,7 +97,7 @@ export default function ScaleInput({ prompt, onSubmit }: Props) {
         className={`${styles.confirmBtn} ${!interacted ? styles.hidden : ''}`}
         onClick={() => onSubmit(String(value))}
       >
-        Confirm
+        {t('Confirm')}
       </button>
     </div>
   )

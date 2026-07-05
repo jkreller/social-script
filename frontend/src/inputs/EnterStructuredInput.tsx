@@ -1,6 +1,7 @@
 import { motion, type Variants } from 'framer-motion'
 import type { CSSProperties } from 'react'
 import { UserGroup, User, Pin, Clock, Palette, Package, Gem, ChevronRight } from '../icons'
+import { t } from '../i18n/strings'
 import type { Prompt } from '../types'
 import styles from './EnterStructuredInput.module.css'
 
@@ -61,7 +62,7 @@ export default function EnterStructuredInput({ prompt, onSubmit }: Props) {
         animate={{ y: [0, 6, 0] }}
         transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
       >
-        tap to continue <ChevronRight width={16} height={16} />
+        {t('tap to continue')} <ChevronRight width={16} height={16} />
       </motion.span>
     </motion.div>
   )

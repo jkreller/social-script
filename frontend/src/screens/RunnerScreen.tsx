@@ -5,6 +5,8 @@ import { getExceptions, postStep } from '../api'
 import type { ExceptionInfo, ExceptionType, Prompt } from '../types'
 import { useRecorder } from '../hooks/useRecorder'
 import { isMuted, toggleMuted, unlockAudio, playPhase, playPass, playYes } from '../utils/sfx'
+import { t } from '../i18n/strings'
+import { getLocale } from '../utils/locale'
 import CameraLayer from '../components/CameraLayer'
 import Modal from '../components/Modal'
 import EnterInput from '../inputs/EnterInput'
@@ -18,8 +20,13 @@ import btn from '../styles/buttons.module.css'
 import styles from './RunnerScreen.module.css'
 
 // A prompt where the device is handed to another person — worth a little whoosh.
+// `headline` is translated server-side, so "pass" (hand_over()'s tag) only matches
+// in English — the German catalog's current translation is hardcoded here too, a
+// narrow, cosmetic-only tradeoff to avoid exposing the translation catalog to JS
+// just for a sound effect. `p.text` is untranslated script content either way.
 function isHandoff(p: Prompt): boolean {
-  return p.headline === 'pass' || /^\s*pass me to/i.test(p.text)
+  const passHeadline = getLocale() === 'de' ? 'weitergeben' : 'pass'
+  return p.headline === passHeadline || /^\s*pass me to/i.test(p.text)
 }
 
 interface Props {
@@ -200,15 +207,15 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
     <div className={styles.root} onPointerDown={unlockAudio}>
       {cameraOn && <CameraLayer videoRef={videoRef} />}
       <div className={styles.topBar}>
-        <button className={styles.iconBtn} onClick={() => setShowConfirm(true)} aria-label="Exit">
+        <button className={styles.iconBtn} onClick={() => setShowConfirm(true)} aria-label={t('Exit')}>
           <Close size={22} color={HEX.fg} />
         </button>
         <div className={styles.topRight}>
-          <button className={`${styles.iconBtn} ${muted ? styles.iconOff : ''}`} onClick={toggleMute} aria-label="Toggle sound">
+          <button className={`${styles.iconBtn} ${muted ? styles.iconOff : ''}`} onClick={toggleMute} aria-label={t('Toggle sound')}>
             <Volume width={20} height={20} />
           </button>
           {interactive && (
-            <button className={styles.iconBtn} onClick={() => setShowException(true)} aria-label="Raise exception">
+            <button className={styles.iconBtn} onClick={() => setShowException(true)} aria-label={t('Raise exception')}>
               <Flag size={20} color={HEX.fg} />
             </button>
           )}
@@ -218,13 +225,13 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
       {error ? (
         <div className={styles.errorState}>
           <span className={styles.errorText}>{error}</span>
-          <button className={btn.btnSecondary} onClick={handleRetry}>Retry</button>
+          <button className={btn.btnSecondary} onClick={handleRetry}>{t('Retry')}</button>
         </div>
       ) : uncaught ? (
         <div className={styles.uncaughtNotice}>
           <span className={styles.uncaughtLabel}>{uncaught.label}</span>
           {uncaught.note && <span className={styles.uncaughtNote}>{uncaught.note}</span>}
-          <span className={styles.uncaughtHint}>Continuing…</span>
+          <span className={styles.uncaughtHint}>{t('Continuing…')}</span>
         </div>
       ) : loading ? (
         <div className={styles.loadingOverlay}>
@@ -265,13 +272,13 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
       </AnimatePresence>
 
       <Modal open={showConfirm} cardClassName={styles.confirmCard}>
-        <span className={styles.confirmText}>Leave the game?</span>
+        <span className={styles.confirmText}>{t('Leave the game?')}</span>
         <div className={styles.confirmActions}>
           <button className={btn.btnSecondary} onClick={() => setShowConfirm(false)}>
-            Keep playing
+            {t('Keep playing')}
           </button>
           <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={finish}>
-            Quit
+            {t('Quit')}
           </button>
         </div>
       </Modal>
@@ -279,7 +286,7 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
       <Modal open={showException} cardClassName={styles.confirmCard}>
         {!selected ? (
           <>
-            <span className={styles.exceptionHeadline}>what happened?</span>
+            <span className={styles.exceptionHeadline}>{t('what happened?')}</span>
             <div className={styles.exceptionList}>
               {exceptions.map(exc => (
                 <div
@@ -293,7 +300,7 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
               ))}
             </div>
             <button className={styles.cancelBtn} onClick={closeException}>
-              cancel
+              {t('cancel')}
             </button>
           </>
         ) : (
@@ -302,7 +309,7 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
             <input
               className={styles.noteInput}
               type="text"
-              placeholder="add a note (optional)"
+              placeholder={t('add a note (optional)')}
               value={note}
               autoFocus
               maxLength={120}
@@ -311,14 +318,14 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
             />
             <div className={styles.confirmActions}>
               <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={stop}>
-                stop
+                {t('stop')}
               </button>
               <button className={btn.btnSecondary} onClick={raise}>
-                continue
+                {t('continue')}
               </button>
             </div>
             <button className={styles.cancelBtn} onClick={() => setSelected(null)}>
-              back
+              {t('back')}
             </button>
           </>
         )}

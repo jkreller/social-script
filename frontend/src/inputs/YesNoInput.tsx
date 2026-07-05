@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Close, HEX } from '../icons'
+import { t } from '../i18n/strings'
 import type { Prompt } from '../types'
 import styles from './YesNoInput.module.css'
 
@@ -26,7 +27,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
         whileTap={{ scale: 0.96 }}
       >
         <Check size={40} color={HEX.ink} />
-        <span className={styles.label}>Yes</span>
+        <span className={styles.label}>{t('Yes')}</span>
       </motion.div>
 
       <motion.div
@@ -36,7 +37,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
         whileTap={{ scale: 0.96 }}
       >
         <Close size={40} color={HEX.fg} />
-        <span className={styles.label}>No</span>
+        <span className={styles.label}>{t('No')}</span>
       </motion.div>
 
       <div className={styles.promptArea}>

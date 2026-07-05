@@ -83,6 +83,7 @@
   font-weight: 700;
   font-size: var(--fs-label);
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--accent);
 }
 
