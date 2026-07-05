@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Heart, Lightning, Fire, Star, Gem, Play, Camera, InfoCircle, HEX } from '../icons'
+import { Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse, Play, Camera, InfoCircle, HEX } from '../icons'
 import { getScripts, type ScriptInfo } from '../api'
 import { unlockAudio } from '../utils/sfx'
 import InfoOverlay from './InfoOverlay'
@@ -13,7 +13,7 @@ const GAME = 'story_game'
 const FALLBACK: ScriptInfo = { name: GAME, version: '', tags: [] }
 
 // The hero glyph cycles through these every 5s instead of sitting on one fixed icon.
-const GLYPHS = [Heart, Lightning, Fire, Star, Gem]
+const GLYPHS = [Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse]
 
 interface Props {
   onPick: (script: string, version: string, tags: string[], userName: string, cameraOn: boolean) => void
