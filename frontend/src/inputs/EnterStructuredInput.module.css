@@ -4,8 +4,15 @@
   flex-direction: column;
   align-items: center;
   gap: 18px;
-  padding: var(--pad-screen-top) calc(20px + env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+  /* Unlike EnterInput, .hint here is a normal in-flow element, not an absolutely
+     positioned overlay — it doesn't need EnterInput's big bottom reserve, so this
+     stays lean to avoid forcing a scroll that isn't otherwise necessary. */
+  padding: var(--pad-screen-top) calc(20px + env(safe-area-inset-right)) calc(20px + var(--sab)) calc(20px + env(safe-area-inset-left));
   cursor: pointer;
+  /* No scroll, ever — this screen has a fixed height (RunnerScreen's .inputArea is
+     flex:1/overflow:hidden). .grid below is the flexible element that shrinks to
+     fill whatever's left; overflow:hidden here is just a rounding-error safety net. */
+  overflow: hidden;
 }
 
 .headline {
@@ -29,27 +36,38 @@
 }
 
 .grid {
-  flex: 1;
   width: 100%;
+  /* The one thing that makes "never scroll, never clip" possible with a variable
+     item count: flex:1 caps the grid to whatever height .root has left, and
+     grid-auto-rows: 1fr divides that fixed height evenly across however many rows
+     exist — 3 rows or 8, the total is always exactly 100% of the box, never more. */
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  align-content: center;
-  gap: 18px 12px;
-  overflow-y: auto;
+  grid-auto-rows: 1fr;
+  gap: 5px 5px;
 }
 
 .tile {
+  /* Each tile is a query container sized to its actual grid cell (a definite size,
+     via grid's default stretch), so badge/text below can be expressed in cqh —
+     a % of the real row height — and shrink automatically as rows get shorter,
+     instead of clipping at a fixed px size. */
+  container-type: size;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 6px;
+  justify-content: center;
+  gap: clamp(4px, 6cqh, 8px);
+  padding: 2px;
   text-align: center;
+  overflow: hidden;
 }
 
 .badge {
-  width: 56px;
-  height: 56px;
+  width: clamp(24px, 42cqh, 56px);
+  height: clamp(24px, 42cqh, 56px);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -58,10 +76,19 @@
   box-shadow: var(--glow-accent);
 }
 
+/* The icon itself is an <img width height> (pixel attributes from a fixed `size`
+   prop) — CSS attribute sizing loses to any author rule, so this simple override is
+   enough to make it track .badge's cqh-driven size with no JS measurement needed. */
+.badge img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
+
 .label {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: var(--fs-label);
+  font-size: clamp(9px, 11cqh, var(--fs-label));
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--muted);
@@ -70,7 +97,7 @@
 .value {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: var(--fs-body);
+  font-size: clamp(9px, 13cqh, var(--fs-body));
   line-height: var(--lh-tight);
   color: var(--fg);
   word-break: break-word;

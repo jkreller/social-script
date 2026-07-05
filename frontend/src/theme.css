@@ -75,10 +75,19 @@
   --scrim: rgba(12, 4, 34, 0.72);     /* modal overlay dim (was 0.6 & 0.82) */
   --pad-screen-top: calc(80px + env(safe-area-inset-top, 0px)); /* input-screen top padding, clears the floating top bar */
   --headline-pad: 4px 14px;           /* accent-chip padding */
+  --sab: env(safe-area-inset-bottom, 0px); /* bottom safe-area inset — zeroed under .pwa below */
 
   /* snappy retro easing — minimal overshoot */
   --ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1);
   --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Installed standalone PWAs can leave a dead, badly-rendered strip behind the home
+   indicator (see frontend git history). Rather than pad content away from it, sit as
+   close to the edge as possible there — a regular browser tab already reports 0 for
+   this inset on its own, so this only changes anything when actually installed. */
+html.pwa {
+  --sab: 0px;
 }
 
 *,

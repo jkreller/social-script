@@ -28,8 +28,8 @@ export default defineConfig({
         description: 'A little story, made together.',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#8921ff',
-        background_color: '#8921ff',
+        theme_color: '#8A00FF',
+        background_color: '#8A00FF',
         icons: [
           {
             src: 'pwa-64x64.png',

@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   gap: 22px;
-  padding: var(--pad-screen-top) calc(28px + env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) calc(28px + env(safe-area-inset-left));
+  padding: var(--pad-screen-top) calc(28px + env(safe-area-inset-right)) calc(64px + var(--sab)) calc(28px + env(safe-area-inset-left));
   cursor: pointer;
   text-align: center;
 }
@@ -39,7 +39,7 @@
 
 .hint {
   position: absolute;
-  bottom: calc(30px + env(safe-area-inset-bottom));
+  bottom: calc(30px + var(--sab));
   display: inline-flex;
   align-items: center;
   gap: 6px;

@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   gap: 40px;
-  padding: 32px calc(24px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+  padding: 32px calc(24px + env(safe-area-inset-right)) calc(40px + var(--sab)) calc(24px + env(safe-area-inset-left));
   text-align: center;
 }
 
@@ -73,31 +73,7 @@
   padding: 16px 46px;
 }
 
-/* --- start dialog (centered popup) --- */
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  background: var(--scrim);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.dialog {
-  width: 100%;
-  max-width: 420px;
-  background: var(--surface-strong);
-  border-radius: var(--radius);
-  padding: 28px 24px calc(24px + env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 16px;
-  box-shadow: var(--glow-accent);
-}
-
+/* --- start dialog content; overlay/card shell lives in components/Modal.tsx --- */
 .dialogLabel {
   font-family: var(--font-display);
   font-weight: 700;

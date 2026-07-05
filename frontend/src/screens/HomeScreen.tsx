@@ -4,6 +4,7 @@ import { Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse, Play, Ca
 import { getScripts, type ScriptInfo } from '../api'
 import { unlockAudio } from '../utils/sfx'
 import InfoOverlay from './InfoOverlay'
+import Modal from '../components/Modal'
 import btn from '../styles/buttons.module.css'
 import styles from './HomeScreen.module.css'
 
@@ -99,57 +100,37 @@ export default function HomeScreen({ onPick }: Props) {
         {booting ? 'waking up…' : 'Play'}
       </motion.button>
 
-      <AnimatePresence>
-        {dialogOpen && (
-          <motion.div
-            className={styles.overlay}
-            onClick={closeDialog}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.12, ease: 'easeOut' }}
-          >
-            <motion.div
-              className={styles.dialog}
-              onClick={e => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.14, ease: 'easeOut' }}
-            >
-              <span className={styles.dialogLabel}>what should we call you?</span>
-              <input
-                className={styles.nameInput}
-                type="text"
-                placeholder="your name"
-                value={userName}
-                autoFocus
-                maxLength={80}
-                onChange={e => setUserName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') start() }}
-              />
+      <Modal open={dialogOpen} onBackdropClick={closeDialog} animate>
+        <span className={styles.dialogLabel}>what should we call you?</span>
+        <input
+          className={styles.nameInput}
+          type="text"
+          placeholder="your name"
+          value={userName}
+          autoFocus
+          maxLength={80}
+          onChange={e => setUserName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') start() }}
+        />
 
-              <button
-                className={`${styles.consent} ${camera ? styles.consentOn : ''}`}
-                onClick={() => setCamera(c => !c)}
-                type="button"
-              >
-                <span className={`${styles.consentIcon} ${!camera ? styles.consentIconOff : ''}`}>
-                  <Camera width={22} height={22} />
-                </span>
-                <span className={styles.consentText}>
-                  <span className={styles.consentTitle}>{camera ? 'Filming on' : 'Filming off'}</span>
-                </span>
-                <span className={`${styles.switch} ${camera ? styles.switchOn : ''}`}><span className={styles.knob} /></span>
-              </button>
+        <button
+          className={`${styles.consent} ${camera ? styles.consentOn : ''}`}
+          onClick={() => setCamera(c => !c)}
+          type="button"
+        >
+          <span className={`${styles.consentIcon} ${!camera ? styles.consentIconOff : ''}`}>
+            <Camera width={22} height={22} />
+          </span>
+          <span className={styles.consentText}>
+            <span className={styles.consentTitle}>{camera ? 'Filming on' : 'Filming off'}</span>
+          </span>
+          <span className={`${styles.switch} ${camera ? styles.switchOn : ''}`}><span className={styles.knob} /></span>
+        </button>
 
-              <button className={`${btn.btnPrimary} ${styles.startBtn}`} disabled={!userName.trim()} onClick={start}>
-                Let's play
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <button className={`${btn.btnPrimary} ${styles.startBtn}`} disabled={!userName.trim()} onClick={start}>
+          Let's play
+        </button>
+      </Modal>
 
       <InfoOverlay open={infoOpen} onClose={() => setInfoOpen(false)} />
     </div>

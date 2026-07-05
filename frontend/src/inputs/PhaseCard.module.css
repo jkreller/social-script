@@ -7,9 +7,9 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 40px;
+  padding: var(--pad-screen-top) 40px 40px;
   text-align: center;
-  background: var(--surface);
+  background: var(--bg);
 }
 
 .iconWrap {

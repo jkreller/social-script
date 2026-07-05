@@ -147,7 +147,7 @@
 
 .confirmBtn {
   width: calc(100% - 56px);
-  margin: 24px 28px calc(24px + env(safe-area-inset-bottom));
+  margin: 24px 28px calc(24px + var(--sab));
   padding: 14px;
   font-family: var(--font-display);
   font-weight: 700;

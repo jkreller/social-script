@@ -1,24 +1,9 @@
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 30;
-  background: var(--scrim);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
+/* Overrides on top of components/Modal.tsx's base card: relative (for the close
+   button), tighter/centered layout to suit this short text-only note. */
 .card {
   position: relative;
-  width: 100%;
   max-width: 400px;
-  background: var(--surface-strong);
-  border-radius: var(--radius);
-  box-shadow: var(--glow-accent);
   padding: 36px 26px 26px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 14px;
   text-align: center;

@@ -2,7 +2,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: var(--pad-screen-top) 20px calc(20px + env(safe-area-inset-bottom));
+  padding: var(--pad-screen-top) 20px calc(20px + var(--sab));
   overflow: hidden;
 }
 

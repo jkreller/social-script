@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 32px calc(24px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+  padding: 32px calc(24px + env(safe-area-inset-right)) calc(32px + var(--sab)) calc(24px + env(safe-area-inset-left));
   text-align: center;
 }
 

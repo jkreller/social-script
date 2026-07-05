@@ -6,6 +6,7 @@ import type { ExceptionInfo, ExceptionType, Prompt } from '../types'
 import { useRecorder } from '../hooks/useRecorder'
 import { isMuted, toggleMuted, unlockAudio, playPhase, playPass, playYes } from '../utils/sfx'
 import CameraLayer from '../components/CameraLayer'
+import Modal from '../components/Modal'
 import EnterInput from '../inputs/EnterInput'
 import YesNoInput from '../inputs/YesNoInput'
 import ScaleInput from '../inputs/ScaleInput'
@@ -263,69 +264,65 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
         )}
       </AnimatePresence>
 
-      {showConfirm && (
-        <div className={styles.confirmModal}>
-          <span className={styles.confirmText}>Leave the game?</span>
-          <div className={styles.confirmActions}>
-            <button className={btn.btnSecondary} onClick={() => setShowConfirm(false)}>
-              Keep playing
-            </button>
-            <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={finish}>
-              Quit
-            </button>
-          </div>
+      <Modal open={showConfirm} cardClassName={styles.confirmCard}>
+        <span className={styles.confirmText}>Leave the game?</span>
+        <div className={styles.confirmActions}>
+          <button className={btn.btnSecondary} onClick={() => setShowConfirm(false)}>
+            Keep playing
+          </button>
+          <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={finish}>
+            Quit
+          </button>
         </div>
-      )}
+      </Modal>
 
-      {showException && (
-        <div className={styles.confirmModal}>
-          {!selected ? (
-            <>
-              <span className={styles.exceptionHeadline}>what happened?</span>
-              <div className={styles.exceptionList}>
-                {exceptions.map(exc => (
-                  <div
-                    key={exc.name}
-                    className={styles.exceptionRow}
-                    role="button"
-                    onClick={() => { setSelected(exc); onExceptionSelect(exc.name, exc.label) }}
-                  >
-                    {exc.label}
-                  </div>
-                ))}
-              </div>
-              <button className={styles.cancelBtn} onClick={closeException}>
-                cancel
+      <Modal open={showException} cardClassName={styles.confirmCard}>
+        {!selected ? (
+          <>
+            <span className={styles.exceptionHeadline}>what happened?</span>
+            <div className={styles.exceptionList}>
+              {exceptions.map(exc => (
+                <div
+                  key={exc.name}
+                  className={styles.exceptionRow}
+                  role="button"
+                  onClick={() => { setSelected(exc); onExceptionSelect(exc.name, exc.label) }}
+                >
+                  {exc.label}
+                </div>
+              ))}
+            </div>
+            <button className={styles.cancelBtn} onClick={closeException}>
+              cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <span className={styles.exceptionHeadline}>{selected.label}</span>
+            <input
+              className={styles.noteInput}
+              type="text"
+              placeholder="add a note (optional)"
+              value={note}
+              autoFocus
+              maxLength={120}
+              onChange={e => setNote(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') raise() }}
+            />
+            <div className={styles.confirmActions}>
+              <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={stop}>
+                stop
               </button>
-            </>
-          ) : (
-            <>
-              <span className={styles.exceptionHeadline}>{selected.label}</span>
-              <input
-                className={styles.noteInput}
-                type="text"
-                placeholder="add a note (optional)"
-                value={note}
-                autoFocus
-                maxLength={120}
-                onChange={e => setNote(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') raise() }}
-              />
-              <div className={styles.confirmActions}>
-                <button className={`${btn.btnSecondary} ${styles.danger}`} onClick={stop}>
-                  stop
-                </button>
-                <button className={btn.btnSecondary} onClick={raise}>
-                  continue
-                </button>
-              </div>
-              <button className={styles.cancelBtn} onClick={() => setSelected(null)}>
-                back
+              <button className={btn.btnSecondary} onClick={raise}>
+                continue
               </button>
-            </>
-          )}
-        </div>
-      )}
+            </div>
+            <button className={styles.cancelBtn} onClick={() => setSelected(null)}>
+              back
+            </button>
+          </>
+        )}
+      </Modal>
     </div>
   )
 }

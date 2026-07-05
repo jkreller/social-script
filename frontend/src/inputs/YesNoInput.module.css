@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: var(--pad-screen-top) 16px calc(20px + env(safe-area-inset-bottom));
+  padding: var(--pad-screen-top) 16px calc(20px + var(--sab));
   position: relative;
 }
 
@@ -52,7 +52,10 @@
 /* Floating prompt card straddling the two zones. */
 .promptArea {
   position: absolute;
-  top: 50%;
+  /* .root's top/bottom padding aren't equal (clearing the floating top bar takes far
+     more room than the bottom safe margin), so the true midpoint of the two zones sits
+     off 50% of the padded box — recenter against that, not the raw box height. */
+  top: calc(50% + (var(--pad-screen-top) - (20px + var(--sab))) / 2);
   left: 16px;
   right: 16px;
   transform: translateY(-50%);
