@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ChevronDown } from '../icons'
+import { ChevronRight } from '../icons'
 import type { Prompt } from '../types'
 import styles from './EnterInput.module.css'
 
@@ -20,7 +20,7 @@ export default function EnterInput({ prompt, onSubmit }: Props) {
         animate={{ y: [0, 6, 0] }}
         transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
       >
-        tap to continue <ChevronDown width={16} height={16} />
+        tap to continue <ChevronRight width={16} height={16} />
       </motion.span>
     </motion.div>
   )

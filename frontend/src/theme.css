@@ -99,13 +99,18 @@ body,
   overflow: hidden;
   color: var(--fg);
   font-family: var(--font-body);
-  /* No forced antialiasing — it thins out Pixel Operator's bitmap strokes further. */
+  -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
 /* Solid bright purple field — shows through every screen. */
 body {
   background: var(--bg);
+}
+
+p {
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 @media (prefers-reduced-motion: reduce) {
