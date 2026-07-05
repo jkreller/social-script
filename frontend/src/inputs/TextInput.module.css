@@ -48,6 +48,12 @@
 .field::placeholder { color: var(--muted); }
 .field:focus { border-color: var(--accent); }
 
+.fieldLong {
+  resize: none;
+  min-height: 140px;
+  font-family: var(--font-body);
+}
+
 .confirmBtn {
   align-self: stretch;
   margin-top: 22px;

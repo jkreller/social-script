@@ -11,6 +11,7 @@ import YesNoInput from '../inputs/YesNoInput'
 import ScaleInput from '../inputs/ScaleInput'
 import ChoiceInput from '../inputs/ChoiceInput'
 import TextInput from '../inputs/TextInput'
+import EnterStructuredInput from '../inputs/EnterStructuredInput'
 import PhaseCard from '../inputs/PhaseCard'
 import btn from '../styles/buttons.module.css'
 import styles from './RunnerScreen.module.css'
@@ -246,7 +247,8 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
           {prompt.input_type === 'yn' && <YesNoInput prompt={prompt} onSubmit={handleSubmit} />}
           {prompt.input_type === 'scale' && <ScaleInput prompt={prompt} onSubmit={handleSubmit} />}
           {prompt.input_type === 'choice' && <ChoiceInput prompt={prompt} onSubmit={handleSubmit} />}
-          {prompt.input_type === 'text' && <TextInput prompt={prompt} onSubmit={handleSubmit} />}
+          {(prompt.input_type === 'text' || prompt.input_type === 'long_text') && <TextInput prompt={prompt} onSubmit={handleSubmit} />}
+          {prompt.input_type === 'enter_structured' && <EnterStructuredInput prompt={prompt} onSubmit={handleSubmit} />}
         </motion.div>
       ) : null}
 
