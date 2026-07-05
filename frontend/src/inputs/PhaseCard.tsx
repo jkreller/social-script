@@ -1,15 +1,15 @@
 import { motion } from 'framer-motion'
-import { UserGroup, Star, Potion, SpellBook, Megaphone, Heart, HEX } from '../icons'
+import { Gem, UserGroup, TypingDots, Potion, Scroll, Megaphone, Heart } from '../icons'
 import styles from './PhaseCard.module.css'
 
-type PhaseIcon = (p: { size?: number; color?: string }) => JSX.Element
+type PhaseIcon = (p: { size?: number; appearance?: 'solid' | 'palette' }) => JSX.Element
 
 // One icon per chapter of story_game (1..6), falling back to a star.
 const ICONS: Record<number, PhaseIcon> = {
   1: UserGroup,   // make it a group
-  2: Star,        // intro round
+  2: TypingDots,  // intro round
   3: Potion,      // add ingredients to the soup
-  4: SpellBook,   // storytime
+  4: Scroll,   // storytime
   5: Megaphone,   // let's hear it
   6: Heart,       // how was it
 }
@@ -23,7 +23,7 @@ interface Props {
 // A full-bleed chapter card shown when the script enters a new phase (next_phase).
 // The parent auto-dismisses it after a few seconds, revealing the prompt underneath.
 export default function PhaseCard({ phase, title, description }: Props) {
-  const Icon = ICONS[phase] ?? Star
+  const Icon = ICONS[phase] ?? Gem
   return (
     <motion.div
       className={styles.root}
@@ -38,7 +38,7 @@ export default function PhaseCard({ phase, title, description }: Props) {
         animate={{ scale: 1 }}
         transition={{ duration: 0.18, ease: [0.2, 0.9, 0.3, 1] }}
       >
-        <Icon size={56} color={HEX.ink} />
+        <Icon size={56} appearance="palette" />
       </motion.div>
       <motion.span className={styles.eyebrow} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
         chapter {phase}
