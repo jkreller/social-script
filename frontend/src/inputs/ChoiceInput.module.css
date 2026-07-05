@@ -37,8 +37,15 @@
   overflow: hidden;
 }
 
+.choices.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(76px, 1fr);
+}
+
 .choice {
   flex: 1;
+  min-height: 76px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -52,7 +59,6 @@
   box-shadow: var(--glow-accent);
   position: relative;
   overflow: hidden;
-  min-height: 0;
 }
 
 .choice.selected {
@@ -96,39 +102,6 @@
   background: var(--accent);
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 4px 0;
-  flex-shrink: 0;
-}
-
-.pageBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: var(--tap);
-  color: var(--fg);
-  background: var(--surface);
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  box-shadow: var(--glow-accent);
-  transition: transform 90ms var(--ease-snap), box-shadow 90ms var(--ease-snap);
-}
-
-.pageBtn:active { transform: translate(5px, 5px); box-shadow: 0 0 0 var(--shadow); }
-.pageBtn:disabled { opacity: 0.35; pointer-events: none; }
-
-.pageInfo {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: var(--fs-body-sm);
-  color: var(--muted);
-}
-
 .ownRow {
   display: flex;
   flex-direction: column;
@@ -136,7 +109,6 @@
   flex-shrink: 0;
   padding-top: 14px;
   margin-top: 14px;
-  border-top: 2px solid var(--shadow);
 }
 
 .ownCaption {

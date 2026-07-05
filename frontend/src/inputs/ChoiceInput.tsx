@@ -1,11 +1,15 @@
 import { useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from '../icons'
 import type { Prompt } from '../types'
 import styles from './ChoiceInput.module.css'
 
-const PAGE_SIZE = 6
-const PALETTE = ['var(--pop-magenta)', 'var(--pop-mint)', 'var(--pop-violet)', 'var(--pop-sky)', 'var(--pop-coral)', 'var(--accent)']
+// Hand-picked, all visually distinct (unlike the old CSS-var palette, where
+// --pop-mint/--pop-sky and --pop-coral/--pop-magenta were duplicate aliases).
+// Covers every choice list currently in the scripts (max observed is 9).
+const PALETTE = ['#ff3d9a', '#ff8a3d', '#FFD300', '#8bff77', '#21e6d6', '#3dc6ff', '#5c7cff', '#9b45ff', '#d63dff', '#ff5c8a']
+
+// Fewer options than this reads better as a single column; a 2-col grid looks sparse.
+const GRID_MIN = 6
 
 const container: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.045 } } }
 const item: Variants = {
@@ -40,14 +44,11 @@ interface Props {
 
 export default function ChoiceInput({ prompt, onSubmit }: Props) {
   const choices = prompt.choices ?? []
+  const isGrid = choices.length >= GRID_MIN
   const allowCustom = prompt.allow_custom ?? false
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
-  const [page, setPage] = useState(0)
   const [own, setOwn] = useState('')
-
-  const totalPages = Math.ceil(choices.length / PAGE_SIZE)
-  const pageChoices = choices.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const handleTap = (globalIndex: number) => {
     if (submitted) return
@@ -68,9 +69,13 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
       {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
       <p className={styles.promptText}>{prompt.text}</p>
 
-      <motion.div key={page} className={styles.choices} variants={container} initial="hidden" animate="visible">
-        {pageChoices.map((choice, i) => {
-          const globalIndex = page * PAGE_SIZE + i
+      <motion.div
+        className={`${styles.choices} ${isGrid ? styles.grid : ''}`}
+        variants={container}
+        initial="hidden"
+        animate="visible"
+      >
+        {choices.map((choice, globalIndex) => {
           const isSelected = selected === globalIndex
           return (
             <motion.div
@@ -89,18 +94,6 @@ export default function ChoiceInput({ prompt, onSubmit }: Props) {
           )
         })}
       </motion.div>
-
-      {totalPages > 1 && (
-        <div className={styles.pagination}>
-          <button className={styles.pageBtn} disabled={page === 0} onClick={() => setPage(p => p - 1)}>
-            <ChevronLeft width={20} height={20} />
-          </button>
-          <span className={styles.pageInfo}>{page + 1} / {totalPages}</span>
-          <button className={styles.pageBtn} disabled={page === totalPages - 1} onClick={() => setPage(p => p + 1)}>
-            <ChevronRight width={20} height={20} />
-          </button>
-        </div>
-      )}
 
       {allowCustom && (
         <div className={styles.ownRow}>
