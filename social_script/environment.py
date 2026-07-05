@@ -36,15 +36,12 @@ class Group:
     # the people playing together, and whose turn it currently is
     def __init__(self, size=0):
         self.size = size
-        self.people = []
-        self.current = 0
+        self.people = [Person(number) for number in range(size)]
+        self.current = 0  # whoever's forming the group is already holding it
 
     @property
     def count(self) -> int:  # how many heads in the group
         return self.size
-
-    def add(self, person) -> None:
-        self.people.append(person)
 
     @property
     def current_person(self):

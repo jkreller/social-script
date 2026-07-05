@@ -29,19 +29,21 @@ def poll(question: str, *, returns: InputType = InputType.scale):
 
 
 class Element:
-    # one ingredient of the story — its label and the question that decides it
-    def __init__(self, label: str, question: str):
+    # one ingredient of the story — its label, the question that decides it, and an
+    # icon key the frontend maps to a picture (meaningless to the CLI)
+    def __init__(self, label: str, question: str, icon: str):
         self.label = label
         self.question = question
+        self.icon = icon
 
 
 class Story:
-    CHARACTER_COUNT = Element("characters", "How many characters should the story have?")
-    WHO             = Element("character", "Who is in the story?")
-    WHERE           = Element("place", "Where does the story take place?")
-    WHEN            = Element("time", "When does it happen?")
-    GENRE           = Element("genre", "What genre is it?")
-    OBJECT          = Element("object", "Which object must appear in the story?")
+    CHARACTER_COUNT = Element("character count", "How many main characters should the story have?", "characters")
+    WHO             = Element("character", "Who is a main character?", "character")
+    WHERE           = Element("place", "Where does the story take place?", "place")
+    WHEN            = Element("time", "When does it happen?", "time")
+    GENRE           = Element("genre", "What genre is it?", "genre")
+    OBJECT          = Element("object", "Which object must appear in the story?", "object")
 
     def __init__(self):
         self.ingredients = []
@@ -49,19 +51,26 @@ class Story:
         self.parts = []
         self.is_complete = False
 
+    @staticmethod
+    def options_for(element, options: list, group=None) -> list:
+        # offer a random group member as a WHO option, on top of the preset ones
+        if element is Story.WHO and group is not None:
+            member = group.random_person()
+            options = options + [f"{member.name}, the {member.role}"]
+        return options
+
     def set(self, element, answer, number=None) -> None:
         label = f"{element.label} {number}" if number is not None else element.label
-        line = f"{label}: {answer}"
-        self.ingredients.append(line)
+        self.ingredients.append({"icon": element.icon, "label": label, "value": str(answer)})
         if element is not Story.CHARACTER_COUNT:
-            self.not_yet_used.append(line)
+            self.not_yet_used.append(f"{label}: {answer}")
 
     def use(self, ingredient: str) -> None:
         if ingredient in self.not_yet_used:
             self.not_yet_used.remove(ingredient)
 
-    def recap(self) -> str:
-        return "\n".join(self.ingredients)
+    def recap(self) -> list:
+        return self.ingredients
 
     def text(self) -> str:
         return "\n".join(self.parts)

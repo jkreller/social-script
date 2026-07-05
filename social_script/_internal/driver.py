@@ -9,11 +9,13 @@ _current = None
 
 
 class InputType(Enum):
-    enter  = "enter"
-    yn     = "yn"
-    scale  = "scale"
-    choice = "choice"
-    text   = "text"
+    enter            = "enter"
+    yn               = "yn"
+    scale            = "scale"
+    choice           = "choice"
+    text             = "text"
+    long_text        = "long_text"
+    enter_structured = "enter_structured"  # enter-style, but text carries structured items for richer display
 
 
 class NeedInput(Exception):
@@ -45,7 +47,7 @@ class CLIDriver:
             handle_exception(exc_class(note))
             raise SystemExit(0)
 
-    def input(self, text="", *, headline=None, input_type=InputType.enter, choices=None, allow_custom=False):
+    def input(self, text="", *, headline=None, input_type=InputType.enter, choices=None, allow_custom=False, items=None, intro=None):
         tag = f"[ {headline} ]  " if headline else ""
         if input_type == InputType.yn:
             hint = " (y/n) "
@@ -65,7 +67,7 @@ class CLIDriver:
                 self._handle_interrupt()
         elif input_type == InputType.choice:
             hint = " (number): "
-        elif input_type == InputType.text:
+        elif input_type in (InputType.text, InputType.long_text):
             hint = " — type it: "
         else:  # enter
             hint = " — press Enter "
@@ -95,7 +97,7 @@ class ReplayDriver:
         self.phase_title = title
         self.phase_description = description
 
-    def input(self, text="", *, headline=None, input_type=InputType.enter, choices=None, allow_custom=False):
+    def input(self, text="", *, headline=None, input_type=InputType.enter, choices=None, allow_custom=False, items=None, intro=None):
         if self.i < len(self.answers):
             val = self.answers[self.i]
             idx = self.i
@@ -110,6 +112,8 @@ class ReplayDriver:
             "input_type": input_type.value,
             "choices": choices,
             "allow_custom": allow_custom,
+            "items": items,
+            "intro": intro,
             "phase": self.phase,
             "phase_title": self.phase_title,
             "phase_description": self.phase_description,
@@ -144,10 +148,10 @@ def clear_driver():
     _current = None
 
 
-def io_read(text="", *, headline=None, input_type=InputType.enter, choices=None, allow_custom=False):
+def io_read(text="", *, headline=None, input_type=InputType.enter, choices=None, allow_custom=False, items=None, intro=None):
     # Interrupts (AnyException) propagate to the script's try/except, or to the
     # runner's top-level handler if the script doesn't catch them.
-    return get_driver().input(text, headline=headline, input_type=input_type, choices=choices, allow_custom=allow_custom)
+    return get_driver().input(text, headline=headline, input_type=input_type, choices=choices, allow_custom=allow_custom, items=items, intro=intro)
 
 
 def io_write(*args, **kwargs):

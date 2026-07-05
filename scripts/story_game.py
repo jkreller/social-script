@@ -1,26 +1,27 @@
 """
 Story game
 version: v1
-tags: playful, approach, group
+tags: playful, group, approaching
 """
 
 from social_script import *
 
 
 ROLES = [
-    ("love fairy", "spread love and peace wherever the story goes"),
-    ("sci-fi nerd", "drag everything into space, robots and all"),
-    ("pragmatist", "keep it grounded — someone has to"),
-    ("crime author", "it's always the gardener!"),
-    ("fantasy fan", "dragons, magic, an unlikely quest"),
-    ("weirdo", "just make it weird, that's fun"),
+    ("love fairy 🧚🏿‍♀️", "spread love and peace wherever the story goes"),
+    ("sci-fi nerd 🚀", "drag everything into space, robots and all"),
+    ("pragmatist 📐", "keep it grounded — someone has to"),
+    ("crime author 🕵️‍♀️", "it's always the gardener!"),
+    ("fantasy fan 🔮", "dragons, magic, an unlikely quest"),
+    ("weirdo 😵‍💫", "just make it weird, that's fun"),
 ]
 
-JOIN_INVITE = "We're creating a story together. It's a game, wanna join playing?"
+JOIN_INVITE = "We're playing a game, wanna join playing? Takes 10-15 minutes."
 QUICK_ASK = "Got a sec? Quick thing for our story."
+DECLINE_ENCOURAGEMENT = "No worries, you did great!\nDo it on your own!"
 
 OPTIONS = {
-    Story.CHARACTER_COUNT: ["1", "2", "3", "4", "5"],
+    Story.CHARACTER_COUNT: ["1", "2", "3"],
     Story.WHO: [
         "Friedrich Merz", "Spongebob", "An ant", "WALL-E", "A police officer",
         "Herzschwestern", "Gregor Gysi", "The guy who invented Bauhaus", "ChatGPT",
@@ -29,7 +30,7 @@ OPTIONS = {
         "M18", "Ilm-Park", "Mensa", "Old Cemetery", "Uni-Library", "Wood-Workshop",
         "Weimar City Center", "Theaterplatz", "Bauhaus-Museum", "Parallel Universe",
     ],
-    Story.WHEN: ["Prehistoric Times", "1980s", "During Summaery", "10 Years From Now", "2626"],
+    Story.WHEN: ["Prehistoric Times", "1980s", "During Summaery", "10 Years From Now", "2626", "Beyond time"],
     Story.GENRE: ["Drama", "Sci-Fi", "Horror", "Romance", "Action", "Psycho-Thriller", "Comedy", "Bauhaus"],
     Story.OBJECT: ["Smartphone", "The Death Star", "M18-deposit-coin", "Mensa tray", "Bauhaus lamp", "Wrecking ball"],
 }
@@ -45,18 +46,12 @@ def approach(purpose, min_count=None):
     say(purpose)
 
     if not sense("Are they in?"):
+        acknowledge(DECLINE_ENCOURAGEMENT)
         return Group() if min_count else None
     if not min_count:
         return Person()
     joined = count_people("How many joined you?")
     return Group(joined) if joined > 1 else Person()
-
-def get_to_know(number):
-    hand_over()
-    name = decide("Pick your username") or "them"
-    role = choose(ROLES, "What's your role", allow_custom=True)
-    person = Person(number, name, role)
-    return person
 
 def decide_story_element(who, story, element, number=None):
     person = who.current_person if isinstance(who, Group) else who
@@ -64,40 +59,43 @@ def decide_story_element(who, story, element, number=None):
     if person.up_for_approaching is None:
         person.up_for_approaching = assess_internal(initiativeness)
 
-    answer = None
+    prompt = element.question
     if person.up_for_approaching:
         stranger = approach(QUICK_ASK)
         if stranger:
-            returns = InputType.scale if element is Story.CHARACTER_COUNT else InputType.text
-            answer = ask(stranger, element.question, returns=returns)
+            prompt = f"Let them decide:\n{prompt}"
 
-    if answer is None:
-        options = OPTIONS[element] + [str(group.random_person())] if element is Story.WHO else OPTIONS[element]
-        answer = choose(options, element.question, allow_custom=element is not Story.CHARACTER_COUNT)
+    options = Story.options_for(element, OPTIONS[element], group)
+    answer = choose(options, prompt, allow_custom=element is not Story.CHARACTER_COUNT)
 
     story.set(element, answer, number)
     return int(answer) if element is Story.CHARACTER_COUNT else answer
 
 def summarize(story):
-    say(f"Alright! Summary:\n{story.recap()}")
+    say(story.recap(), intro="Alright! Here's what we've got:", headline="tell everybody")
 
 def read(person, story):
-    do(f"Bring me to {person}.")
+    do(f"Pass me to {person}.")
     say(f"Read it out loud:\n{story.text()}")
 
 def pass_device(group, anyone=False):
     if anyone:
         do("Pass me to whoever feels like it.")
         return
-    group.next_person()
-    do(f"Pass me to {group.current_person}{", the " + group.current_person.role if group.current_person.role else ''}.")
 
-def center_device(group):
-    do("Put me in the middle, screen up, so everyone can see.")
+    group.next_person()
+    person = group.current_person
+    if person.name:
+        do(f"Pass me to {person}{',\nthe ' + person.role if person.role else ''}")
+    else:
+        do("Pass me on.")
+
+def center_device():
+    do("Put me in the middle, so everyone can see.")
 
 def brainstorm(story, group):
-    choose(group.people, "Who's got an idea for the next part?")
-    part = decide("Say the next part of the story, then type it in.")
+    choose([(person, person.role) for person in group.people], "Who's got an idea for the next part?")
+    part = decide("Say the next part of the story and type it in")
     story.parts.append(part)
 
     if story.not_yet_used:
@@ -110,7 +108,7 @@ def brainstorm(story, group):
 def gather_feedback(group):
     poll("How happy are you with the story?")
     poll("How much fun did you have?")
-    say("Great — go again sometime!" if poll("Would you like to play again?", returns=InputType.yn) else goodbye)
+    say("Great — thank you!" if poll("Would you like to play again some other time?", returns=InputType.yn) else goodbye)
 
 
 # --- main flow ---
@@ -130,10 +128,12 @@ group = Group(participant_count)
 next_phase("Great! Intro round!", "Let's see who's here")
 
 for number in range(group.size):
-    person = get_to_know(number)
-    group.add(person)
-    group.next_person()
+    pass_device(group)
+    person = group.current_person
+    get_to_know(person)
+    person.role = choose(ROLES, "What's your role", allow_custom=True)
 
+pass_device(group)
 
 # Phase 3: find story elements
 next_phase("Add ingredients to the soup!", "Pick who, where, when, the genre and an object.")
@@ -144,7 +144,7 @@ character_count = decide_story_element(group, story, Story.CHARACTER_COUNT) # in
 
 for character_number in range(character_count):
     pass_device(group)
-    decide_story_element(group.current_person, story, Story.WHO, character_number)
+    decide_story_element(group.current_person, story, Story.WHO, character_number + 1)
 
 for element in [Story.WHERE, Story.WHEN, Story.GENRE, Story.OBJECT]:
     pass_device(group)
@@ -157,7 +157,7 @@ summarize(story)
 next_phase("Storytime!", "Everyone adds a part until it's complete.")
 
 while not story.is_complete:
-    center_device(group)
+    center_device()
     brainstorm(story, group)
 
 

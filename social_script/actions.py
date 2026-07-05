@@ -24,8 +24,14 @@ def breath_in_out(cycles: int = 1) -> None:
         io_read(f"{cue}Breathe in... and out.", headline="breathe", input_type=InputType.enter)
 
 
-def say(p, *, headline="say") -> None:
-    """Deliver a phrase out loud. Pass a phrase, or a plain string for a free-form line."""
+def say(p, *, headline="say", intro=None) -> None:
+    """Deliver a phrase out loud. Pass a phrase, a plain string for a free-form line,
+    or a list of {icon, label, value} items to read out as a structured summary — an
+    optional `intro` sets the scene above it, same idea as assess_internal's intro."""
+    if isinstance(p, list):
+        text = "\n".join(f"{item['label']}: {item['value']}" for item in p)
+        io_read(f"{intro}\n{text}" if intro else text, headline=headline, input_type=InputType.enter_structured, items=p, intro=intro)
+        return
     if isinstance(p, str):
         p = Phrase(instruction=p)
     label = str(p) if isinstance(p, Phrase) and p.instruction else f"Say: '{p}'"
@@ -37,9 +43,8 @@ def do(action) -> None:
     io_read(action, headline="action", input_type=InputType.enter)
 
 
-def keep_in_mind(note) -> None:
-    """Take in something and carry it with you — a reason, a goal, nothing said out loud."""
-    io_read(note, headline="keep in mind", input_type=InputType.enter)
+def acknowledge(note) -> None:
+    io_read(note, headline="acknowledge", input_type=InputType.enter)
 
 
 def next_phase(title=None, description=None) -> None:
@@ -155,7 +160,7 @@ def choose(options, prompt: str = "Pick one", *, allow_custom: bool = False):
     pairs = [(o[0], o[1]) if isinstance(o, tuple) else (o, None) for o in members]
     choices = [{"label": str(label), "description": desc} for label, desc in pairs]
     while True:
-        raw = io_read(f"{prompt}:", headline="choose", input_type=InputType.choice, choices=choices, allow_custom=allow_custom).strip()
+        raw = io_read(f"{prompt}", headline="choose", input_type=InputType.choice, choices=choices, allow_custom=allow_custom).strip()
         if raw.isdigit() and 1 <= int(raw) <= len(pairs):
             return pairs[int(raw) - 1][0]
         if allow_custom and raw:
@@ -170,11 +175,11 @@ def sense(prompt: str, *, headline: str = "sense") -> bool:
 
 def decide(prompt: str) -> str:
     """Decide for yourself and type it in — the device is already in your hands."""
-    return io_read(f"{prompt}:", headline="decide", input_type=InputType.text)
+    return io_read(f"{prompt}:", headline="decide", input_type=InputType.long_text)
 
 
 def get_to_know(person) -> None:
-    person.name = io_read("Ask how they want to be called?", headline="get to know", input_type=InputType.text) or "them"
+    person.name = io_read("How do you want to be called?", headline="get to know", input_type=InputType.text) or "them"
 
 
 def ask(person, about, *, returns: InputType = InputType.enter):
