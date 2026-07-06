@@ -16,6 +16,10 @@ import re
 import runpy
 import builtins
 import types
+import struct
+import shutil
+import subprocess
+import tempfile
 from pathlib import Path
 
 root = Path(__file__).parent.parent
@@ -117,6 +121,90 @@ def build_raw_events(script_name, answers, seed=None):
             clear_driver()
 
     return events
+
+
+def _ensure_faststart(video_path):
+    """
+    Check if an MP4 file has 'moov' box before 'mdat' (faststart layout).
+    If not, remux it losslessly with ffmpeg's +faststart flag.
+    """
+    if not video_path.exists():
+        return
+
+    # Only process MP4/MOV files.
+    if video_path.suffix.lower() not in ('.mp4', '.mov'):
+        return
+
+    try:
+        with open(video_path, 'rb') as f:
+            moov_found = False
+            mdat_found = False
+
+            while True:
+                size_bytes = f.read(4)
+                if len(size_bytes) < 4:
+                    break
+
+                type_bytes = f.read(4)
+                if len(type_bytes) < 4:
+                    break
+
+                size = struct.unpack('>I', size_bytes)[0]
+                box_type = type_bytes.decode('ascii', errors='ignore')
+
+                if box_type == 'moov':
+                    moov_found = True
+                elif box_type == 'mdat':
+                    mdat_found = True
+                    if not moov_found:
+                        # moov comes after mdat — needs remuxing.
+                        break
+
+                if size == 1:
+                    # Extended size field (64-bit).
+                    ext_size_bytes = f.read(8)
+                    if len(ext_size_bytes) < 8:
+                        break
+                    size = struct.unpack('>Q', ext_size_bytes)[0] - 16
+                else:
+                    size -= 8
+
+                f.seek(f.tell() + size)
+
+                if moov_found and mdat_found:
+                    # Correct order already.
+                    return
+    except Exception:
+        # If parsing fails, skip quietly.
+        return
+
+    # If we reach here without returning, moov comes after mdat.
+    # Try to fix it with ffmpeg.
+    if not shutil.which('ffmpeg'):
+        print(f'  WARN {video_path.name}: moov box after mdat, but ffmpeg not found — skipping fix')
+        return
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp:
+            tmp_path = tmp.name
+
+        subprocess.run(
+            ['ffmpeg', '-y', '-i', str(video_path), '-c', 'copy', '-movflags', '+faststart', tmp_path],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        # Replace the original with the fixed file.
+        Path(tmp_path).replace(video_path)
+        print(f'  Fixed {video_path.name}: remuxed to faststart layout')
+    except subprocess.CalledProcessError as e:
+        print(f'  WARN {video_path.name}: ffmpeg remux failed — {e.stderr}')
+        # Clean up temp file if it exists.
+        if Path(tmp_path).exists():
+            Path(tmp_path).unlink()
+    except Exception as e:
+        print(f'  WARN {video_path.name}: unexpected error during remux — {e}')
 
 
 def build_timed_trace(events, log):
@@ -235,6 +323,10 @@ def main():
         seed = run_data.get('seed')
 
         print(f'Building trace: {subdir.name}  ({len(answers)} answers, {len(log)} log entries)')
+
+        # Ensure video files have moov before mdat (faststart layout).
+        for video_file in subdir.glob('video_1.*'):
+            _ensure_faststart(video_file)
 
         events = build_raw_events(script_name, answers, seed=seed)
         n_lines = sum(1 for e in events if e['kind'] == 'line')

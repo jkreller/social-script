@@ -4,24 +4,24 @@
 // The video is muted from the start so it can always autoplay without a user
 // gesture — the video device has no controls of its own, so playback must never
 // be gated on someone tapping it. A dismissible overlay offers to unmute.
-//
-// Videos are pre-downloaded into memory (Blob) before playback to avoid
-// sustained network streaming: corrective seeks on a network source require
-// round-trip HTTP range requests that can cascade into stutter on devices with
-// high-latency or flaky Wi-Fi. Once loaded, seeks are instant and local.
 
 import { pollState } from './sync.js'
 
 let meta = {}               // id → list entry ({ video, video_offset })
 let currentExecution = null
-let currentAbort = null     // AbortController for in-flight fetch, or null
-let currentObjectUrl = null // current video blob object URL, or null
+let lastSyncTime = null     // target time from the last apply() call, or null
+let lastSyncWall = 0        // performance.now() at the last apply() call
+let lastSyncPlaying = false // whether the video was playing at the last apply()
+
+let currentAbort = null     // AbortController for in-flight download, or null
+let currentObjectUrl = null // revoke when done or superseded
+
+const INITIAL_CHUNK_SIZE = 2 * 1024 * 1024  // ~2MB to cover ftyp+moov
 
 const videoEl = document.getElementById('video')
 const emptyOverlay = document.getElementById('empty-overlay')
-const loadingOverlay = document.getElementById('loading-overlay')
-const loadingPct = document.getElementById('loading-pct')
 const waitingOverlay = document.getElementById('waiting-overlay')
+const loadingOverlay = document.getElementById('loading-overlay')
 const muteOverlay = document.getElementById('mute-overlay')
 
 muteOverlay.addEventListener('click', () => {
@@ -29,80 +29,123 @@ muteOverlay.addEventListener('click', () => {
   muteOverlay.hidden = true
 })
 
-function setLoadingText(fraction) {
-  loadingPct.textContent = fraction == null ? '' : `${Math.round(fraction * 100)}%`
-}
+function loadVideo(execId, url) {
+  // Abort any in-flight download for a previous execution.
+  if (currentAbort) {
+    currentAbort.abort()
+  }
+  currentAbort = new AbortController()
+  const localAbort = currentAbort
 
-// Downloads the entire video file into a Blob, then makes videoEl.src
-// point to it via Object URL. Prevents stutter from seeking on network-
-// streamed sources with high-latency round-trips.
-async function loadVideo(execId, url) {
-  const controller = new AbortController()
-  currentAbort = controller
+  // Clean up old blob URL if present.
+  if (currentObjectUrl) {
+    URL.revokeObjectURL(currentObjectUrl)
+    currentObjectUrl = null
+  }
 
   loadingOverlay.hidden = false
-  waitingOverlay.hidden = true
-  muteOverlay.hidden = true
-  setLoadingText(0)
 
-  try {
-    const res = await fetch(url, { signal: controller.signal })
-    const total = Number(res.headers.get('content-length')) || null
-    const reader = res.body.getReader()
-    const chunks = []
-    let received = 0
-    for (;;) {
-      const { done, value } = await reader.read()
-      if (done) break
-      chunks.push(value)
-      received += value.length
-      setLoadingText(total ? received / total : null)
-    }
+  fetch(url, { signal: localAbort.signal })
+    .then(async response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-    // Discard result if this download was superseded by a newer selection.
-    if (execId !== currentExecution) return
+      const reader = response.body.getReader()
+      const chunks = []
+      let totalSize = 0
+      let initialChunkPlayed = false
 
-    const blob = new Blob(chunks, { type: res.headers.get('content-type') || 'video/mp4' })
-    const objectUrl = URL.createObjectURL(blob)
-    currentObjectUrl = objectUrl
-    videoEl.src = objectUrl
-    videoEl.currentTime = 0
-    loadingOverlay.hidden = true
-  } catch (err) {
-    if (err.name === 'AbortError') return  // cancelled by a newer selection
-    setLoadingText(null)
-    loadingOverlay.textContent = 'Video failed to load — reselect the execution'
-  } finally {
-    if (currentAbort === controller) currentAbort = null
-  }
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        chunks.push(value)
+        totalSize += value.length
+
+        // Once we've accumulated enough data (~2MB), build a blob and play.
+        if (!initialChunkPlayed && totalSize >= INITIAL_CHUNK_SIZE) {
+          if (localAbort === currentAbort) {
+            const partialBlob = new Blob(chunks, { type: 'video/mp4' })
+            const objectUrl = URL.createObjectURL(partialBlob)
+            currentObjectUrl = objectUrl
+            videoEl.src = objectUrl
+            loadingOverlay.hidden = true
+
+            if (videoEl.paused && lastSyncPlaying) {
+              videoEl.play().catch(() => {})
+            }
+            initialChunkPlayed = true
+          }
+        }
+      }
+
+      // Download complete. Build the full blob and swap if not superseded.
+      if (localAbort === currentAbort && initialChunkPlayed) {
+        const savedTime = videoEl.currentTime
+        const wasPaused = videoEl.paused
+
+        const fullBlob = new Blob(chunks, { type: 'video/mp4' })
+        const newObjectUrl = URL.createObjectURL(fullBlob)
+
+        URL.revokeObjectURL(currentObjectUrl)
+        videoEl.src = newObjectUrl
+        currentObjectUrl = newObjectUrl
+        videoEl.currentTime = savedTime
+
+        if (!wasPaused) {
+          videoEl.play().catch(() => {})
+        }
+      }
+    })
+    .catch(err => {
+      if (err.name !== 'AbortError' && localAbort === currentAbort) {
+        loadingOverlay.hidden = true
+        const msg = document.createElement('div')
+        msg.id = 'error-overlay'
+        msg.className = 'overlay'
+        msg.style.zIndex = '40'
+        msg.textContent = `Error loading video: ${err.message}`
+        document.body.appendChild(msg)
+
+        setTimeout(() => {
+          msg.remove()
+        }, 3000)
+      }
+    })
 }
 
 function apply(s) {
   if (!s.execution) {
     currentExecution = null
-    if (currentAbort) { currentAbort.abort(); currentAbort = null }
-    if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null }
+    lastSyncTime = null
     videoEl.pause()
     videoEl.removeAttribute('src')
+    if (currentAbort) {
+      currentAbort.abort()
+      currentAbort = null
+    }
+    if (currentObjectUrl) {
+      URL.revokeObjectURL(currentObjectUrl)
+      currentObjectUrl = null
+    }
     emptyOverlay.hidden = false
-    loadingOverlay.hidden = true
     waitingOverlay.hidden = true
+    loadingOverlay.hidden = true
     muteOverlay.hidden = true
     return
   }
   emptyOverlay.hidden = true
 
   if (s.execution !== currentExecution) {
-    if (currentAbort) { currentAbort.abort(); currentAbort = null }
-    if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null }
+    lastSyncTime = null
     currentExecution = s.execution
     videoEl.pause()
-    videoEl.removeAttribute('src')
+    videoEl.currentTime = 0
     const m = meta[s.execution]
-    if (m && m.video) loadVideo(s.execution, `/executions/${s.execution}/${m.video}`)
+    if (m && m.video) {
+      loadVideo(s.execution, `/executions/${s.execution}/${m.video}`)
+    }
   }
 
-  // While downloading or if download failed, don't attempt sync/play/seek.
   if (!videoEl.src) return
 
   const offset = meta[s.execution]?.video_offset || 0
@@ -110,7 +153,12 @@ function apply(s) {
   const notStarted = target < 0
 
   waitingOverlay.hidden = !notStarted
-  muteOverlay.hidden = notStarted || !videoEl.muted
+  if (!notStarted && loadingOverlay.hidden === false) {
+    // Still loading the initial chunk, don't show mute overlay yet
+    muteOverlay.hidden = true
+  } else {
+    muteOverlay.hidden = notStarted || !videoEl.muted
+  }
 
   if (notStarted) {
     // The recording hasn't begun at this trace time — show the first frame,
@@ -123,7 +171,25 @@ function apply(s) {
   const clamped = Math.max(0, target)
   if (s.playing && videoEl.paused) videoEl.play().catch(() => {})
   if (!s.playing && !videoEl.paused) videoEl.pause()
-  if (Math.abs(videoEl.currentTime - clamped) > 0.3) videoEl.currentTime = clamped
+
+  // Smart discontinuity detection: distinguish real jumps (step, scrub, switch)
+  // from natural clock drift during continuous playback. Only seek on jumps,
+  // not on drift—older devices glitch the decoder with unnecessary seeks.
+  const now = performance.now()
+  const expected = lastSyncTime === null ? clamped : lastSyncTime + (lastSyncPlaying ? (now - lastSyncWall) / 1000 : 0)
+  const isContinuous = lastSyncTime !== null && Math.abs(clamped - expected) < 0.3
+
+  if (!isContinuous) {
+    // A real jump (step, scrub, switch) or the very first sync after load.
+    videoEl.currentTime = clamped
+  } else if (Math.abs(videoEl.currentTime - clamped) > 2) {
+    // Safety net: raw drift exceeded 2s (shouldn't happen in normal operation).
+    videoEl.currentTime = clamped
+  }
+
+  lastSyncTime = clamped
+  lastSyncWall = now
+  lastSyncPlaying = s.playing
 }
 
 async function main() {
