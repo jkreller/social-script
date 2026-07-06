@@ -40,7 +40,7 @@ class Element:
 
 class Story:
     CHARACTER_COUNT = Element("character count", "How many main characters should the story have?", "characters")
-    WHO             = Element("character", "Who is a main character?", "character")
+    WHO             = Element("character", "Who is main character number {number}?", "character")
     WHERE           = Element("place", "Where does the story take place?", "place")
     WHEN            = Element("time", "When does it happen?", "time")
     GENRE           = Element("genre", "What genre is it?", "genre")

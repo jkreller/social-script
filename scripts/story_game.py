@@ -17,7 +17,7 @@ ROLES = [
 ]
 
 JOIN_INVITE = "We're playing a game, wanna join playing? Takes 10-15 minutes."
-QUICK_ASK = "Got a sec? Quick thing for our story."
+QUICK_ASK = "We're playing a game and need help, can I ask a quick question?"
 DECLINE_ENCOURAGEMENT = "No worries, you did great!\nDo it on your own!"
 
 OPTIONS = {
@@ -59,7 +59,7 @@ def decide_story_element(who, story, element, number=None):
     if person.up_for_approaching is None:
         person.up_for_approaching = assess_internal(initiativeness)
 
-    prompt = element.question
+    prompt = _(element.question, number=number) if number is not None else element.question
     if person.up_for_approaching:
         stranger = approach(QUICK_ASK)
         if stranger:
