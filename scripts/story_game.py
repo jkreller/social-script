@@ -76,7 +76,10 @@ def summarize(story):
 
 def read(person, story):
     do("Pass me to {person}.", person=person)
-    say("Read it out loud:\n{story_text}", story_text=story.text())
+    finished = False
+    while not finished:
+        say("Read it out loud:\n{story_text}", story_text=story.text())
+        finished = sense("Did you finish reading it out loud?")
 
 def pass_device(group, anyone=False):
     if anyone:
@@ -106,7 +109,7 @@ def brainstorm(story, group):
         story.use(used)
 
     if not story.not_yet_used:
-        story.is_complete = sense("Does the story feel complete?")
+        story.is_complete = sense("Does the story feel complete, or do you want to add an ending?")
 
 def gather_feedback(group):
     poll("How happy are you with the story?")
