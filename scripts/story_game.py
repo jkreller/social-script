@@ -108,8 +108,8 @@ def brainstorm(story, group):
         used = choose(story.not_yet_used + ["none of them"], "Did you weave one of these in?")
         story.use(used)
 
-    if not story.not_yet_used:
-        story.is_complete = sense("Does the story feel complete, or do you want to add an ending?")
+    if not story.not_yet_used or len(story.parts) >= 10:
+        story.is_complete = sense("Does the story feel complete?")
 
 def gather_feedback(group):
     poll("How happy are you with the story?")
