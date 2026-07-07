@@ -166,7 +166,7 @@ TRANSLATIONS = {
         "Put me in the middle, so everyone can see.": "Lege mich in die Mitte, sodass alle draufschauen können.",
         "Who's got an idea for the next part?": "Wer hat eine Idee für den nächsten Teil?",
         "none of them": "Keiner davon",
-        "Does the story feel complete, or do you want to add an ending?": "Fühlt sich die Geschichte komplett an, oder wollt ihr noch ein Ende hinzufügen?",
+        "Does the story feel complete?": "Fühlt sich die Geschichte komplett an?",
         "How happy are you with the story?": "Wie zufrieden bist du mit der Geschichte?",
         "How much fun did you have?": "Wie viel Spaß hattest du?",
         "Would you like to play again some other time?": "Würdest du irgendwann nochmal spielen?",
