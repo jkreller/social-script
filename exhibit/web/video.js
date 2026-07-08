@@ -9,14 +9,18 @@ function createChannel(videoEl) {
   let lastSyncTime = null
   let lastSyncWall = 0
   let lastSyncPlaying = false
+  let loadedUrl = null
 
   function load(url) {
+    if (url === loadedUrl) return
+    loadedUrl = url
     lastSyncTime = null
     videoEl.pause()
     videoEl.src = url
   }
 
   function clear() {
+    loadedUrl = null
     lastSyncTime = null
     videoEl.pause()
     videoEl.removeAttribute('src')
@@ -37,9 +41,9 @@ function createChannel(videoEl) {
 
     const now = performance.now()
     const expected = lastSyncTime === null ? clamped : lastSyncTime + (lastSyncPlaying ? (now - lastSyncWall) / 1000 : 0)
-    const isContinuous = lastSyncTime !== null && Math.abs(clamped - expected) < 0.3
+    const isContinuous = lastSyncTime !== null && Math.abs(clamped - expected) < 1.0
 
-    if (!isContinuous || Math.abs(videoEl.currentTime - clamped) > 2) {
+    if (!isContinuous || Math.abs(videoEl.currentTime - clamped) > 5) {
       videoEl.currentTime = clamped
     }
 
@@ -60,6 +64,8 @@ const interstitialOverlay = document.getElementById('interstitial')
 
 const frontChannel = createChannel(frontVideoEl)
 const outsideChannel = createChannel(outsideVideoEl)
+
+document.addEventListener('pointerdown', () => { frontVideoEl.muted = false }, { once: true })
 
 function apply(s) {
   // Interstitial mode: show title card, pause videos

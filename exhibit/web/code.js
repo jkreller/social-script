@@ -35,7 +35,7 @@ function fmtTime(s) {
 }
 
 function post(immediate = false) {
-  postState({ execution: currentExecution, time: currentTime, playing: true })
+  postState({ execution: currentExecution, time: currentTime, playing: true, next: null })
 }
 
 function splitHighlightedLines(html) {

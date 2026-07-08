@@ -48,3 +48,7 @@ generation. If it isn't a human action, pause, gut-feeling, or phrase — it doe
 ## Testing
 
 You can test social script by running `python run.py <social_script_name>.py`
+
+## Commits
+
+Never commit anything unless explicitly told to do so. Wait for explicit instruction from the user before staging, committing, or pushing any changes.

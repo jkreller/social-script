@@ -77,7 +77,7 @@ TRANSLATIONS = {
         "anchor": "anchor",
         "breathe": "atme",
         # play.py
-        "Pass me on.": "Gib mich weiter.",
+        "Pass me to the next person.": "Gib mich an die nächste Person.",
         "Pass me to {person}.": "Gib mich weiter an {person}.",
         "Pass me to {person},\nthe {role}": "Gib mich weiter an {person},\nden/die {role}",
         "{name}, the {role}": "{name}, der/die {role}",

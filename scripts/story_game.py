@@ -94,7 +94,7 @@ def pass_device(group, anyone=False):
         else:
             do("Pass me to {person}.", person=person)
     else:
-        do("Pass me on.")
+        do("Pass me to the next person.")
 
 def center_device():
     do("Put me in the middle, so everyone can see.")

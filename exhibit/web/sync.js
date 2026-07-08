@@ -12,7 +12,7 @@ export async function postState(patch) {
   } catch { /* dropped; the next post supersedes it */ }
 }
 
-export function pollState(onState, ms = 250) {
+export function pollState(onState, ms = 500) {
   let lastRev = -1
   setInterval(async () => {
     try {
