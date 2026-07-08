@@ -30,9 +30,16 @@ OPTIONS = {
         "M18", "Ilm-Park", "Mensa", "Old Cemetery", "Uni-Library", "Wood-Workshop",
         "Weimar City Center", "Theaterplatz", "Bauhaus-Museum", "Parallel Universe",
     ],
-    Story.WHEN: ["Prehistoric Times", "1980s", "During Summaery", "10 Years From Now", "2626", "Beyond time"],
-    Story.GENRE: ["Drama", "Sci-Fi", "Horror", "Romance", "Action", "Psycho-Thriller", "Comedy", "Bauhaus"],
-    Story.OBJECT: ["Smartphone", "The Death Star", "M18-deposit-coin", "Mensa tray", "Bauhaus lamp", "Wrecking ball"],
+    Story.WHEN: [
+        "Prehistoric Times", "1980s", "During Summaery", "10 Years From Now", "2626", "Beyond time",
+    ],
+    Story.GENRE: [
+        "Drama", "Sci-Fi", "Horror", "Romance", "Action", "Psycho-Thriller", "Comedy", "Bauhaus",
+    ],
+    Story.OBJECT: [
+        "Smartphone", "The Death Star", "M18-deposit-coin", "Mensa tray", "Bauhaus lamp",
+        "Wrecking ball",
+    ],
 }
 
 
@@ -100,7 +107,8 @@ def center_device():
     do("Put me in the middle, so everyone can see.")
 
 def brainstorm(story, group):
-    choose([(person, person.role) for person in group.people], "Who's got an idea for the next part?")
+    idea_options = [(person, person.role) for person in group.people]
+    choose(idea_options, "Who's got an idea for the next part?")
     part = decide("Say the next part of the story and type it in")
     story.parts.append(part)
 
@@ -114,7 +122,12 @@ def brainstorm(story, group):
 def gather_feedback(group):
     poll("How happy are you with the story?")
     poll("How much fun did you have?")
-    say("Great — thank you!" if poll("Would you like to play again some other time?", returns=InputType.yn) else goodbye)
+    again = poll("Would you like to play again some other time?", returns=InputType.yn)
+    
+    if again:
+        say("Great – thank you!")
+    else:
+        say(goodbye)
 
 
 # --- main flow ---
@@ -146,7 +159,7 @@ next_phase("Add ingredients to the soup!", "Pick who, where, when, the genre and
 
 story = Story()
 
-character_count = decide_story_element(group, story, Story.CHARACTER_COUNT) # inside: story.set(Story.CHARACTER_COUNT, character_count)
+character_count = decide_story_element(group, story, Story.CHARACTER_COUNT)
 
 for character_number in range(character_count):
     pass_device(group)
@@ -170,7 +183,7 @@ while not story.is_complete:
 # Phase 3: listen to the story
 next_phase("Let's hear it!", "Curious what the story sounds like?")
 
-initiativeness = assess_vibe(initiativeness) # assert the vibe of the group, do they want to approach a random person
+initiativeness = assess_vibe(initiativeness)
 
 if initiativeness:
     person = None
