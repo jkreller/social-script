@@ -140,6 +140,16 @@ pre#source {
   font-weight: 700;
 }
 
+/* Current line's number becomes a solid yellow chip — the frontend's signature
+   accent (yellow fill, dark-purple ink) as a "you are here" marker. */
+.src-line.active .lineno {
+  background: #FFD300;
+  color: #2a004d;
+  opacity: 1;
+  font-weight: 700;
+  padding: 0 6px;
+}
+
 .lineno {
   display: inline-block;
   min-width: 2.8em;
@@ -152,8 +162,8 @@ pre#source {
 }
 
 .inline-vars {
-  margin-left: 1.5em;
-  color: #ffe066;           /* accent-soft */
+  float: right;             /* value sits flush against the right edge */
+  color: #8bff77;           /* pop green — live runtime value */
   font-style: italic;
   opacity: 0.8;
   user-select: none;
@@ -163,9 +173,9 @@ pre#source {
 /* ── Syntax tokens (highlight.js — frontend pop palette on deep purple) ── */
 
 .hljs-keyword            { color: #FFD300; }             /* brand yellow */
-.hljs-built_in           { color: #ffe066; }             /* accent-soft */
+.hljs-built_in           { color: #FFD300; }             /* brand yellow */
 .hljs-title              { color: #21e6d6; }             /* cyan — func / class names */
-.hljs-string             { color: #8bff77; }             /* green */
+.hljs-string             { color: #FFD300; }             /* brand yellow */
 .hljs-comment            { color: #d9b3ff; opacity: 0.7; } /* lavender, dimmed */
 .hljs-number             { color: #ff3d9a; }             /* magenta */
 .hljs-params             { color: #d9b3ff; }             /* lavender */
@@ -247,6 +257,10 @@ body:not(.has-outside) #video-outside {
   background: #6600C2;      /* brand purple card between clips */
   pointer-events: none;
   font-size: 28px;
+  display: flex;            /* centre the card (the code page's screen doesn't otherwise) */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .card {
