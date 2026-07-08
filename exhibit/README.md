@@ -76,14 +76,22 @@ Each time you want to (re)start the exhibit, run:
 ```
 
 It kills any server still running, starts a fresh one (binds `0.0.0.0:8000`), and
-opens two Chrome kiosk windows: `/code` and `/video`. The exhibit autoplays
-immediately, cycling through all executions in chronological order forever.
+opens two Chrome kiosk windows: `/code` (controller) and `/video` (display). The
+exhibit autoplays immediately, cycling through all executions forever.
 
-Arrange the two Chrome windows across your displays (or drag one off-screen if you only
-need one). Close either window to stop playback.
+You can also launch the windows independently:
 
-The Chrome `--autoplay-policy=no-user-gesture-required` flag allows the frontcam video
-to play unmuted without user interaction (required for unattended operation).
+```sh
+./exhibit/open_code.sh    # Open just the code view (source display)
+./exhibit/open_video.sh   # Open just the video view (video display)
+```
+
+Each script attempts to position its window on a different display if available
+(assumes ~2560px display width; edit the coordinates in the script if your setup
+differs). Close either window to stop playback.
+
+The Chrome `--autoplay-policy=no-user-gesture-required` flag allows the frontcam
+video to play unmuted without user interaction (required for unattended operation).
 
 ## How sync works
 
