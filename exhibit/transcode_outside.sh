@@ -4,7 +4,7 @@
 # Camera exports (e.g. Sony XAVC) often carry PCM ("twos") audio and a
 # proprietary rtmd metadata track that Chrome's <video> element can't
 # decode, which silently breaks playback. This re-encodes to H.264/1080p
-# and drops audio (the outside video is always shown muted in the viewer).
+# with AAC audio for broader compatibility.
 #
 # Usage: exhibit/transcode_outside.sh <source-video> <execution-dir>
 set -e
@@ -24,5 +24,5 @@ if [ -e "$DEST" ] && [ "$SRC" -ef "$DEST" ]; then
   exit 1
 fi
 
-ffmpeg -i "$SRC" -vf "scale=-2:1080" -c:v libx264 -preset veryfast -crf 20 -an -movflags +faststart "$DEST"
+ffmpeg -i "$SRC" -vf "scale=-2:1080" -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -movflags +faststart "$DEST"
 echo "Wrote $DEST"
