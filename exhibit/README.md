@@ -11,7 +11,7 @@ browser windows**:
   outside-camera video (muted). No controls of its own.
 
 The two windows are kept in sync via a small local server: the code page POSTs its
-playback state, the video page polls it (~4×/s) over plain HTTP. Loop runs forever,
+playback state, the video page polls it (~2×/s) over plain HTTP. Loop runs forever,
 with a brief title-card pause between executions. No WebSocket, no build step, no npm.
 
 ## Files
@@ -19,8 +19,11 @@ with a brief title-card pause between executions. No WebSocket, no build step, n
 ```
 exhibit/
   server.py            FastAPI: serves the pages, /api/executions, /api/state, assets
-  install_pi.sh        one-time setup: create a venv and install requirements
-  run_pi.sh            restart the server and open the code view in kiosk Chromium
+  install.sh           one-time setup: create a venv and install requirements
+  run.sh               restart the server
+  open_code.sh         open the /code window in kiosk Chrome
+  open_video.sh        open the /video window in kiosk Chrome
+  transcode_outside.sh convert a raw camera export to a browser-safe MP4
   requirements.txt     fastapi + uvicorn (plain — no compiling on the Pi)
   build_trace.py       generate trace.json from recorded runs
   web/                 everything served to browsers
@@ -103,7 +106,7 @@ where `time` is in the trace timeline.
 - **`/code` (master)**: the autoplay loop POSTs state as it progresses through each
   execution. When showing the interstitial title card between executions, it sets
   `execution: null` and `next: {script, userName, date}`.
-- **`/video` (follower)**: polls `/api/state` every ~250 ms and, when `rev` changed:
+- **`/video` (follower)**: polls `/api/state` every ~500 ms and, when `rev` changed:
   - If `next` is set, shows the interstitial overlay and clears both videos.
   - Else, loads the matching videos and syncs them to `time - video_offset` (frontcam)
     and `time - video_outside_offset` (outside camera, if present).

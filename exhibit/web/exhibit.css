@@ -254,6 +254,7 @@ body:not(.has-outside) #video-outside {
   font-size: 32px;
   font-weight: 600;
   color: #e0e0e0;
+  line-height: 1.2;
 }
 
 .card-meta {

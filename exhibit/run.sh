@@ -1,5 +1,5 @@
 #!/bin/bash
-# Restart the exhibit server and open both Chrome kiosk windows.
+# Restart the exhibit server. (Windows open via open_code.sh / open_video.sh.)
 set -e
 cd "$(dirname "$0")"
 

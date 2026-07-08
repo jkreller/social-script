@@ -2,8 +2,8 @@
 """
 Exhibit server — serves the two-device replay viewer and keeps them in sync.
 
-Runs locally (e.g. on a Raspberry Pi). One device opens /code (the code view,
-a pure follower), another opens /video (the controller + clock master). The
+Runs locally (e.g. on a Raspberry Pi). One device opens /code (the controller +
+clock master, an autoplay loop), another opens /video (a pure follower). The
 master POSTs its playback state; the follower polls it. No WebSocket.
 
 Usage:
@@ -31,7 +31,7 @@ _VIDEO_OUTSIDE_RE = re.compile(r"^video_outside\.(mp4|webm|mov|mkv)$", re.IGNORE
 
 app = FastAPI()
 
-# Sync state: the video master POSTs it, the code follower polls it. `rev`
+# Sync state: the code master POSTs it, the video follower polls it. `rev`
 # lets the follower cheaply ignore polls that changed nothing.
 state = {"rev": 0, "execution": None, "time": 0.0, "playing": False, "next": None}
 
@@ -65,8 +65,9 @@ def _execution_entry(subdir: Path):
     log = json.loads(log_path.read_text())
     trace = json.loads(trace_path.read_text())
     frames = trace.get("timed_trace", [])
-    video = next((p.name for p in sorted(subdir.iterdir()) if _VIDEO_RE.match(p.name)), None)
-    video_outside = next((p.name for p in sorted(subdir.iterdir()) if _VIDEO_OUTSIDE_RE.match(p.name)), None)
+    entries = sorted(subdir.iterdir())
+    video = next((p.name for p in entries if _VIDEO_RE.match(p.name)), None)
+    video_outside = next((p.name for p in entries if _VIDEO_OUTSIDE_RE.match(p.name)), None)
 
     return {
         "id": subdir.name,

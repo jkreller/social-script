@@ -1,5 +1,5 @@
 // Shared HTTP sync client.
-// The video master POSTs the playback state; the code follower polls it.
+// The code master POSTs the playback state; the video follower polls it.
 // No WebSocket — every request is stateless, so reconnect/late-join is automatic.
 
 export async function postState(patch) {

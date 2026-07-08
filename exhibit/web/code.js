@@ -29,12 +29,7 @@ const INTERSTITIAL_MS = 4000
 
 const label = (a, b) => [a, b].filter(Boolean).join('  ·  ')
 
-function fmtTime(s) {
-  if (!isFinite(s)) s = 0
-  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
-}
-
-function post(immediate = false) {
+function post() {
   postState({ execution: currentExecution, time: currentTime, playing: true, next: null })
 }
 
