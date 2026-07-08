@@ -26,13 +26,25 @@ HERE = Path(__file__).parent
 WEB = HERE / "web"
 EXECUTIONS = HERE / "executions"
 
-_VIDEO_RE = re.compile(r"^video_1\.(mp4|webm|mov|mkv)$")
+_VIDEO_RE = re.compile(r"^video_1\.(mp4|webm|mov|mkv)$", re.IGNORECASE)
+_VIDEO_OUTSIDE_RE = re.compile(r"^video_outside\.(mp4|webm|mov|mkv)$", re.IGNORECASE)
 
 app = FastAPI()
 
 # Sync state: the video master POSTs it, the code follower polls it. `rev`
 # lets the follower cheaply ignore polls that changed nothing.
-state = {"rev": 0, "execution": None, "time": 0.0, "playing": False}
+state = {"rev": 0, "execution": None, "time": 0.0, "playing": False, "next": None}
+
+
+def _outside_offset(subdir: Path) -> float:
+    """Read the outside-camera offset from video_outside_offset.txt, or 0.0 if missing."""
+    offset_path = subdir / "video_outside_offset.txt"
+    if offset_path.exists():
+        try:
+            return float(offset_path.read_text().strip())
+        except (ValueError, OSError):
+            return 0.0
+    return 0.0
 
 
 def _display_date(name: str, log: list) -> str:
@@ -54,6 +66,7 @@ def _execution_entry(subdir: Path):
     trace = json.loads(trace_path.read_text())
     frames = trace.get("timed_trace", [])
     video = next((p.name for p in sorted(subdir.iterdir()) if _VIDEO_RE.match(p.name)), None)
+    video_outside = next((p.name for p in sorted(subdir.iterdir()) if _VIDEO_OUTSIDE_RE.match(p.name)), None)
 
     return {
         "id": subdir.name,
@@ -64,6 +77,8 @@ def _execution_entry(subdir: Path):
         "date": _display_date(subdir.name, log.get("log", [])),
         "video": video,
         "video_offset": trace.get("video_offset", 0.0),
+        "video_outside": video_outside,
+        "video_outside_offset": _outside_offset(subdir),
         "duration": (frames[-1]["time"] + 1) if frames else 0.0,
     }
 
@@ -96,7 +111,7 @@ def get_state():
 
 @app.post("/api/state")
 def set_state(patch: dict):
-    for key in ("execution", "time", "playing"):
+    for key in ("execution", "time", "playing", "next"):
         if key in patch:
             state[key] = patch[key]
     state["rev"] += 1

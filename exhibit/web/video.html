@@ -8,12 +8,15 @@
 </head>
 <body class="video-page">
 
-  <video id="video" playsinline muted></video>
+  <video id="video-outside" muted playsinline></video>
+  <video id="video-front" playsinline></video>
 
-  <div id="empty-overlay" class="overlay">Select an execution on the code view</div>
-  <div id="waiting-overlay" class="overlay" hidden>Waiting for code view…</div>
-  <div id="loading-overlay" class="overlay" hidden>Loading video…</div>
-  <div id="mute-overlay" class="overlay">Tap to unmute</div>
+  <div id="empty-overlay" class="overlay">Waiting for code view to select an execution…</div>
+  <div id="waiting-overlay" class="overlay" hidden>Waiting for recording to start…</div>
+  <div id="interstitial" class="overlay card" hidden>
+    <div id="interstitial-script" class="card-title"></div>
+    <div id="interstitial-meta" class="card-meta"></div>
+  </div>
 
   <script type="module" src="/assets/video.js"></script>
 </body>

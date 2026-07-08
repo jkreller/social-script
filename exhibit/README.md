@@ -1,15 +1,18 @@
-# Exhibit — two-device synced replay
+# Exhibit — unattended autoplay gallery
 
-A gallery viewer that steps through a `social_script` source file in sync with a
-recorded session video, split across **two devices**:
+A gallery viewer that autoplays through a sequence of `social_script` executions,
+stepping through the source code in sync with recorded videos, split across **two
+browser windows**:
 
-- **`/code`** — the *controller* (a display driven by the Raspberry Pi). Shows the
-  execution list and the code, and drives play/pause/step/scrub.
-- **`/video`** — the *follower* (a tablet). Mirrors whatever the code view is doing —
-  plays, pauses and seeks the recorded video to match. No controls of its own.
+- **`/code`** — plays each execution's script source, highlighted line-by-line,
+  controlled by an autoplay loop (no manual interaction).
+- **`/video`** — mirrors the code view by displaying the matching recorded video(s).
+  Supports both a portrait frontcam video (ambient audio) and an optional landscape
+  outside-camera video (muted). No controls of its own.
 
-A small local server keeps the two in sync: the code device POSTs its playback state,
-the video device polls it (~4×/s) over plain HTTP. No WebSocket, no build step, no npm.
+The two windows are kept in sync via a small local server: the code page POSTs its
+playback state, the video page polls it (~4×/s) over plain HTTP. Loop runs forever,
+with a brief title-card pause between executions. No WebSocket, no build step, no npm.
 
 ## Files
 
@@ -37,7 +40,13 @@ Each execution is a subdirectory of `executions/` containing:
 - `log.json` — the exported PWA run (script, `userName`, `tags`, `commit`, `answers`,
   `log`). After finishing a session in the PWA, open DevTools → Console and run
   `copy(localStorage.getItem('run'))`, then save it as `log.json`.
-- `video_1.<ext>` — the recorded video (H.264 MP4 recommended; see note below).
+- `video_1.<ext>` — the portrait frontcam video (H.264 MP4 recommended).
+- `video_outside.<ext>` (optional) — a landscape video from an external camera (e.g.
+  a static wide shot recorded on a separate device).
+- `video_outside_offset.txt` (if using outside video) — a plain text file containing
+  one decimal number: the second (within `video_outside.<ext>`) where this execution's
+  session begins. Can be negative (recording started after the session began). Missing
+  file → defaults to `0.0`.
 
 Then build the trace (replays the session with `sys.settrace` to capture per-line
 timing and writes `trace.json` next to each `log.json`):
@@ -46,44 +55,51 @@ timing and writes `trace.json` next to each `log.json`):
 python exhibit/build_trace.py
 ```
 
-The execution list on `/code` is built by scanning `executions/`; script and executor
-names are read from each `log.json`. No filenames or query params to manage.
+The execution list is built by scanning `executions/` in chronological order (sorted
+by folder name: `YYYY-MM-DD_HH-MM_...`). Script and executor names are read from each
+`log.json`. Videos are discovered by filename patterns; no manual manifests needed.
 
-## How to run (Raspberry Pi + tablet)
+## How to run (Mac Mini)
 
-On the Pi (once):
+One time (once):
 
 ```sh
-./exhibit/install_pi.sh
+./exhibit/install.sh
 ```
 
-(Raspberry Pi OS blocks system-wide `pip install`, so this creates a venv at
-`exhibit/.venv` and installs the requirements into it.)
+This creates a venv at `exhibit/.venv` and installs the requirements into it.
 
 Each time you want to (re)start the exhibit, run:
 
 ```sh
-./exhibit/run_pi.sh
+./exhibit/run.sh
 ```
 
-It kills any server still running, starts a fresh one (binds `0.0.0.0:8000` and prints
-its LAN IP), and opens the code view in kiosk Chromium.
+It kills any server still running, starts a fresh one (binds `0.0.0.0:8000`), and
+opens two Chrome kiosk windows: `/code` and `/video`. The exhibit autoplays
+immediately, cycling through all executions in chronological order forever.
 
-Then, on the tablet (same Wi-Fi), open `http://<pi-lan-ip>:8000/video`.
+Arrange the two Chrome windows across your displays (or drag one off-screen if you only
+need one). Close either window to stop playback.
 
-Pick an execution on the code view (Pi) and press play — the tablet's video follows.
-Pause, seek and switching executions are all mirrored within a poll interval.
-
-> The tablet streams the video from the Pi over Wi-Fi (the server supports HTTP range
-> requests, so seeking works). For smooth playback on the Pi's Wi-Fi, keep videos as
-> web-friendly H.264 MP4.
+The Chrome `--autoplay-policy=no-user-gesture-required` flag allows the frontcam video
+to play unmuted without user interaction (required for unattended operation).
 
 ## How sync works
 
-`server.py` holds one in-memory state dict — `{rev, execution, time, playing}`, where
-`time` is in the trace timeline. The code page (master) `POST`s it on
-select/play/pause/step/scrub; the video page `GET`s it every ~250 ms and, when `rev`
-changed, loads the matching video and seeks to `time - video_offset`. Every request is
-stateless, so a device can be reloaded or reconnected at any time and catches up on its
-next poll. Selecting nothing (`execution: null`) tells the video page to clear its video
-and show a prompt to pick one on the code view.
+`server.py` holds one in-memory state dict — `{rev, execution, time, playing, next}`,
+where `time` is in the trace timeline.
+
+- **`/code` (master)**: the autoplay loop POSTs state as it progresses through each
+  execution. When showing the interstitial title card between executions, it sets
+  `execution: null` and `next: {script, userName, date}`.
+- **`/video` (follower)**: polls `/api/state` every ~250 ms and, when `rev` changed:
+  - If `next` is set, shows the interstitial overlay and clears both videos.
+  - Else, loads the matching videos and syncs them to `time - video_offset` (frontcam)
+    and `time - video_outside_offset` (outside camera, if present).
+
+The two HTML `<video>` elements are independent: the frontcam is full-bleed and
+unmuted (carries audio); if an outside video is present, it fills the background
+(muted) with the frontcam as a smaller picture-in-picture overlay. Every request is
+stateless, so either window can be reloaded or the server restarted; they'll
+resynchronize on the next poll.
