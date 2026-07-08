@@ -96,8 +96,8 @@ html, body {
    ════════════════════════════════════════════════════════════════════════════ */
 
 .code-page {
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: #6600C2;      /* deep purple — matches the frontend's solid panel */
+  color: #ffffff;
 }
 
 
@@ -112,26 +112,32 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding: 36px 48px;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: #6600C2;
+  color: #ffffff;
 }
 
 pre#source {
   font-family: var(--font);
-  font-size: 18px;          /* larger for across-the-room reading */
-  line-height: 1.75;
+  font-size: 26px;          /* larger for across-the-room reading */
+  line-height: 1.7;
   white-space: pre;
   tab-size: 4;
 }
 
 .src-line {
   display: block;
-  padding: 1px 8px;
-  border-radius: var(--radius);
+  padding: 3px 8px;
+  border-radius: 0;         /* square corners — flat pixel, like the frontend */
+  transition: background 120ms ease, box-shadow 120ms ease;
 }
 
+/* Current line: lifted lighter-purple block with the signature yellow offset
+   shadow, enlarged + bold, so it's the obvious focal point. Syntax colours stay. */
 .src-line.active {
-  background: rgba(255, 255, 255, 0.10);
+  background: #9B2EFF;
+  box-shadow: 5px 5px 0 rgba(255, 211, 0, 0.3);
+  font-size: 34px;
+  font-weight: 700;
 }
 
 .lineno {
@@ -139,31 +145,31 @@ pre#source {
   min-width: 2.8em;
   margin-right: 1.4em;
   text-align: right;
-  color: var(--muted);
-  font-size: 12px;
+  color: #d9b3ff;           /* lavender */
+  font-size: 14px;
   opacity: 0.55;
   user-select: none;
 }
 
 .inline-vars {
   margin-left: 1.5em;
-  color: #888888;
+  color: #ffe066;           /* accent-soft */
   font-style: italic;
-  opacity: 0.65;
+  opacity: 0.8;
   user-select: none;
 }
 
 
-/* ── Syntax tokens (highlight.js — VS Code dark) ── */
+/* ── Syntax tokens (highlight.js — frontend pop palette on deep purple) ── */
 
-.hljs-keyword            { color: #569cd6; }
-.hljs-built_in           { color: #4ec9b0; }
-.hljs-string             { color: #ce9178; }
-.hljs-comment            { color: #6a9955; }
-.hljs-number             { color: #b5cea8; }
-.hljs-title              { color: #dcdcaa; }
-.hljs-params             { color: #9cdcfe; }
-.hljs-attr               { color: #9cdcfe; }
+.hljs-keyword            { color: #FFD300; }             /* brand yellow */
+.hljs-built_in           { color: #ffe066; }             /* accent-soft */
+.hljs-title              { color: #21e6d6; }             /* cyan — func / class names */
+.hljs-string             { color: #8bff77; }             /* green */
+.hljs-comment            { color: #d9b3ff; opacity: 0.7; } /* lavender, dimmed */
+.hljs-number             { color: #ff3d9a; }             /* magenta */
+.hljs-params             { color: #d9b3ff; }             /* lavender */
+.hljs-attr               { color: #d9b3ff; }
 
 /* ════════════════════════════════════════════════════════════════════════════
    Video page (/video) — passive mirror: full-screen video
@@ -217,7 +223,7 @@ body:not(.has-outside) #video-outside {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #e0e0e0;
+  color: #d9b3ff;           /* lavender — matches idle text elsewhere */
   font-size: 22px;
   letter-spacing: 0.05em;
   text-align: center;
@@ -238,7 +244,7 @@ body:not(.has-outside) #video-outside {
 
 #interstitial {
   z-index: 40;
-  background: #000;
+  background: #6600C2;      /* brand purple card between clips */
   pointer-events: none;
   font-size: 28px;
 }
@@ -251,15 +257,15 @@ body:not(.has-outside) #video-outside {
 }
 
 .card-title {
-  font-size: 32px;
-  font-weight: 600;
-  color: #e0e0e0;
+  font-size: 40px;
+  font-weight: 700;
+  color: #ffffff;
   line-height: 1.2;
 }
 
 .card-meta {
-  font-size: 16px;
-  color: #999999;
+  font-size: 18px;
+  color: #FFD300;           /* brand yellow — reads as an eyebrow label */
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
