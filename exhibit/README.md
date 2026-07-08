@@ -42,7 +42,9 @@ Each execution is a subdirectory of `executions/` containing:
   `copy(localStorage.getItem('run'))`, then save it as `log.json`.
 - `video_1.<ext>` — the portrait frontcam video (H.264 MP4 recommended).
 - `video_outside.<ext>` (optional) — a landscape video from an external camera (e.g.
-  a static wide shot recorded on a separate device).
+  a static wide shot recorded on a separate device). If it's a raw camera export
+  (e.g. Sony XAVC with PCM audio or proprietary metadata), use `./transcode_outside.sh`
+  to convert it to a browser-playable H.264 MP4 first.
 - `video_outside_offset.txt` (if using outside video) — a plain text file containing
   one decimal number: the second (within `video_outside.<ext>`) where this execution's
   session begins. Can be negative (recording started after the session began). Missing
