@@ -75,3 +75,7 @@ class Story:
 
     def text(self) -> str:
         return "\n".join(self.parts)
+
+    @property
+    def might_be_done(self) -> bool:  # worth checking if the story feels finished
+        return not self.not_yet_used or len(self.parts) >= 10

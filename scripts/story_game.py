@@ -16,6 +16,8 @@ ROLES = [
     ("weirdo 😵‍💫", "just make it weird, that's fun"),
 ]
 
+MIN_GROUP_SIZE = 3
+
 JOIN_INVITE = "We're playing a game, wanna join playing? Takes 10-15 minutes."
 QUICK_ASK = "We're playing a game and need help, can I ask a quick question?"
 DECLINE_ENCOURAGEMENT = "No worries, you did great!\nDo it on your own!"
@@ -44,7 +46,10 @@ OPTIONS = {
 
 
 def approach(purpose, min_count=None):
-    intro = f"We need {min_count} more person(s)." if min_count else None
+    if min_count:
+        intro = f"We need {min_count} more person(s)."
+    else:
+        intro = None
     if assess_internal(fear, intro) > 6:
         breath_in_out(2)
 
@@ -54,19 +59,29 @@ def approach(purpose, min_count=None):
 
     if not sense("Are they in?"):
         acknowledge(DECLINE_ENCOURAGEMENT)
-        return Group() if min_count else None
+        if min_count:
+            return Group()
+        return None
+
     if not min_count:
         return Person()
-    joined = count_people("How many joined you?")
-    return Group(joined) if joined > 1 else Person()
 
-def decide_story_element(who, story, element, number=None):
-    person = who.current_person if isinstance(who, Group) else who
+    joined = count_people("How many joined you?")
+    if joined > 1:
+        return Group(joined)
+    return Person()
+
+def decide_story_element(group, story, element, number=None):
+    person = group.current_person
 
     if person.up_for_approaching is None:
         person.up_for_approaching = assess_internal(initiativeness)
 
-    prompt = _(element.question, number=number) if number is not None else element.question
+    if number is not None:
+        prompt = _(element.question, number=number)
+    else:
+        prompt = element.question
+
     if person.up_for_approaching:
         stranger = approach(QUICK_ASK)
         if stranger:
@@ -76,7 +91,9 @@ def decide_story_element(who, story, element, number=None):
     answer = choose(options, prompt, allow_custom=element is not Story.CHARACTER_COUNT)
 
     story.set(element, answer, number)
-    return int(answer) if element is Story.CHARACTER_COUNT else answer
+    if element is Story.CHARACTER_COUNT:
+        return int(answer)
+    return answer
 
 def summarize(story):
     say(story.recap(), intro="Alright! Here's what we've got:", headline="tell everybody")
@@ -107,8 +124,7 @@ def center_device():
     do("Put me in the middle, so everyone can see.")
 
 def brainstorm(story, group):
-    idea_options = [(person, person.role) for person in group.people]
-    choose(idea_options, "Who's got an idea for the next part?")
+    choose(group.people_with_roles, "Who's got an idea for the next part?")
     part = decide("Say the next part of the story and type it in")
     story.parts.append(part)
 
@@ -116,7 +132,7 @@ def brainstorm(story, group):
         used = choose(story.not_yet_used + ["none of them"], "Did you weave one of these in?")
         story.use(used)
 
-    if not story.not_yet_used or len(story.parts) >= 10:
+    if story.might_be_done:
         story.is_complete = sense("Does the story feel complete?")
 
 def gather_feedback(group):
@@ -125,7 +141,7 @@ def gather_feedback(group):
     again = poll("Would you like to play again some other time?", returns=InputType.yn)
     
     if again:
-        say("Great – thank you!")
+        say("Great — thank you!")
     else:
         say(goodbye)
 
@@ -137,8 +153,10 @@ next_phase("Make it a group!", "Let's see if we're enough people to play")
 
 participant_count = count_people()
 
-while participant_count < 3:
-    participant_count += approach(JOIN_INVITE, 3 - participant_count).count
+while participant_count < MIN_GROUP_SIZE:
+    still_needed = MIN_GROUP_SIZE - participant_count
+    joined = approach(JOIN_INVITE, still_needed)
+    participant_count += joined.count
 
 group = Group(participant_count)
 
@@ -163,7 +181,7 @@ character_count = decide_story_element(group, story, Story.CHARACTER_COUNT)
 
 for character_number in range(character_count):
     pass_device(group)
-    decide_story_element(group.current_person, story, Story.WHO, character_number + 1)
+    decide_story_element(group, story, Story.WHO, character_number + 1)
 
 for element in [Story.WHERE, Story.WHEN, Story.GENRE, Story.OBJECT]:
     pass_device(group)
@@ -183,9 +201,9 @@ while not story.is_complete:
 # Phase 3: listen to the story
 next_phase("Let's hear it!", "Curious what the story sounds like?")
 
-initiativeness = assess_vibe(initiativeness)
+group_feels_up_for_it = assess_vibe(initiativeness)
 
-if initiativeness:
+if group_feels_up_for_it:
     person = None
     while not person:
         pass_device(group, anyone=True)

@@ -53,6 +53,10 @@ class Group:
     def random_person(self):
         return random.choice(self.people)
 
+    @property
+    def people_with_roles(self):  # each person paired with their role, for choose()
+        return [(person, person.role) for person in self.people]
+
 
 class _Everyone:
     label = "anyone"
