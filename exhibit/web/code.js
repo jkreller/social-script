@@ -27,8 +27,6 @@ const interstitialMeta = document.getElementById('interstitial-meta')
 const CLOCK_MS = 100
 const INTERSTITIAL_MS = 4000
 
-const label = (a, b) => [a, b].filter(Boolean).join('  ·  ')
-
 function post() {
   postState({ execution: currentExecution, time: currentTime, playing: true, next: null })
 }
@@ -175,8 +173,8 @@ async function runExecution(e) {
 function showInterstitial(next) {
   codeView.hidden = true
   interstitialView.hidden = false
-  interstitialScript.textContent = next.script
-  interstitialMeta.textContent = label(next.userName, next.date)
+  interstitialScript.textContent = next.userName || next.script
+  interstitialMeta.textContent = next.date || ''
   postState({ execution: null, time: 0, playing: false, next })
 
   return new Promise(resolve => setTimeout(resolve, INTERSTITIAL_MS))

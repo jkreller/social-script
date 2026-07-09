@@ -71,8 +71,8 @@ function apply(s) {
   // Interstitial mode: show title card, pause videos
   if (s.next) {
     interstitialOverlay.hidden = false
-    document.getElementById('interstitial-script').textContent = s.next.script
-    document.getElementById('interstitial-meta').textContent = [s.next.userName, s.next.date].filter(Boolean).join('  ·  ')
+    document.getElementById('interstitial-script').textContent = s.next.userName || s.next.script
+    document.getElementById('interstitial-meta').textContent = s.next.date || ''
     frontChannel.clear()
     outsideChannel.clear()
     emptyOverlay.hidden = true
