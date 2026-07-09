@@ -138,12 +138,6 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
     return () => clearTimeout(t)
   }, [uncaught, onRollback])
 
-  useEffect(() => {
-    if (!phaseCard) return
-    const t = setTimeout(() => setPhaseCard(null), 2500)
-    return () => clearTimeout(t)
-  }, [phaseCard])
-
   const handleSubmit = (value: string) => {
     if (!prompt) return
     // The app can't know when a stranger is actually won over — so any "yes" gets a
@@ -267,6 +261,7 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
             phase={phaseCard.phase}
             title={phaseCard.phase_title}
             description={phaseCard.phase_description}
+            onDismiss={() => setPhaseCard(null)}
           />
         )}
       </AnimatePresence>

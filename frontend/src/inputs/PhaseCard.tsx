@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Gem, UserGroup, TypingDots, Potion, Scroll, Megaphone, Heart } from '../icons'
+import { Gem, UserGroup, TypingDots, Potion, Scroll, Megaphone, Heart, ChevronRight } from '../icons'
 import { t } from '../i18n/strings'
 import styles from './PhaseCard.module.css'
 
@@ -19,15 +19,19 @@ interface Props {
   phase: number
   title: string | null
   description: string | null
+  onDismiss: () => void
 }
 
 // A full-bleed chapter card shown when the script enters a new phase (next_phase).
-// The parent auto-dismisses it after a few seconds, revealing the prompt underneath.
-export default function PhaseCard({ phase, title, description }: Props) {
+// Requires a tap to dismiss, revealing the prompt underneath.
+export default function PhaseCard({ phase, title, description, onDismiss }: Props) {
   const Icon = ICONS[phase] ?? Gem
   return (
     <motion.div
       className={styles.root}
+      role="button"
+      onClick={onDismiss}
+      whileTap={{ scale: 0.985 }}
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -54,6 +58,13 @@ export default function PhaseCard({ phase, title, description }: Props) {
           {description}
         </motion.span>
       )}
+      <motion.span
+        className={styles.hint}
+        animate={{ y: [0, 6, 0] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {t('tap to continue')} <ChevronRight width={16} height={16} />
+      </motion.span>
     </motion.div>
   )
 }
