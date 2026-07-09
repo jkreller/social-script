@@ -127,7 +127,9 @@ html, body {
 
 #code-panel {
   flex: 1;
+  position: relative;       /* containing block for the value annotation */
   overflow-y: auto;
+  overflow-x: hidden;       /* long lines overflow off the right edge, no scrollbar */
   padding: 36px 48px;
   background: #45007a;
   color: #ffffff;
@@ -143,6 +145,8 @@ pre#source {
 
 .src-line {
   display: block;
+  width: max-content;       /* background covers the whole line, incl. overflow */
+  min-width: 100%;          /* short lines still fill the panel width */
   padding: 3px 8px;
   border-radius: 0;         /* square corners — flat pixel, like the frontend */
   transition: background 120ms ease, box-shadow 120ms ease;
@@ -178,12 +182,49 @@ pre#source {
   user-select: none;
 }
 
+/* Value annotation sits small and non-bold just above the active line, pinned to the
+   panel's visible right edge (its top is set to the line's offsetTop in code.js), so it
+   stays put however far the line overflows. */
 .inline-vars {
-  float: right;             /* value sits flush against the right edge */
+  position: absolute;
+  right: 48px;              /* aligned to the code column's right edge (panel padding) */
+  transform: translateY(-100%);   /* sits just above the active line */
+  font-size: 16px;
+  font-weight: 400;
+  white-space: nowrap;      /* value stays on one line */
   color: #8bff77;           /* pop green — live runtime value */
   font-style: italic;
   opacity: 0.8;
   user-select: none;
+}
+
+
+/* Debug-only: jump to the end of the current execution's code playback. */
+#debug-end {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 100;
+  padding: 8px 14px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius);
+  cursor: pointer;
+  opacity: 0;                 /* hidden until the mouse moves (see code.js) */
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+#debug-end.visible {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+#debug-end.visible:hover {
+  opacity: 1;
 }
 
 
@@ -299,4 +340,53 @@ body:not(.has-outside) #video-outside {
   color: #FFD300;           /* brand yellow — reads as an eyebrow label */
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Story beat — the finished execution's human output, shown on both pages
+   (code screen + video overlay) between the clip and the next interstitial.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* One rule drives both pages so the code screen and the video overlay render
+   identically — the video overlay deliberately drops the `.overlay` class (whose
+   centering/letter-spacing/lavender colour would otherwise make it diverge). */
+#story-view,
+#story-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #6600C2;      /* brand purple — matches the interstitial card */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+#story-overlay { pointer-events: none; }
+
+.story-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 80ch;
+  text-align: center;       /* centred header; the body overrides to left below */
+}
+
+/* The sentences, left-aligned and stacked so the story reads top-to-bottom, each
+   one built by a different participant. */
+.story-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.story-line {
+  font-size: 26px;
+  line-height: 1.5;
+  color: #ffffff;
+  padding-left: 20px;
+  border-left: 3px solid #FFD300;   /* brand yellow tick per sentence */
 }

@@ -41,6 +41,14 @@ def _short(v):
     return r if len(r) <= 80 else r[:77] + '...'
 
 
+def _displayable(v):
+    """Only show simple values inline — skip collections and objects with no readable
+    repr (Group, Story, …); they're long and noisy in the code view."""
+    if isinstance(v, (list, tuple, dict, set, frozenset)):
+        return False
+    return type(v).__repr__ is not object.__repr__
+
+
 def _snapshot(f_locals):
     """The script's own variables in a frame, as display strings."""
     return {
@@ -49,6 +57,7 @@ def _snapshot(f_locals):
         and k not in _ENV_NAMES
         and not callable(v)
         and not isinstance(v, types.ModuleType)
+        and _displayable(v)
     }
 
 

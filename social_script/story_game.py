@@ -13,6 +13,6 @@ def explain_rules() -> None:
         "You are building a story together, in three rounds:\n\n"
         "- 1. Get to know each other\n"
         "- 2. Pick story elements\n"
-        "- 3. Create an actual story",
+        "- 3. Write the story",
         headline="read the rules",
     )

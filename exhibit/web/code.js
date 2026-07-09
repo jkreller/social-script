@@ -19,16 +19,48 @@ let anchorWall = 0          // performance.now() when the clock started
 let anchorTime = 0          // currentTime when the clock started
 
 const codeView = document.getElementById('code-view')
+const storyView = document.getElementById('story-view')
 const interstitialView = document.getElementById('interstitial')
 const codePanelEl = document.getElementById('code-panel')
 const interstitialScript = document.getElementById('interstitial-script')
 const interstitialMeta = document.getElementById('interstitial-meta')
+const storyTitle = document.getElementById('story-title')
+const storyMeta = document.getElementById('story-meta')
+const storyBody = document.getElementById('story-body')
+const debugEndEl = document.getElementById('debug-end')
+
+// One reused element for the active line's runtime values, pinned above that line.
+const varsEl = document.createElement('span')
+varsEl.className = 'inline-vars'
+varsEl.hidden = true
+codePanelEl.appendChild(varsEl)
 
 const CLOCK_MS = 100
 const INTERSTITIAL_MS = 4000
 
 function post() {
-  postState({ execution: currentExecution, time: currentTime, playing: true, next: null })
+  postState({ execution: currentExecution, time: currentTime, playing: true, next: null, story: null })
+}
+
+// story.txt separates the collaboratively-built sentences with a literal "\n"
+// (backslash-n), not a real newline.
+function storySentences(text) {
+  return text.split(/\\n|\n/).map(s => s.trim()).filter(Boolean)
+}
+
+// Longer stories get more read time; short ones don't linger. Generous per-sentence
+// pacing so it's comfortably readable across the room.
+function storyDuration(sentences) {
+  return Math.min(60000, 6000 + sentences.length * 6000)
+}
+
+function renderStory(el, text) {
+  el.replaceChildren(...storySentences(text).map(sentence => {
+    const p = document.createElement('p')
+    p.className = 'story-line'
+    p.textContent = sentence
+    return p
+  }))
 }
 
 function splitHighlightedLines(html) {
@@ -101,6 +133,7 @@ function updateView() {
 
   if (activeEl) activeEl.classList.remove('active')
   activeEl = null
+  varsEl.hidden = true
 
   if (idx >= 0) {
     const frame = log.timed_trace[idx]
@@ -116,15 +149,31 @@ function updateView() {
         .filter(([k]) => idents.has(k))
         .map(([k, v]) => `${k} = ${v}`)
       if (parts.length) {
-        el.querySelector('.inline-vars')?.remove()
-        const span = document.createElement('span')
-        span.className = 'inline-vars'
-        span.textContent = parts.join('  ·  ')
-        el.appendChild(span)
+        varsEl.textContent = parts.join('  ·  ')
+        varsEl.style.top = `${el.offsetTop}px`
+        varsEl.hidden = false
       }
     }
   }
 }
+
+// Debug: fast-forward the clock to just before the end, so the last few seconds
+// still play out (rather than snapping to completion). No-op unless code is playing.
+function jumpToEnd() {
+  if (!clockTimer) return
+  anchorTime = Math.max(0, logDuration - 3)
+  anchorWall = performance.now()
+}
+debugEndEl.addEventListener('click', jumpToEnd)
+
+// The debug button reveals itself while the mouse moves and fades out once it's
+// been still for a moment, so it stays out of the way of the unattended exhibit.
+let hideDebugTimer = null
+document.addEventListener('mousemove', () => {
+  debugEndEl.classList.add('visible')
+  clearTimeout(hideDebugTimer)
+  hideDebugTimer = setTimeout(() => debugEndEl.classList.remove('visible'), 2000)
+})
 
 function setCurrentTime(t) {
   currentTime = Math.max(0, Math.min(t, logDuration))
@@ -153,7 +202,15 @@ async function runExecution(e) {
 
   currentExecution = e.id
   const trace = log.timed_trace
-  logDuration = trace.length ? trace[trace.length - 1].time + 1 : 0
+  const traceEnd = trace.length ? trace[trace.length - 1].time + 1 : 0
+  // The recording keeps running after the last executed line. A video mapped through
+  // its offset (videoTime = clock − offset) reaches its end at clock = duration + offset,
+  // so hold the clock until the longest video has finished before showing the story.
+  logDuration = Math.max(
+    traceEnd,
+    e.video && e.video_duration ? e.video_duration + (e.video_offset || 0) : 0,
+    e.video_outside && e.video_outside_duration ? e.video_outside_duration + (e.video_outside_offset || 0) : 0,
+  )
   prevFrameIdx = -1
   activeEl = null
   renderSource(log.source)
@@ -170,12 +227,26 @@ async function runExecution(e) {
   })
 }
 
+// The finished execution's story — its actual human output — held on screen before
+// moving on. Posts the story text so the video follower can mirror it.
+function showStory(e) {
+  codeView.hidden = true
+  storyView.hidden = false
+  storyTitle.textContent = e.userName || e.script
+  storyMeta.textContent = e.date || ''
+  renderStory(storyBody, e.story)
+  postState({ execution: null, time: 0, playing: false, next: null, story: e })
+
+  return new Promise(resolve => setTimeout(resolve, storyDuration(storySentences(e.story))))
+}
+
 function showInterstitial(next) {
   codeView.hidden = true
+  storyView.hidden = true
   interstitialView.hidden = false
   interstitialScript.textContent = next.userName || next.script
   interstitialMeta.textContent = next.date || ''
-  postState({ execution: null, time: 0, playing: false, next })
+  postState({ execution: null, time: 0, playing: false, next, story: null })
 
   return new Promise(resolve => setTimeout(resolve, INTERSTITIAL_MS))
 }
@@ -193,8 +264,11 @@ async function loopForever() {
     let idx = 0
     while (true) {
       codeView.hidden = false
+      storyView.hidden = true
       interstitialView.hidden = true
-      await runExecution(order[idx])
+      const cur = order[idx]
+      await runExecution(cur)
+      if (cur.story) await showStory(cur)
       idx = (idx + 1) % order.length
       await showInterstitial(order[idx])
     }

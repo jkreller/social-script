@@ -14,6 +14,7 @@ Usage:
 import json
 import re
 import socket
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -33,7 +34,34 @@ app = FastAPI()
 
 # Sync state: the code master POSTs it, the video follower polls it. `rev`
 # lets the follower cheaply ignore polls that changed nothing.
-state = {"rev": 0, "execution": None, "time": 0.0, "playing": False, "next": None}
+state = {"rev": 0, "execution": None, "time": 0.0, "playing": False, "next": None, "story": None}
+
+
+_duration_cache: dict = {}
+
+
+def _video_duration(path: Path):
+    """Video length in seconds via ffprobe, or None if unavailable. Cached by mtime.
+
+    The trace ends at the last executed line, but the recording usually runs on for a
+    while after that — so the code clock needs the video length to hold the story until
+    the footage has actually finished.
+    """
+    try:
+        key = (str(path), path.stat().st_mtime)
+    except OSError:
+        return None
+    if key not in _duration_cache:
+        try:
+            out = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "csv=p=0", str(path)],
+                capture_output=True, text=True, timeout=10,
+            )
+            _duration_cache[key] = float(out.stdout.strip())
+        except (ValueError, OSError, subprocess.SubprocessError):
+            _duration_cache[key] = None  # ffprobe missing/failed — fall back to trace length
+    return _duration_cache[key]
 
 
 def _outside_offset(subdir: Path) -> float:
@@ -69,6 +97,9 @@ def _execution_entry(subdir: Path):
     video = next((p.name for p in entries if _VIDEO_RE.match(p.name)), None)
     video_outside = next((p.name for p in entries if _VIDEO_OUTSIDE_RE.match(p.name)), None)
 
+    story_path = subdir / "story.txt"
+    story = story_path.read_text().strip() if story_path.exists() else ""
+
     return {
         "id": subdir.name,
         "script": log.get("script", subdir.name),
@@ -78,8 +109,11 @@ def _execution_entry(subdir: Path):
         "date": _display_date(subdir.name, log.get("log", [])),
         "video": video,
         "video_offset": trace.get("video_offset", 0.0),
+        "video_duration": _video_duration(subdir / video) if video else None,
         "video_outside": video_outside,
         "video_outside_offset": _outside_offset(subdir),
+        "video_outside_duration": _video_duration(subdir / video_outside) if video_outside else None,
+        "story": story,
         "duration": (frames[-1]["time"] + 1) if frames else 0.0,
     }
 
@@ -112,7 +146,7 @@ def get_state():
 
 @app.post("/api/state")
 def set_state(patch: dict):
-    for key in ("execution", "time", "playing", "next"):
+    for key in ("execution", "time", "playing", "next", "story"):
         if key in patch:
             state[key] = patch[key]
     state["rev"] += 1

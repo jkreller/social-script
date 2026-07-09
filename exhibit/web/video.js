@@ -61,6 +61,18 @@ const outsideVideoEl = document.getElementById('video-outside')
 const emptyOverlay = document.getElementById('empty-overlay')
 const waitingOverlay = document.getElementById('waiting-overlay')
 const interstitialOverlay = document.getElementById('interstitial')
+const storyOverlay = document.getElementById('story-overlay')
+
+// story.txt separates the collaboratively-built sentences with a literal "\n"
+// (backslash-n), not a real newline.
+function renderStory(el, text) {
+  el.replaceChildren(...text.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).map(sentence => {
+    const p = document.createElement('p')
+    p.className = 'story-line'
+    p.textContent = sentence
+    return p
+  }))
+}
 
 const frontChannel = createChannel(frontVideoEl)
 const outsideChannel = createChannel(outsideVideoEl)
@@ -68,6 +80,22 @@ const outsideChannel = createChannel(outsideVideoEl)
 document.addEventListener('pointerdown', () => { frontVideoEl.muted = false }, { once: true })
 
 function apply(s) {
+  // Story mode: show the finished execution's story, pause videos
+  if (s.story) {
+    storyOverlay.hidden = false
+    interstitialOverlay.hidden = true
+    document.getElementById('story-title').textContent = s.story.userName || s.story.script
+    document.getElementById('story-meta').textContent = s.story.date || ''
+    renderStory(document.getElementById('story-body'), s.story.story)
+    frontChannel.clear()
+    outsideChannel.clear()
+    emptyOverlay.hidden = true
+    waitingOverlay.hidden = true
+    return
+  }
+
+  storyOverlay.hidden = true
+
   // Interstitial mode: show title card, pause videos
   if (s.next) {
     interstitialOverlay.hidden = false

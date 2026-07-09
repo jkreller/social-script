@@ -191,7 +191,7 @@ TRANSLATIONS = {
         "Did you weave one of these in?": "Hast du etwas davon eingebaut?",
         # social_script/story_game.py
         "read the rules": "regeln lesen",
-        "You'll run this script prompt by prompt.\n\nRule 1: do what it says.\n\nRule 2: read everything out loud, so everyone gets it.\n\nYou are building a story together, in three rounds:\n\n- 1. Get to know each other\n- 2. Pick story elements\n- 3. Create an actual story":
+        "You'll run this script prompt by prompt.\n\nRule 1: do what it says.\n\nRule 2: read everything out loud, so everyone gets it.\n\nYou are building a story together, in three rounds:\n\n- 1. Get to know each other\n- 2. Pick story elements\n- 3. Write the story":
             "Ihr führt ein Skript aus.\n\nRegel 1: Tu, was es sagt.\n\nRegel 2: Lies alles laut vor, damit es alle mitbekommen.\n\nIhr schreibt gemeinsam eine Geschichte, in drei Runden:\n\n- 1. Lernt euch kennen\n- 2. Wählt Story-Elemente\n- 3. Schreibt die Geschichte",
     },
 }
