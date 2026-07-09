@@ -112,6 +112,11 @@ def sit_down() -> None:
     io_read(_("Find a spot and settle in."), headline=_("sit"), input_type=InputType.enter)
 
 
+def sit_down_together() -> None:
+    """Find a spot and settle in, together with the group."""
+    io_read(_("Find a place to sit down together."), headline=_("sit"), input_type=InputType.enter)
+
+
 def observe_environment() -> None:
     """Openly take in the surroundings – who is here, what is happening."""
     io_read(_("Look around. Take it all in."), headline=_("observe"), input_type=InputType.enter)

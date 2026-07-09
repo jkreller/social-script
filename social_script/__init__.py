@@ -28,6 +28,7 @@ from social_script.actions import (
     assess_external,
     walk,
     sit_down,
+    sit_down_together,
     observe_environment,
     find_people,
     explain,
@@ -51,7 +52,14 @@ from social_script.play import (
     count_people,
     pick_from,
     poll,
+    center_device,
+    pass_device,
+    gather_feedback,
     Story,
+)
+
+from social_script.story_game import (
+    explain_rules,
 )
 
 from social_script.phrases import (
@@ -129,6 +137,7 @@ __all__ = [
     "assess_external",
     "walk",
     "sit_down",
+    "sit_down_together",
     "observe_environment",
     "find_people",
     "explain",
@@ -150,7 +159,12 @@ __all__ = [
     "count_people",
     "pick_from",
     "poll",
+    "center_device",
+    "pass_device",
+    "gather_feedback",
     "Story",
+    # story game
+    "explain_rules",
     # phrase categories
     "greeting",
     "exit",

@@ -3,10 +3,34 @@
 import random
 from social_script._internal.driver import io_read, InputType
 from social_script._internal.i18n import _
+from social_script.actions import do, say
+from social_script.phrases import goodbye
 
 
 def hand_over() -> None:
     io_read(_("Pass me on."), headline=_("pass"), input_type=InputType.enter)
+
+
+def center_device() -> None:
+    """Put the device down where everyone in the group can see it."""
+    do("Put me in the middle, so everyone can see.")
+
+
+def pass_device(group, anyone=False) -> None:
+    """Hand the device to the group's next person, or to whoever feels like it."""
+    if anyone:
+        do("Pass me to whoever feels like it.")
+        return
+
+    group.next_person()
+    person = group.current_person
+    if person.name:
+        if person.role:
+            do("Pass me to {person},\nthe {role}", person=person, role=person.role)
+        else:
+            do("Pass me to {person}.", person=person)
+    else:
+        do("Pass me to the next person.")
 
 
 def count_people(prompt: str = "How many of you are playing?") -> int:
@@ -27,6 +51,18 @@ def poll(question: str, *, returns: InputType = InputType.scale):
     if returns == InputType.yn:
         return raw.lower() == "y"
     return raw
+
+
+def gather_feedback() -> None:
+    """Poll the group on how the game went."""
+    poll("How happy are you with the outcome?")
+    poll("How much fun did you have?")
+    again = poll("Would you like to play again some other time?", returns=InputType.yn)
+
+    if again:
+        say("Great — thank you!")
+    else:
+        say(goodbye)
 
 
 class Element:
@@ -78,4 +114,4 @@ class Story:
 
     @property
     def might_be_done(self) -> bool:  # worth checking if the story feels finished
-        return not self.not_yet_used or len(self.parts) >= 10
+        return not self.not_yet_used or len(self.parts) >= 5

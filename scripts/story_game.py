@@ -105,24 +105,6 @@ def read(person, story):
         say("Read it out loud:\n{story_text}", story_text=story.text())
         finished = sense("Did you finish reading it out loud?")
 
-def pass_device(group, anyone=False):
-    if anyone:
-        do("Pass me to whoever feels like it.")
-        return
-
-    group.next_person()
-    person = group.current_person
-    if person.name:
-        if person.role:
-            do("Pass me to {person},\nthe {role}", person=person, role=person.role)
-        else:
-            do("Pass me to {person}.", person=person)
-    else:
-        do("Pass me to the next person.")
-
-def center_device():
-    do("Put me in the middle, so everyone can see.")
-
 def brainstorm(story, group):
     choose(group.people_with_roles, "Who's got an idea for the next part?")
     part = decide("Say the next part of the story and type it in")
@@ -134,17 +116,6 @@ def brainstorm(story, group):
 
     if story.might_be_done:
         story.is_complete = sense("Does the story feel complete?")
-
-def gather_feedback(group):
-    poll("How happy are you with the story?")
-    poll("How much fun did you have?")
-    again = poll("Would you like to play again some other time?", returns=InputType.yn)
-    
-    if again:
-        say("Great — thank you!")
-    else:
-        say(goodbye)
-
 
 # --- main flow ---
 
@@ -159,6 +130,9 @@ while participant_count < MIN_GROUP_SIZE:
     participant_count += joined.count
 
 group = Group(participant_count)
+
+sit_down_together()
+explain_rules()
 
 
 # Phase 2: get to know each other
@@ -217,4 +191,4 @@ read(person, story)
 # Phase 4: feedback
 next_phase("How was it?", "Quick feedback")
 
-gather_feedback(group)
+gather_feedback()
