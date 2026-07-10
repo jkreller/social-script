@@ -6,10 +6,10 @@
 // - pixelarticons (MIT, halfmage/pixelarticons) — fills gaps pxlkit's free packs don't cover
 //   (Gamepad, Volume, chevrons). These render as inline SVG with fill="currentColor", so they
 //   behave like normal icon fonts and pick up CSS `color` from their parent.
-import { PxlKitIcon, AnimatedPxlKitIcon } from '@pxlkit/core'
+import { PxlKitIcon, AnimatedPxlKitIcon, type PxlKitData } from '@pxlkit/core'
 import { Play as UiPlay, Pause as UiPause, Close as UiClose, Check as UiCheck } from '@pxlkit/ui'
 import { Flag as GameFlag, Star as GameStar, Potion as GamePotion, SpellBook as GameSpellBook, Heart as GameHeart, Lightning as GameLightning, Gem as GameGem, Scroll as GameScroll } from '@pxlkit/gamification'
-import { Megaphone as FeedbackMegaphone, InfoCircle as FeedbackInfoCircle, TypingDots as FeedbackTypingDots } from '@pxlkit/feedback'
+import { Megaphone as FeedbackMegaphone, InfoCircle as FeedbackInfoCircle, TypingDots as FeedbackTypingDots, Mail as FeedbackMail } from '@pxlkit/feedback'
 import { UserGroup as SocialUserGroup, User as SocialUser, Pin as SocialPin } from '@pxlkit/social'
 import { Clock as UiClock, Palette as UiPalette, Package as UiPackage } from '@pxlkit/ui'
 import { Flame as EffectsFlame, ExplosionBurst as EffectsExplosionBurst, GlowPulse as EffectsGlowPulse } from '@pxlkit/effects'
@@ -108,4 +108,45 @@ export const Palette = ({ size = 24, color = HEX.fg, appearance = 'solid' }: Pal
 )
 export const Package = ({ size = 24, color = HEX.fg, appearance = 'solid' }: PaletteIconProps) => (
   <PxlKitIcon icon={UiPackage} size={size} appearance={appearance} color={color} />
+)
+export const Mail = ({ size = 24, color = HEX.fg, appearance = 'solid' }: PaletteIconProps) => (
+  <PxlKitIcon icon={FeedbackMail} size={size} appearance={appearance} color={color} />
+)
+
+// Instagram doesn't ship in any pxlkit pack — hand-authored pixel art in the same
+// grid format, used only by the /psst teaser's Instagram link.
+const InstagramData: PxlKitData = {
+  name: 'instagram',
+  size: 16,
+  category: 'custom',
+  grid: [
+    '..AAAAAAAAEEEE..',
+    '.AAAAAEEEEEEEEE.',
+    'AAAEFFFFFFFFEEEE',
+    'AAEFFFFFFFFFFEEE',
+    'AEFFFEEBBBBBFFEE',
+    'EEFFEBBFFBFBFFEE',
+    'EEFFBBFFFFBBFFEE',
+    'EBFFBFFBBFFBFFBE',
+    'EBFFDFFDBFFBFFBE',
+    'DDFFDDFFFFBBFFBB',
+    'DDFFDDDFFDBBFFBB',
+    'DDFFFCDDDDDFFFBB',
+    'DDCFFFFFFFFFFBBB',
+    'DCCCFFFFFFFFBBBB',
+    '.CCCCCCCCDDDBBB.',
+    '..CCCCCCCCDDDB..',
+  ],
+  palette: {
+    A: '#4B62D4',
+    B: '#D32F8C',
+    C: '#FFDD80',
+    D: '#F26A39',
+    E: '#9237C0',
+    F: '#FFFFFF',
+  },
+  tags: [],
+}
+export const Instagram = ({ size = 24, color = HEX.fg, appearance = 'palette' }: PaletteIconProps) => (
+  <PxlKitIcon icon={InstagramData} size={size} appearance={appearance} color={color} />
 )

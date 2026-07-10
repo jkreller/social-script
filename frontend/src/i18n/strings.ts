@@ -49,6 +49,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     'Confirm': 'Bestätigen',
     'or make up your own': 'Oder deine eigene',
     'type here…': 'Hier eingeben…',
+    'the story so far': 'bisherige Story',
     'Go': 'Los',
     'chapter': 'Kapitel',
     'icons by pxlkit.xyz': 'Icons von pxlkit.xyz',

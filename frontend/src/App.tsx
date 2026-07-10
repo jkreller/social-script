@@ -152,6 +152,7 @@ export default function App() {
               answers={answers}
               seed={seed}
               cameraOn={cameraOn}
+              log={log}
               onAnswer={handleAnswer}
               onDone={handleDone}
               onPaused={handlePaused}

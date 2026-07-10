@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Close, Flag, Volume, Star, HEX } from '../icons'
 import { getExceptions, postStep } from '../api'
-import type { ExceptionInfo, ExceptionType, Prompt } from '../types'
+import type { ExceptionInfo, ExceptionType, LogEntry, Prompt } from '../types'
 import { useRecorder } from '../hooks/useRecorder'
 import { isMuted, toggleMuted, unlockAudio, playPhase, playPass, playYes } from '../utils/sfx'
 import { t } from '../i18n/strings'
@@ -29,11 +29,23 @@ function isHandoff(p: Prompt): boolean {
   return p.headline === passHeadline || /^\s*pass me to/i.test(p.text)
 }
 
+// The story game's decide() prompt for "type in the next part" — recognized the same
+// way as isHandoff, purely to reconstruct "the story so far" from the answer log for
+// display. Not script logic: just matching a prompt we already know by its fixed
+// (translated) headline/text, same as isHandoff does for hand-offs.
+function isStoryPart(p: Prompt): boolean {
+  const de = getLocale() === 'de'
+  const headline = de ? 'entscheide' : 'decide'
+  const text = de ? 'Erzähle den nächsten Teil der Geschichte' : 'Say the next part of the story'
+  return p.headline === headline && p.text.startsWith(text)
+}
+
 interface Props {
   script: string
   answers: string[]
   seed: number
   cameraOn: boolean
+  log: LogEntry[]
   onAnswer: (value: string, prompt: Prompt, stepIndex: number) => void
   onDone: () => void
   onPaused: () => void
@@ -45,7 +57,7 @@ interface Props {
   onClipEnd: (timestamp: number) => void
 }
 
-export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer, onDone, onPaused, onRollback, onStepShow, onExceptionSelect, onException, onClipStart, onClipEnd }: Props) {
+export default function RunnerScreen({ script, answers, seed, cameraOn, log, onAnswer, onDone, onPaused, onRollback, onStepShow, onExceptionSelect, onException, onClipStart, onClipEnd }: Props) {
   const [execReady, setExecReady] = useState(!cameraOn)
   const { videoRef, stop: stopRecording } = useRecorder(
     cameraOn,
@@ -197,6 +209,16 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
 
   const interactive = exceptions.length > 0 && prompt && !loading && !error && !uncaught
 
+  // Reconstruct "the story so far" from the log purely for display — the prompt
+  // itself carries no history since each step is a stateless replay.
+  const storySoFar = prompt && isStoryPart(prompt)
+    ? log
+        .filter((e): e is LogEntry & { type: 'step_answer' } => e.type === 'step_answer' && isStoryPart(e.prompt))
+        .map(e => e.answer)
+        .join('\n')
+    : ''
+  const textInputPrompt = storySoFar ? { ...prompt!, intro: storySoFar } : prompt
+
   return (
     <div className={styles.root} onPointerDown={unlockAudio}>
       {cameraOn && <CameraLayer videoRef={videoRef} />}
@@ -249,7 +271,7 @@ export default function RunnerScreen({ script, answers, seed, cameraOn, onAnswer
           {prompt.input_type === 'yn' && <YesNoInput prompt={prompt} onSubmit={handleSubmit} />}
           {prompt.input_type === 'scale' && <ScaleInput prompt={prompt} onSubmit={handleSubmit} />}
           {prompt.input_type === 'choice' && <ChoiceInput prompt={prompt} onSubmit={handleSubmit} />}
-          {(prompt.input_type === 'text' || prompt.input_type === 'long_text') && <TextInput prompt={prompt} onSubmit={handleSubmit} />}
+          {(prompt.input_type === 'text' || prompt.input_type === 'long_text') && <TextInput prompt={textInputPrompt!} onSubmit={handleSubmit} />}
           {prompt.input_type === 'enter_structured' && <EnterStructuredInput prompt={prompt} onSubmit={handleSubmit} />}
         </motion.div>
       ) : null}

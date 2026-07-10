@@ -5,10 +5,50 @@
   align-items: center;
   justify-content: center;
   padding: var(--pad-screen-top) 28px calc(24px + var(--sab));
+  /* Defensive fallback: normally this all fits without scrolling, but a long
+     story-so-far box (see .intro) shouldn't get silently clipped by the parent's
+     overflow:hidden — let the whole panel scroll from the top instead. */
+  overflow-y: auto;
+}
+
+.intro {
+  align-self: stretch;
+  /* Sized to its own content by default (short story = short box). min-height:0
+     is what lets it actually shrink below that once the panel runs out of room —
+     the other children below get flex-shrink:0 so they hold their size and this
+     is the only thing that gives, becoming internally scrollable at that point. */
+  min-height: 0;
+  overflow-y: auto;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+}
+
+.introLabel {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-label);
+  text-decoration: underline;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.introText {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-relaxed);
+  white-space: pre-wrap;
+  text-align: left;
+  color: var(--muted);
 }
 
 .headline {
   align-self: flex-start;
+  flex-shrink: 0;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--fs-label);
@@ -23,6 +63,7 @@
 }
 
 .promptText {
+  flex-shrink: 0;
   font-family: var(--font-body);
   font-weight: 400;
   font-size: var(--fs-prompt);
@@ -35,6 +76,7 @@
 
 .field {
   align-self: stretch;
+  flex-shrink: 0;
   padding: 16px 18px;
   background: var(--surface);
   border: 2px solid var(--accent);
@@ -57,6 +99,7 @@
 
 .confirmBtn {
   align-self: stretch;
+  flex-shrink: 0;
   margin-top: 22px;
   padding: 14px;
   font-family: var(--font-display);

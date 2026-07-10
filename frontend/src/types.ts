@@ -17,7 +17,7 @@ export interface Prompt {
   input_type: InputType
   choices: Choice[] | null
   items?: StructuredItem[] | null   // enter_structured screens: icon/label/value tiles
-  intro?: string | null             // enter_structured screens: optional lead-in line above the tiles
+  intro?: string | null             // optional lead-in line above the tiles (enter_structured) or the field (text/long_text)
   allow_custom?: boolean   // choice screens: also accept a typed answer
   phase: number
   phase_title: string | null

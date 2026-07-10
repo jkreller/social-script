@@ -1,0 +1,73 @@
+.root {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: var(--pad-screen-top) calc(28px + env(safe-area-inset-right)) calc(64px + var(--sab)) calc(28px + env(safe-area-inset-left));
+  cursor: pointer;
+  text-align: center;
+  background: var(--bg);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.line {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-base);
+  white-space: pre-wrap;
+  text-align: center; /* theme.css sets `p { text-align: left }` globally */
+}
+
+.link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+}
+
+.linkIcon {
+  display: inline-flex;
+  filter: drop-shadow(var(--glow-accent));
+}
+
+.linkLabel {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+.highlight {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.logo {
+  color: var(--accent);
+  filter: drop-shadow(var(--glow-accent));
+}
+
+.hint {
+  position: absolute;
+  bottom: calc(30px + var(--sab));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  color: var(--muted);
+}

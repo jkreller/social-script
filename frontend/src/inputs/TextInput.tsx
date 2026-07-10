@@ -16,6 +16,12 @@ export default function TextInput({ prompt, onSubmit }: Props) {
   return (
     <div className={styles.root}>
       {prompt.headline && <span className={styles.headline}>{prompt.headline}</span>}
+      {prompt.intro && (
+        <div className={styles.intro}>
+          <span className={styles.introLabel}>{t('the story so far')}:</span>
+          <p className={styles.introText}>{prompt.intro}</p>
+        </div>
+      )}
       <p className={styles.promptText}>{prompt.text}</p>
       {isLong ? (
         <textarea
