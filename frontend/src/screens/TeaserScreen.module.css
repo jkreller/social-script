@@ -18,6 +18,11 @@
   gap: 14px;
   max-height: 70vh;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.lines::-webkit-scrollbar {
+  display: none; /* Chrome/Safari — the bar flashing in as each line reveals is distracting */
 }
 
 .line {
