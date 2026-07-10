@@ -114,7 +114,7 @@ export const Mail = ({ size = 24, color = HEX.fg, appearance = 'solid' }: Palett
 )
 
 // Instagram doesn't ship in any pxlkit pack — hand-authored pixel art in the same
-// grid format, used only by the /psst teaser's Instagram link.
+// grid format, used only by the /psssssssssst teaser's Instagram link.
 const InstagramData: PxlKitData = {
   name: 'instagram',
   size: 16,
