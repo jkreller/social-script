@@ -43,7 +43,7 @@ const PAGES: Line[][] = [
     line('I’m up for it!'),
   ],
   [
-    line('Otherwise here comes an <explanation> and then you can decide to approach digitally…'),
+    line('Otherwise here comes an <explanation> and then you can decide to approach <digitally>…'),
   ],
   [
     line('This is an <art project> exhibited at Summaery 2026.'),
