@@ -1,13 +1,16 @@
 .root {
-  height: 100%;
+  /* Sized to its own content (not height:100%) so the parent flex container (the
+     main game's .inputArea, or the teaser's .stageInner) can center this as a
+     compact group rather than this box filling all leftover space and centering
+     its content within itself. min-height:0 + overflow-y:auto keep the old
+     defensive fallback working: if it's ever taller than the available room, the
+     parent's flex-shrink squeezes this box down and it scrolls internally instead
+     of being silently clipped. */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: var(--pad-screen-top) 28px calc(24px + var(--sab));
-  /* Defensive fallback: normally this all fits without scrolling, but a long
-     story-so-far box (see .intro) shouldn't get silently clipped by the parent's
-     overflow:hidden — let the whole panel scroll from the top instead. */
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -93,8 +96,15 @@
 
 .fieldLong {
   resize: none;
-  min-height: 140px;
+  min-height: 180px;
+  overflow-y: auto;
   font-family: var(--font-body);
+  /* .field sets flex-shrink:0 (every other field in this panel holds its natural
+     size) — this one is the exception: it's the element meant to grow with typed
+     text, so it also has to be the one that gives when there isn't enough room,
+     down to min-height, past which it scrolls internally instead of pushing
+     the confirm button off screen. */
+  flex-shrink: 1;
 }
 
 .confirmBtn {

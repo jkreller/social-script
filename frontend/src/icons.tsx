@@ -150,3 +150,71 @@ const InstagramData: PxlKitData = {
 export const Instagram = ({ size = 24, color = HEX.fg, appearance = 'palette' }: PaletteIconProps) => (
   <PxlKitIcon icon={InstagramData} size={size} appearance={appearance} color={color} />
 )
+
+// Flags for the /psssssssssst teaser's language switch — hand-authored, same reason
+// as Instagram above (not part of any pxlkit pack).
+const FlagEnglishData: PxlKitData = {
+  name: 'flag-english',
+  size: 16,
+  category: 'custom',
+  grid: [
+    '................',
+    '................',
+    'AACBBBCAACBBBCAA',
+    'CAACBBCAACBBCAAC',
+    'BCAACBCAACBCAACB',
+    'BBCAACCAACCAACBB',
+    'CCCCCCCAACCCCCCC',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'CCCCCCCAACCCCCCC',
+    'BBCAACCAACCAACBB',
+    'BCAACBCAACBCAACB',
+    'CAACBBCAACBBCAAC',
+    'AACBBBCAACBBBCAA',
+    '................',
+    '................',
+  ],
+  palette: {
+    A: '#FF1E3D',
+    B: '#1A3FE0',
+    C: '#FFFFFF',
+  },
+  tags: [],
+}
+export const FlagEnglish = ({ size = 24, color = HEX.fg, appearance = 'palette' }: PaletteIconProps) => (
+  <PxlKitIcon icon={FlagEnglishData} size={size} appearance={appearance} color={color} />
+)
+
+const FlagGermanData: PxlKitData = {
+  name: 'flag-german',
+  size: 16,
+  category: 'custom',
+  grid: [
+    '................',
+    '................',
+    'CCCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCC',
+    'CCCCCCCCCCCCCCCC',
+    'BBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBB',
+    'BBBBBBBBBBBBBBBB',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    'AAAAAAAAAAAAAAAA',
+    '................',
+    '................',
+  ],
+  palette: {
+    A: '#FFD500',
+    B: '#FF0000',
+    C: '#000000',
+  },
+  tags: [],
+}
+export const FlagGerman = ({ size = 24, color = HEX.fg, appearance = 'palette' }: PaletteIconProps) => (
+  <PxlKitIcon icon={FlagGermanData} size={size} appearance={appearance} color={color} />
+)

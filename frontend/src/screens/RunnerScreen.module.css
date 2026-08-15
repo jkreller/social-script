@@ -58,6 +58,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* Only visibly affects TextInput: the other input types still fill this fully
+     (height:100%), leaving no free space for justify-content to distribute. */
+  justify-content: center;
   overflow: hidden;
 }
 

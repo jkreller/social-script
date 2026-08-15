@@ -8,9 +8,11 @@ import styles from './YesNoInput.module.css'
 interface Props {
   prompt: Prompt
   onSubmit: (value: string) => void
+  yesLabel?: string
+  noLabel?: string
 }
 
-export default function YesNoInput({ prompt, onSubmit }: Props) {
+export default function YesNoInput({ prompt, onSubmit, yesLabel, noLabel }: Props) {
   const [flashing, setFlashing] = useState<'y' | 'n' | null>(null)
 
   const handleTap = (value: 'y' | 'n') => {
@@ -27,7 +29,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
         whileTap={{ scale: 0.96 }}
       >
         <Check size={40} color={HEX.ink} />
-        <span className={styles.label}>{t('Yes')}</span>
+        <span className={styles.label}>{yesLabel ?? t('Yes')}</span>
       </motion.div>
 
       <motion.div
@@ -37,7 +39,7 @@ export default function YesNoInput({ prompt, onSubmit }: Props) {
         whileTap={{ scale: 0.96 }}
       >
         <Close size={40} color={HEX.fg} />
-        <span className={styles.label}>{t('No')}</span>
+        <span className={styles.label}>{noLabel ?? t('No')}</span>
       </motion.div>
 
       <div className={styles.promptArea}>

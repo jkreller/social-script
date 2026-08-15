@@ -1,63 +1,36 @@
 .root {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
   position: relative;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: var(--pad-screen-top) calc(28px + env(safe-area-inset-right)) calc(64px + var(--sab)) calc(28px + env(safe-area-inset-left));
-  cursor: pointer;
-  text-align: center;
   background: var(--bg);
+  /* Every input/message component pads its own top by --pad-screen-top to clear the
+     floating header bar the main app renders elsewhere. Here the glyph (.logoBar) is
+     inline right above that content instead, so that reserved space would just be a
+     second, redundant gap — zero it out for this screen's whole subtree. */
+  --pad-screen-top: 0px;
 }
 
-.lines {
+.logoBar {
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-height: 70vh;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-}
-
-.lines::-webkit-scrollbar {
-  display: none; /* Chrome/Safari — the bar flashing in as each line reveals is distracting */
-}
-
-.line {
-  font-family: var(--font-body);
-  font-weight: 400;
-  font-size: var(--fs-h2);
-  line-height: var(--lh-base);
-  white-space: pre-wrap;
-  text-align: center; /* theme.css sets `p { text-align: left }` globally */
-}
-
-.link {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  align-self: center;
-}
-
-.linkIcon {
-  display: inline-flex;
-  filter: drop-shadow(var(--glow-accent));
-}
-
-.linkLabel {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: var(--fs-caption);
-  color: var(--muted);
-  text-decoration: underline;
-}
-
-.highlight {
-  color: var(--accent);
-  font-weight: 700;
+  justify-content: center;
+  /* Reserved even when the glyph itself is hidden (ScaleInput/YesNoInput steps,
+     see TeaserScreen.tsx) — this row's height is what gives the fixed langBtn its
+     clearance from the next component's content, so it must stay the same size
+     with or without the icon inside it. box-sizing:border-box means min-height is
+     a floor on the TOTAL box (padding included), so this has to match padding
+     (10 + 20) + the 48px icon, not just the icon alone. */
+  min-height: calc(78px + env(safe-area-inset-top));
+  /* Top padding isn't just breathing room: the glyph bounces upward (y: -8px) via
+     its own animation, and this row can end up flush against .stageInner's
+     overflow:hidden top edge when other content (e.g. ScaleInput's slider, which
+     is designed to fill the available height) leaves no slack to center within —
+     without this, the bounce's peak gets clipped. It also tracks safe-area-inset-top
+     for the same flush-to-the-top case, and the bottom padding is sized to clear
+     the fixed langBtn (top + height ~60px) with a bit of headroom, since that case
+     also puts the next component's content right underneath it. */
+  padding: calc(10px + env(safe-area-inset-top)) 0 20px;
 }
 
 .logo {
@@ -65,14 +38,45 @@
   filter: drop-shadow(var(--glow-accent));
 }
 
-.hint {
+.langBtn {
   position: absolute;
-  bottom: calc(30px + var(--sab));
-  display: inline-flex;
+  top: calc(16px + env(safe-area-inset-top));
+  left: calc(16px + env(safe-area-inset-left));
+  z-index: 11;
+  display: flex;
   align-items: center;
   gap: 6px;
+  height: var(--tap);
+  padding: 0 12px;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--fg);
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: var(--fs-label);
-  color: var(--muted);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: var(--glow-accent);
+  transition: transform 90ms var(--ease-snap), box-shadow 90ms var(--ease-snap);
+}
+
+.langBtn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stageInner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
 }

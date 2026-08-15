@@ -1,189 +1,217 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronRight, Mail, Instagram, Pin, Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse } from '../icons'
+import { Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse, FlagEnglish, FlagGerman } from '../icons'
+import RevealText, { type RevealTextHandle } from '../components/RevealText'
+import YesNoInput from '../inputs/YesNoInput'
+import ScaleInput from '../inputs/ScaleInput'
+import TextInput from '../inputs/TextInput'
+import { t } from '../i18n/strings'
+import { setLocale } from '../utils/locale'
+import { createTeaserRun, updateTeaserRun } from '../teaserApi'
+import type { Prompt } from '../types'
 import styles from './TeaserScreen.module.css'
 
-// TODO: replace with the real contact channels before printing the QR code.
-const EMAIL = 'julian.kreller@uni-weimar.de'
-const INSTAGRAM_URL = 'https://instagram.com/ju.krel'
-const MAPS_URL = 'https://www.google.com/maps/search/?api=1&query=Sendehalle+Humboldtstra%C3%9Fe+36A+Weimar'
+const GLYPHS = [Star, Gem, ExplosionBurst, Heart, Lightning, Flame, GlowPulse]
 
-// Same cycling hero glyph as HomeScreen, so the icon hovering at the top of the
-// teaser matches the app it's teasing.
-const GLYPHS = [Heart, Lightning, Flame, Star, Gem, ExplosionBurst, GlowPulse]
+type StepId =
+  | 'intro' | 'opinion' | 'tellInPerson' | 'afraidScale'
+  | 'hintPeace' | 'approachNow' | 'success' | 'notToday' | 'goodbye'
 
-type Run = { text: string; highlight?: boolean }
-type Line = { kind: 'text'; runs: Run[] } | { kind: 'mail' } | { kind: 'instagram' } | { kind: 'location' }
+type Step =
+  | { kind: 'message'; lines: string[]; next: StepId | null }
+  | { kind: 'input'; prompt: Prompt; yesLabel?: string; noLabel?: string; onValue: (value: string) => StepId }
 
-// Splits `<...>` markup out of a copy line into plain/highlighted runs, so the
-// PAGES list below can stay close to the original wording.
-function line(text: string): Line {
-  const runs: Run[] = []
-  const re = /<([^<>]+)>/g
-  let lastIndex = 0
-  let m: RegExpExecArray | null
-  while ((m = re.exec(text))) {
-    if (m.index > lastIndex) runs.push({ text: text.slice(lastIndex, m.index) })
-    runs.push({ text: m[1], highlight: true })
-    lastIndex = re.lastIndex
+const basePrompt = { headline: null, choices: null, phase: 0, phase_title: null, phase_description: null }
+
+// Rebuilt on every render so a language switch (see below) immediately
+// re-translates every step, not just the ones rendered so far.
+function buildSteps(): Record<StepId, Step> {
+  return {
+    intro: {
+      kind: 'message',
+      lines: [t('Thank you for scanning!'), t("Can I ask you a question?")],
+      next: 'opinion',
+    },
+    opinion: {
+      kind: 'input',
+      prompt: {
+        ...basePrompt,
+        text: t('I was wondering: what do you think of me? (the person wearing the t-shirt)'),
+        input_type: 'long_text',
+        placeholder: t('Something you noticed, an idea of who I am or a random thought... be honest and blunt!'),
+      },
+      onValue: () => 'tellInPerson',
+    },
+    tellInPerson: {
+      kind: 'input',
+      prompt: { ...basePrompt, text: t('Thank you!\nWould you like to tell me what you wrote in person?'), input_type: 'yn' },
+      onValue: value => (value === 'y' ? 'afraidScale' : 'goodbye'),
+    },
+    afraidScale: {
+      kind: 'input',
+      prompt: { ...basePrompt, text: t('How afraid of approaching are you?'), input_type: 'scale' },
+      onValue: value => (Number(value) > 5 ? 'hintPeace' : 'approachNow'),
+    },
+    hintPeace: {
+      kind: 'input',
+      prompt: { ...basePrompt, text: t('No worries! Just give me a hint by showing a peace sign (✌️) to me.'), input_type: 'yn' },
+      yesLabel: t('Reacted'),
+      noLabel: t("Didn't react"),
+      onValue: value => (value === 'y' ? 'success' : 'notToday'),
+    },
+    approachNow: {
+      kind: 'input',
+      prompt: { ...basePrompt, text: t('Super, approach me and tell me about it!'), input_type: 'yn' },
+      yesLabel: t('Done'),
+      noLabel: t("Didn't work"),
+      onValue: value => (value === 'y' ? 'success' : 'notToday'),
+    },
+    success: {
+      kind: 'message',
+      lines: [t('Cool! Thanks for reaching out!')],
+      next: null,
+    },
+    notToday: {
+      kind: 'message',
+      lines: [t("Oh, well, maybe today's not the day."), t('Anyways, thank you for taking part!')],
+      next: null,
+    },
+    goodbye: {
+      kind: 'message',
+      lines: [t('Alright, thank you for your answer!'), t('See you!')],
+      next: null,
+    },
   }
-  if (lastIndex < text.length) runs.push({ text: text.slice(lastIndex) })
-  return { kind: 'text', runs }
 }
 
-// One entry per page (a blank-line-separated paragraph in the source copy). Lines
-// within a page reveal one at a time, 2s apart.
-const PAGES: Line[][] = [
-  [
-    line('Yay, you scanned me!'),
-    line('<Great!>'),
-  ],
-  [
-    line('If you feel confident enough just <approach me> and ask what this is about!'),
-    line('I’m up for it!'),
-  ],
-  [
-    line('Otherwise here comes an <explanation> and then you can decide to approach <digitally>…'),
-  ],
-  [
-    line('This is an <art project> exhibited at Summaery 2026.'),
-    line('The idea is to <program people> in social situations.'),
-    line('(yes, programming like you would normally program <computers>)'),
-  ],
-  [
-    line('It’s working through a <story telling game>.'),
-    line('You and other people get to know each other, make up story elements and write a story.'),
-    line('I hope it’s <fun> but maybe it’s still a bit <messy>.'),
-  ],
-  [
-    line('Anyways… <Let’s try it out!>'),
-    line('<Approach> me here:'),
-    { kind: 'mail' },
-    { kind: 'instagram' },
-    line('Or watch how <other people> were programmed at:'),
-    { kind: 'location' },
-  ],
-]
-
-function renderLine(l: Line) {
-  if (l.kind === 'mail') {
-    return (
-      <a className={styles.link} href={`mailto:${EMAIL}`} onPointerDown={e => e.stopPropagation()}>
-        <span className={styles.linkIcon}><Mail size={56} appearance="palette" /></span>
-      </a>
-    )
-  }
-  if (l.kind === 'instagram') {
-    return (
-      <a className={styles.link} href={INSTAGRAM_URL} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()}>
-        <span className={styles.linkIcon}><Instagram size={56} appearance="palette" /></span>
-      </a>
-    )
-  }
-  if (l.kind === 'location') {
-    return (
-      <a className={styles.link} href={MAPS_URL} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()}>
-        <span className={styles.linkIcon}><Pin size={56} appearance="palette" /></span>
-        <span className={styles.linkLabel}>Sendehalle, Humboldtstraße 36A</span>
-      </a>
-    )
-  }
-  return l.runs.map((run, i) => (run.highlight ? <span key={i} className={styles.highlight}>{run.text}</span> : run.text))
-}
-
-// Hidden QR-code teaser (see main.tsx) — plays the intro copy back as a slow, tappable
-// reveal, then hands off to email/Instagram on the last page. Fully separate from the
-// Home/Runner state machine; nothing here touches localStorage or the script engine.
+// Hidden QR-code teaser (see main.tsx) — a small branching conversation, fully
+// separate from the Home/Runner state machine; nothing here touches the script
+// engine. Defaults to German regardless of any locale saved from the main app,
+// with an escape hatch to switch to English.
 export default function TeaserScreen() {
-  const [pageIndex, setPageIndex] = useState(0)
-  const [revealedCount, setRevealedCount] = useState(0)
+  const [lang, setLang] = useState<'de' | 'en'>('de')
+  setLocale(lang)
+  const [stepId, setStepId] = useState<StepId>('intro')
   const [glyphIndex, setGlyphIndex] = useState(0)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const page = PAGES[pageIndex]
-  const isLastPage = pageIndex === PAGES.length - 1
-  const fullyRevealed = revealedCount >= page.length
-  const Glyph = GLYPHS[glyphIndex]
+  const [textExpanded, setTextExpanded] = useState(false)
+  const revealTextRef = useRef<RevealTextHandle>(null)
+  // Run persistence (see teaserApi.ts): created right after the opinion answer so
+  // a visitor bailing out mid-flow is still captured, then patched with the
+  // decision log so far after every subsequent answer — so a bail-out later in
+  // the flow still leaves whatever was answered up to that point. Refs, not
+  // state — nothing in this component's JSX needs to re-render off them.
+  const runPromiseRef = useRef<Promise<{ id: number } | null> | null>(null)
+  const decisionLogRef = useRef<{ step: StepId; value: string }[]>([])
+  // Patches must reach the server in the order they were made (and only once the
+  // row exists) — chaining onto this ref serializes them instead of racing.
+  const patchChainRef = useRef<Promise<void>>(Promise.resolve())
+  // Memoized so glyphIndex's 5s tick (which re-renders this component but doesn't
+  // change the language) doesn't hand RevealText a new `lines` array reference on
+  // every tick — that was resetting its reveal-so-far state and looping the text.
+  const STEPS = useMemo(() => buildSteps(), [lang])
+  const step = STEPS[stepId]
 
   useEffect(() => {
     const id = setInterval(() => setGlyphIndex(i => (i + 1) % GLYPHS.length), 5000)
     return () => clearInterval(id)
   }, [])
 
-  useEffect(() => {
-    setRevealedCount(1)
-    if (page.length > 1) {
-      intervalRef.current = setInterval(() => {
-        setRevealedCount(n => {
-          const next = n + 1
-          if (next >= page.length && intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-          }
-          return next
-        })
-      }, 2000)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }, [pageIndex])
+  // A fresh step starts un-expanded — TextInput will report back in if its field
+  // grows enough to change that.
+  useEffect(() => { setTextExpanded(false) }, [stepId])
 
-  const handleTap = () => {
-    if (revealedCount < page.length) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-      setRevealedCount(page.length)
-      return
+  const Glyph = GLYPHS[glyphIndex]
+  // ScaleInput/YesNoInput fill the whole screen by design (slider, tap zones) —
+  // the glyph has no good place to sit above them, so only show it above the
+  // message/text steps, which stay a compact centered block. Same reasoning once
+  // a long_text field has grown enough to fill the screen itself.
+  const showGlyph = !textExpanded && (step.kind === 'message' || step.prompt.input_type === 'text' || step.prompt.input_type === 'long_text')
+
+  const handleSubmit = (value: string) => {
+    if (step.kind !== 'input') return
+    if (stepId === 'opinion') {
+      runPromiseRef.current = createTeaserRun(value).catch(err => {
+        console.error('Failed to save teaser run', err)
+        return null
+      })
+    } else {
+      decisionLogRef.current.push({ step: stepId, value })
+      const log = [...decisionLogRef.current]
+      patchChainRef.current = patchChainRef.current
+        .then(() => runPromiseRef.current)
+        .then(created => { if (created) return updateTeaserRun(created.id, log) })
+        .catch(err => console.error('Failed to save teaser run', err))
     }
-    if (!isLastPage) setPageIndex(i => i + 1)
+    setStepId(step.onValue(value))
   }
 
   return (
-    <div className={styles.root} onPointerDown={handleTap}>
-      <motion.div
-        className={styles.logo}
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={glyphIndex}
-            style={{ display: 'flex' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-          >
-            <Glyph size={48} appearance="palette" />
-          </motion.span>
-        </AnimatePresence>
-      </motion.div>
-      <div className={styles.lines}>
-        {page.slice(0, revealedCount).map((l, i) => (
-          <motion.p
-            key={`${pageIndex}-${i}`}
-            className={styles.line}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.14, ease: 'easeOut' }}
-          >
-            {renderLine(l)}
-          </motion.p>
-        ))}
-      </div>
-      {fullyRevealed && !isLastPage && (
-        <motion.span
-          className={styles.hint}
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          tap to continue <ChevronRight width={16} height={16} />
-        </motion.span>
+    <div className={styles.root}>
+      {/* Pinned to the physical top of the screen — unlike the glyph below, this
+          isn't part of the centered content group, since it's chrome (a settings
+          toggle), not part of the conversation. */}
+      {lang === 'de' ? (
+        <button className={styles.langBtn} onClick={() => setLang('en')}>
+          <FlagEnglish size={20} appearance="palette" />
+        </button>
+      ) : (
+        <button className={styles.langBtn} onClick={() => setLang('de')}>
+          <FlagGerman size={20} appearance="palette" />
+        </button>
       )}
+
+      <div className={styles.stage}>
+        <motion.div
+          key={stepId}
+          className={styles.stageInner}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.14, ease: 'easeOut' }}
+          // RevealText's own box is content-sized, not full-screen, so the tap-to-
+          // continue affordance has to be caught up here to cover the whole screen.
+          onPointerDown={() => { if (step.kind === 'message') revealTextRef.current?.tap() }}
+        >
+          {/* Always rendered (not conditionally) so the reserved header space — and
+              thus the clearance below the fixed langBtn — stays consistent whether
+              or not the glyph itself is shown; only its visibility toggles below. */}
+          <div className={styles.logoBar}>
+            {showGlyph && (
+              <motion.div
+                className={styles.logo}
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={glyphIndex}
+                    style={{ display: 'flex' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                  >
+                    <Glyph size={48} appearance="palette" />
+                  </motion.span>
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </div>
+
+          {step.kind === 'message' ? (
+            <RevealText ref={revealTextRef} lines={step.lines} onAdvance={step.next ? () => setStepId(step.next!) : undefined} />
+          ) : (
+            <>
+              {step.prompt.input_type === 'yn' && (
+                <YesNoInput prompt={step.prompt} onSubmit={handleSubmit} yesLabel={step.yesLabel} noLabel={step.noLabel} />
+              )}
+              {step.prompt.input_type === 'scale' && <ScaleInput prompt={step.prompt} onSubmit={handleSubmit} />}
+              {(step.prompt.input_type === 'text' || step.prompt.input_type === 'long_text') && (
+                <TextInput prompt={step.prompt} onSubmit={handleSubmit} onExpandedChange={setTextExpanded} />
+              )}
+            </>
+          )}
+        </motion.div>
+      </div>
     </div>
   )
 }

@@ -18,6 +18,7 @@ export interface Prompt {
   choices: Choice[] | null
   items?: StructuredItem[] | null   // enter_structured screens: icon/label/value tiles
   intro?: string | null             // optional lead-in line above the tiles (enter_structured) or the field (text/long_text)
+  placeholder?: string | null       // optional override for the text/long_text field's placeholder
   allow_custom?: boolean   // choice screens: also accept a typed answer
   phase: number
   phase_title: string | null

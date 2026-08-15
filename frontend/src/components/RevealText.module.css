@@ -1,0 +1,44 @@
+.root {
+  /* Sized to its own content (not height:100%) so the teaser's parent flex column can
+     center the glyph-above-text pair as one compact group, rather than this box filling
+     all leftover space and centering the text within itself, away from the glyph. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 12px calc(28px + env(safe-area-inset-right)) calc(24px + var(--sab)) calc(28px + env(safe-area-inset-left));
+  cursor: pointer;
+  text-align: center;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.lines::-webkit-scrollbar {
+  display: none; /* Chrome/Safari — the bar flashing in as each line reveals is distracting */
+}
+
+.line {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-base);
+  white-space: pre-wrap;
+  text-align: center; /* theme.css sets `p { text-align: left }` globally */
+}
+
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-label);
+  color: var(--muted);
+}
