@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createInsertSchema } from 'drizzle-zod'
 import { z } from 'zod'
-import { db, teaserRuns } from '../_db'
+import { db, teaserRuns } from '../_db.js'
 
 // Derived from the table so this can't silently drift from the DB shape; only
 // `.max(5000)` is a business rule the column type doesn't already express.

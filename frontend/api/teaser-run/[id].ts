@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { eq } from 'drizzle-orm'
 import { createUpdateSchema } from 'drizzle-zod'
 import { z } from 'zod'
-import { db, teaserRuns } from '../_db'
+import { db, teaserRuns } from '../_db.js'
 
 // `decisionLog` is jsonb — the DB has no shape for it, so the array/entry shape
 // is supplied here rather than derived; `.max(...)` caps are business rules on
