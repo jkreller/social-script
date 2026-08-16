@@ -95,11 +95,12 @@ export default function TeaserScreen() {
   const [glyphIndex, setGlyphIndex] = useState(0)
   const [textExpanded, setTextExpanded] = useState(false)
   const revealTextRef = useRef<RevealTextHandle>(null)
-  // Run persistence (see teaserApi.ts): created right after the opinion answer so
-  // a visitor bailing out mid-flow is still captured, then patched with the
-  // decision log so far after every subsequent answer — so a bail-out later in
-  // the flow still leaves whatever was answered up to that point. Refs, not
-  // state — nothing in this component's JSX needs to re-render off them.
+  // Run persistence (see teaserApi.ts): created the moment the screen mounts, so
+  // even a visitor who never answers anything is still counted, then patched
+  // with the opinion (once answered) and the decision log so far after every
+  // subsequent answer — so a bail-out anywhere in the flow still leaves whatever
+  // was answered up to that point. Refs, not state — nothing in this component's
+  // JSX needs to re-render off them.
   const runPromiseRef = useRef<Promise<{ id: number } | null> | null>(null)
   const decisionLogRef = useRef<{ step: StepId; value: string }[]>([])
   // Patches must reach the server in the order they were made (and only once the
@@ -116,6 +117,13 @@ export default function TeaserScreen() {
     return () => clearInterval(id)
   }, [])
 
+  useEffect(() => {
+    runPromiseRef.current = createTeaserRun().catch(err => {
+      console.error('Failed to save teaser run', err)
+      return null
+    })
+  }, [])
+
   // A fresh step starts un-expanded — TextInput will report back in if its field
   // grows enough to change that.
   useEffect(() => { setTextExpanded(false) }, [stepId])
@@ -129,19 +137,12 @@ export default function TeaserScreen() {
 
   const handleSubmit = (value: string) => {
     if (step.kind !== 'input') return
-    if (stepId === 'opinion') {
-      runPromiseRef.current = createTeaserRun(value).catch(err => {
-        console.error('Failed to save teaser run', err)
-        return null
-      })
-    } else {
-      decisionLogRef.current.push({ step: stepId, value })
-      const log = [...decisionLogRef.current]
-      patchChainRef.current = patchChainRef.current
-        .then(() => runPromiseRef.current)
-        .then(created => { if (created) return updateTeaserRun(created.id, log) })
-        .catch(err => console.error('Failed to save teaser run', err))
-    }
+    decisionLogRef.current.push({ step: stepId, value })
+    const patch = { opinion: stepId === 'opinion' ? value : undefined, decisionLog: [...decisionLogRef.current] }
+    patchChainRef.current = patchChainRef.current
+      .then(() => runPromiseRef.current)
+      .then(created => { if (created) return updateTeaserRun(created.id, patch) })
+      .catch(err => console.error('Failed to save teaser run', err))
     setStepId(step.onValue(value))
   }
 

@@ -1,0 +1,79 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "f3e0df18-1275-4607-8019-b0ffc8a06f1e",
+  "prevIds": [
+    "7d5606a0-d73a-465a-afb9-edb2b868b4f6"
+  ],
+  "ddl": [
+    {
+      "isRlsEnabled": false,
+      "name": "teaser_runs",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "serial",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "teaser_runs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "opinion",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "teaser_runs"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "decision_log",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "teaser_runs"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "teaser_runs"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "teaser_runs_pkey",
+      "schema": "public",
+      "table": "teaser_runs",
+      "entityType": "pks"
+    }
+  ],
+  "renames": []
+}

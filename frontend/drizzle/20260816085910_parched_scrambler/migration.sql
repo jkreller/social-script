@@ -1,0 +1,1 @@
+ALTER TABLE "teaser_runs" ALTER COLUMN "opinion" DROP NOT NULL;
