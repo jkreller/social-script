@@ -55,10 +55,10 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     'icons by pxlkit.xyz': 'Icons von pxlkit.xyz',
     'Thank you for scanning!': 'Danke fürs Scannen!',
     "Can I ask you a question?": 'Darf ich dir eine Frage stellen?',
-    'I was wondering: what do you think of me? (the person wearing the t-shirt)':
-      'Was denkst du über mich?\n(die Person, die das T-Shirt trägt)',
-    'Something you noticed, an idea of who I am or a random thought... be honest and blunt!':
-      'Spontan! Etwas, das dir aufgefallen ist oder eine Vermutung, wer ich bin. Ehrlich und direkt!',
+    'Tell me something about yourself, something you would normally not tell a stranger!':
+      'Erzähl mir etwas über dich, das du normalerweise einem Fremden nicht erzählen würdest!',
+    'Something you\'re thinking about, a struggle of yours or your greatest passion...':
+      'Etwas, worüber du nachdenkst, ein aktuelles Problem oder deine größte Leidenschaft...',
     'Thank you!\nWould you like to tell me what you wrote in person?':
       'Danke!\nMöchtest du mir persönlich erzählen, was du geschrieben hast?',
     'How afraid of approaching are you?': 'Wie viel Angst hast du davor, mich anzusprechen?',

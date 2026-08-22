@@ -36,9 +36,9 @@ function buildSteps(): Record<StepId, Step> {
       kind: 'input',
       prompt: {
         ...basePrompt,
-        text: t('I was wondering: what do you think of me? (the person wearing the t-shirt)'),
+        text: t('Tell me something about yourself, something you would normally not tell a stranger!'),
         input_type: 'long_text',
-        placeholder: t('Something you noticed, an idea of who I am or a random thought... be honest and blunt!'),
+        placeholder: t('Something you\'re thinking about, a struggle of yours or your greatest passion...'),
       },
       onValue: () => 'tellInPerson',
     },
